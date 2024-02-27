@@ -1,0 +1,32 @@
+{
+  "name": "@newari/sails-generate-api-service-generator",
+  "version": "1.0.0",
+  "description": "sails generate api-service-generator",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo 'No further automated tests have been implemented for this generator yet.'",
+    "pretest": "npm run lint",
+    "lint": "node ./node_modules/eslint/bin/eslint . --max-warnings=0"
+  },
+  "keywords": [
+    "api-service-generator",
+    "generator",
+    "sails",
+    "generate",
+    "plugin"
+  ],
+  "author": "newari",
+  "license": "MIT",
+  "dependencies": {
+    "@sailshq/lodash": "^3.10.3"
+  },
+  "devDependencies": {
+    "eslint": "3.19.0"
+  },
+  "repository": {"type":"git","url":"git://github.com/newari/sails-generate-api-service-generator.git"},
+  "sailsGenerator": {
+    "type": "api-service-generator",
+    "behavior": "Implements or overrides `sails generate api-service-generator`",
+    "sailsVersion": "^1.0.0"
+  }
+}
