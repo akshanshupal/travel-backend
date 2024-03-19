@@ -39,6 +39,7 @@ module.exports = {
                 lastName: user.lastName,
                 username: user.username,
                 role: user.role,
+                type: user?.type
             },
         });
 

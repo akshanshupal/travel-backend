@@ -7,16 +7,22 @@ module.exports = {
 
     attributes: {
         username: {
-            type: 'string'
+            type: 'string',
+            required: true
+
         },
         firstName: {
-            type: 'string'
+            type: 'string',
+            required: true
+
         },
         lastName: {
             type: 'string'
         },
         company: {
-            model: 'company'
+            model: 'company',
+            required: true
+
         },
         email: {
             type: 'string',
@@ -25,11 +31,13 @@ module.exports = {
         mobile: {
             type: 'string',
         },
-        password: { type: 'string' },
+        password: { type: 'string',  required: true},
+        type: {type: 'string',  required: true}, //"ADMIN", "AGENT", "MANAGER"
         role: {
             type: 'string',
         },
         profileImg: { type: 'string' },
+
         isDeleted: { type: 'boolean' },
         deletedAt: { type: 'ref', columnType: 'datetime' },
         deletedBy: { model: 'user' },

@@ -28,6 +28,7 @@ module.exports.routes = {
 
 
   'POST /api/file/upload': 'FileController.uploadFile',
+  'POST /api/file/delete': 'FileController.deleteFile',
  
 
   'POST /api/user': 'UserController.create',

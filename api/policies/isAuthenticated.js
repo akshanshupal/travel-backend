@@ -14,10 +14,10 @@ module.exports = async function (req, res, next) {
         return res.forbidden(error);
     }
 
-    if (!tokenData || !tokenData.user) {
+    if (!tokenData?.user) {
         return res.forbidden({ code: 'UnAuthorised', message: 'Please login again!' });
     }
-    if (tokenData.user?.type != 'ADMIN' && tokenData.user?.type != 'STAFF' && tokenData.user?.type != 'STUDENT' && tokenData.user?.type != 'FACULTY') {
+    if (tokenData.user?.type != 'ADMIN' && tokenData.user?.type != 'MANAGER' &&tokenData.user?.type != 'AGENT') {
         return res.forbidden({ code: 'Error', message: 'Not authorised!!' });
     }
     if (!tokenData.user.role) {
@@ -28,7 +28,7 @@ module.exports = async function (req, res, next) {
     if (tokenData.user.role == 'ROOT') {
         next();
     } else {
-        let acl = sails.redis.hgetall('acl:' + req.session.activeClient.id + ':' + tokenData.user.role);
+        let acl = sails.redis.hgetall('acl:' + req.session.activeCompany.id + ':' + tokenData.user.role);
         if (!acl) {
             return next();
         }

@@ -45,7 +45,7 @@ module.exports.http = {
 
     parseCompany: async function (req, res, next) {
       console.log('new req', req.url);
-      if (req.headers && req.headers['api-key']) {
+      if (req?.headers['api-key']) {
           let clientApiKey = req.headers['api-key'];
           let companyConfig
           try {
@@ -67,7 +67,7 @@ module.exports.http = {
           // clientConfig.path = path.resolve(__dirname, '../clients/' + clientConfig.publicDir);
           sails.activeClient = companyConfig[0].client;
           next();
-      } else if (req.method && req.method == 'OPTIONS') {
+      } else if (req?.method == 'OPTIONS') {
           next();
       } else if (req.url == '/api/health') {
           next();
@@ -91,14 +91,14 @@ module.exports.http = {
           let method = req.method;
           if (hostCompany?.reqHost == hostname) {
               if (method == 'GET') {
-                  req.query = _.assign({ company: hostCompany.id }, req.query);
+                  req.query = {...req.query, company: hostCompany.id};
               } else {
                   if (!Array.isArray(req.body)) {
-                      req.body = _.assign({ company: hostCompany.id }, req.body);
+                    req.body = {...req.body, company: hostCompany.id};
                   }
               }
               if(!req.session) {
-                req.session = {};
+                    req.session = {};
                 }
               req.session.activeCompany = hostCompany;
 

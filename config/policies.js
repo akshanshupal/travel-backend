@@ -26,10 +26,13 @@ module.exports.policies = {
       getApiVersion: true,
   },
   CompanyconfigController: {
-    create : true
+    '*' : true
+  },
+  CompanyController: {
+    '*' : true
   },
   userController: {
-    create : true
+    'create' : true
   },
 
 };
