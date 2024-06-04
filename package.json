@@ -9,15 +9,21 @@
     "@sailshq/lodash": "^3.10.3",
     "@sailshq/socket.io-redis": "^5.2.0",
     "bcryptjs": "^2.4.3",
+    "gridfs-stream": "^1.1.1",
     "grunt": "1.0.4",
+    "ioredis": "^5.3.2",
     "jsonwebtoken": "^9.0.0",
+    "mongoose": "^8.4.1",
+    "multer": "^1.4.5-lts.1",
     "node-fetch": "^2.7.0",
     "redis": "^4.6.6",
     "sails": "^1.5.8",
     "sails-hook-grunt": "^5.0.0",
     "sails-hook-orm": "^4.0.0",
     "sails-hook-sockets": "^2.0.0",
-    "sails-mongo-cloud": "^3.0.2"
+    "sails-mongo": "^2.1.1",
+    "skipper": "^0.9.4",
+    "skipper-gridfs": "^1.0.2"
   },
   "devDependencies": {
     "eslint": "5.16.0"

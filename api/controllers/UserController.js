@@ -83,8 +83,9 @@ module.exports = {
             return res.serverError(error);
         }
         
-        return res.json(record.data);
+        return res.json(record);
     },
+
 
     create: async function (req, res) {
         if (!req.body.username) {
@@ -103,7 +104,7 @@ module.exports = {
             return res.serverError(error);
         }
 
-        return res.json(record.data);
+        return res.json(record);
     },
 
     updateOne: async function (req, res) {
@@ -114,7 +115,7 @@ module.exports = {
             return res.serverError(error);
         }
 
-        return res.json(record.data);
+        return res.json(record);
     },
     deleteOne: async function (req, res) {
 
@@ -124,7 +125,18 @@ module.exports = {
             return res.serverError(error);
         }
 
-        return res.json(record.data);
-    }
+        return res.json(record);
+    },
+    getCacheUser: async function (req, res) {
+        if(!req.params.id)   return res.badRequest('ID is missing');
+
+        try {
+            var record = await UserService.getCacheUser(req, req.params.id);
+        } catch (error) {
+            return res.serverError(error);
+        }
+        
+        return res.json(record);
+    },
 
 };

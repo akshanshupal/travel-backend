@@ -22,8 +22,10 @@ module.exports.policies = {
   AuthController: {
       signIn: true,
       signout: true,
+      refreshToken: true,
       health: true,
       getApiVersion: true,
+
   },
   CompanyconfigController: {
     '*' : true
@@ -33,6 +35,9 @@ module.exports.policies = {
   },
   userController: {
     'create' : true
+  },
+  fileNewController: {
+    'download' : true
   },
 
 };

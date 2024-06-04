@@ -7,8 +7,12 @@ module.exports = {
             if (!params) {
                 params = {};
             }
+            if(!filter.hasOwnProperty('isDeleted')){
+                filter.isDeleted = { '!=': true };
+            }
             let qryObj = {where : filter};
             //sort
+
             let sortField = 'createdAt';
             let sortOrder = 'DESC';
             qryObj.sort = sortField + ' ' + sortOrder;
@@ -85,7 +89,7 @@ module.exports = {
                 company: ctx?.session?.activeCompany?.id,
             };
             if (!filter.id) {
-                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+                return reject({ statusCode: 400, error: { message: 'id is required!' } });
             }
             if (!filter.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
@@ -132,8 +136,7 @@ module.exports = {
                     }
                 }   
             }
-            const rtrn = { data: record }
-            return resolve({ data: record });
+            return resolve(record);
         })
     },
     create: function (ctx, data, avoidRecordFetch) {
@@ -155,28 +158,20 @@ module.exports = {
             }
             let existingUser;
             try {
-                existingUser = await this.find(ctx, {username: data.username, company: data.company})
+                existingUser = await this.getCacheUserByUsername(ctx, data.username)
             } catch (error) {
                 return reject({ statusCode: 400, error: { message: 'error in fetching existing user' } });
             }
-            if(existingUser?.length){
+            if(existingUser){
                 return reject({ statusCode: 400, error: { message: 'user already exist with same username!' } });
             }
-            if (avoidRecordFetch) {
-                try {
-                    var record = await User.create(data);
-                } catch (error) {
-                    return reject({ statusCode: 500, error: error });
-                }
-            } else {
-                try {
-                    var record = await User.create(data).fetch();
-                } catch (error) {
-                    return reject({ statusCode: 500, error: error });
-                }
+            try {
+                var record = await User.create(data).fetch();
+            } catch (error) {
+                return reject({ statusCode: 500, error: error });
             }
 
-            return resolve({ data: record || { created: true } });
+            return resolve(record);
         })
 
 
@@ -202,11 +197,31 @@ module.exports = {
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
-
-            return resolve({ data: record || { modified: true } });
+            this.deleteCacheUser(record)
+            return resolve(record);
         })
     },
     deleteOne: function (ctx, id) {
+        return new Promise(async (resolve, reject) => {
+            if (!id) {
+                return reject({ statusCode: 400, error: { message: 'id is required!' } });
+            }
+            if (!ctx?.session?.activeCompany?.id) {
+                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+            }
+            let deletedUser
+            try {
+                deletedUser =  await this.updateOne(ctx, id, {isDeleted:true})
+            } catch (error) {
+                return reject({ statusCode: 500, error: error });
+            }
+            if(deletedUser){
+                this.deleteCacheUser(deletedUser)
+            }
+            return resolve(deletedUser);
+        })
+    },
+    getCacheUser: function(ctx,id){
         return new Promise(async (resolve, reject) => {
             const filter = {
                 id: id,
@@ -218,14 +233,57 @@ module.exports = {
             if (!filter.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
-            try {
-                await User.destroyOne(filter);
-            } catch (error) {
-                return reject({ statusCode: 500, error: error });
+            const key = `user:${id}`
+            let cacheUser = await sails.redis.hgetall(key);
+            if(cacheUser&&Object.entries(cacheUser).length > 0 && cacheUser.constructor === Object){
+                return resolve({ data: cacheUser });
             }
+            let findUser
+            try {
+                findUser = await this.findOne(ctx,id)
+            } catch (error) {
+                reject(error) 
+            }
+            sails.redis.pipeline().hset(key, findUser.data).expire(key, sails.config.redis.expire).exec()
 
-
-            return resolve({ data: { deleted: true } });
-        })
+            return resolve(findUser);
+        })  
+    },
+    getCacheUserByUsername: function(ctx,username){
+        return new Promise(async (resolve, reject) => {
+            const filter = {
+                username: username,
+                company: ctx?.session?.activeCompany?.id,
+            };
+            if (!filter.username) {
+                return reject({ statusCode: 400, error: { message: 'username is required!' } });
+            }
+            filter.username = filter.username.trim().toLowerCase();
+            if (!filter.company) {
+                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+            }
+            const key = `user:${filter.username}:${filter.company}`
+            let cacheUser = await sails.redis.hgetall(key);
+            if(cacheUser&&Object.entries(cacheUser).length > 0 && cacheUser.constructor === Object){
+                return resolve(cacheUser);
+            }
+            let existingUser;
+            try {
+                existingUser = await this.find(ctx, {username: data.username, company: data.company})
+            } catch (error) {
+                return reject({ statusCode: 400, error: { message: 'error in fetching existing user' } });
+            }
+            if(!existingUser?.length){
+                return reject({ statusCode: 404, error: { message: 'user not found' } });   
+            }
+            sails.redis.pipeline().hset(key, existingUser[0]).expire(key, sails.config.redis.expire).exec()
+            return resolve(existingUser[0]);
+        })  
+    },
+    deleteCacheUser(user){
+        const key =`user:${user.id}`
+        const keyUsername =`user:${user.username}:${user.company}`
+        sails.redis.del(key);
+        sails.redis.del(keyUsername);
     }
 }

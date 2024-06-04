@@ -9,7 +9,6 @@
  * https://sailsjs.com/config/http
  */
 
-const CompanyconfigService = require("../api/services/CompanyconfigService");
 
 module.exports.http = {
 
@@ -67,12 +66,8 @@ module.exports.http = {
           // clientConfig.path = path.resolve(__dirname, '../clients/' + clientConfig.publicDir);
           sails.activeClient = companyConfig[0].client;
           next();
-      } else if (req?.method == 'OPTIONS') {
+      } else if (req?.method == 'OPTIONS' || req.url == '/api/health' || req.url == '/api/companyconfig' || req.url?.includes("/api/file/download/")) {
           next();
-      } else if (req.url == '/api/health') {
-          next();
-      }else if (req.url == '/api/companyconfig') {
-            next();
       } else if (req?.headers?.origin || req?.headers?.apihost) {
           let url;
           if (req.headers.apihost) {
@@ -84,7 +79,7 @@ module.exports.http = {
           console.log('hostname', hostname);
 
           try {
-              var hostCompany = await sails.client.HGETALL('host:' + hostname + ':company');
+              var hostCompany = await sails.redis.hgetall('host:' + hostname + ':company');
           } catch (error) {
               return res.status(403).send(error);
           }
@@ -116,7 +111,7 @@ module.exports.http = {
                   reqHost: companyConfig[0].panelUrl,
               };
               try {
-                  await sails.client.HSET('host:' + hostname + ':company', cacheConf);
+                  await sails.redis.hset('host:' + hostname + ':company', cacheConf);
               } catch (error) {
                   console.log(error);
                   return res.status(403).send(error);

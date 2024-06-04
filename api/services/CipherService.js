@@ -31,24 +31,25 @@ module.exports = {
      * Create a token based on the passed user
      * @param user
      */
-    createToken: function (body) {
-        return jwt.sign(
-            body,
-            sails.config.jwtSettings.secret,
-            {
-                algorithm: sails.config.jwtSettings.algorithm,
-                expiresIn: sails.config.jwtSettings.expiresInSecs,
-                issuer: sails.config.jwtSettings.issuer,
-                audience: sails.config.jwtSettings.audience,
-            }
-        );
+    createToken: function (body, refresh) {
+        let params = {
+            algorithm: sails.config.jwtSettings.algorithm,
+            expiresIn: refresh? sails.config.jwtSettings.refreshRxpiresIn : sails.config.jwtSettings.expiresIn,
+            issuer: sails.config.jwtSettings.issuer,
+            audience: sails.config.jwtSettings.audience
+        }
+        const jwtSecretKey = refresh? sails.config.jwtSettings.refreshSecret :sails.config.jwtSettings.secret
+        return jwt.sign(body,jwtSecretKey,params);
     },
-    decodeToken: function (tkn) {
+    decodeToken: function (tkn, refresh) {
+        
         return new Promise((resolve, reject)=>{
+            const jwtSecretKey = refresh? sails.config.jwtSettings.refreshSecret :sails.config.jwtSettings.secret
+
             try {
-                var decoded=jwt.verify(tkn, sails.config.jwtSettings.secret);
+                var decoded=jwt.verify(tkn, jwtSecretKey);
             } catch (error) {
-                return reject(error);
+                return reject('Invalid refresh token');
             }
 
             return resolve(decoded)

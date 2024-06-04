@@ -9,11 +9,19 @@
  * https://sailsjs.com/config/bootstrap
  */
 
-const { createClient } = require('redis');
 
+const IORedis = require('ioredis');
 module.exports.bootstrap = async function () {
-    sails.client = createClient({ url: sails.config.redis.url });
-    sails.client.on('error', (err) => console.log('Redis Client Error', err));
+  // Create a Redis client
+  const redis = new IORedis({url: sails.config.redis.url});
+  sails.redis = redis;
 
-    await sails.client.connect();
-};
+  sails.redis.on('error', (err) => {
+    console.error('Redis client error:', err);
+  });
+
+  redis.on('connect', () => {
+    console.log('Connected to Redis server');
+  })
+}
+

@@ -22,6 +22,7 @@ module.exports.routes = {
   '/': { view: 'pages/homepage' },
 
   'POST /api/auth/signin': 'AuthController.signIn',
+  'POST /api/auth/getAuthToken': 'AuthController.refreshToken',
 
   'GET /api/health': 'AuthController.health',
   'GET /api/i/version': 'AuthController.getApiVersion',
@@ -29,6 +30,8 @@ module.exports.routes = {
 
   'POST /api/file/upload': 'FileController.uploadFile',
   'POST /api/file/delete': 'FileController.deleteFile',
+  'POST /api/update-hotel-images': 'FileController.updateHotelImages',
+
  
 
   'POST /api/user': 'UserController.create',
@@ -36,6 +39,7 @@ module.exports.routes = {
   'GET /api/user/:id': 'UserController.findOne',
   'PUT /api/user/:id': 'UserController.updateOne',
   'DELETE /api/user/:id': 'UserController.deleteOne',
+  'GET /api/user-cache/:id': 'UserController.getCacheUser',
 
   'POST /api/company': 'CompanyController.create',
   'GET /api/company': 'CompanyController.find',
@@ -48,6 +52,41 @@ module.exports.routes = {
 'GET /api/companyconfig/:id': 'CompanyconfigController.findOne',
 'PUT /api/companyconfig/:id': 'CompanyconfigController.updateOne',
 'DELETE /api/companyconfig/:id': 'CompanyconfigController.deleteOne',
+
+
+
+'POST /api/site': 'siteController.create',
+'GET /api/site': 'siteController.find',
+'GET /api/site/:id': 'siteController.findOne',
+'PUT /api/site/:id': 'siteController.updateOne',
+'DELETE /api/site/:id': 'siteController.deleteOne',
+'GET /api/site-cache/:id': 'UserController.getCacheSite',
+
+
+'POST /api/area': 'areaController.create',
+'GET /api/area': 'areaController.find',
+'GET /api/area/:id': 'areaController.findOne',
+'PUT /api/area/:id': 'areaController.updateOne',
+'DELETE /api/area/:id': 'areaController.deleteOne',
+
+'POST /api/hotelcategory': 'HotelCategoryController.create',
+'GET /api/hotelcategory': 'HotelCategoryController.find',
+'GET /api/hotelcategory/:id': 'HotelCategoryController.findOne',
+'PUT /api/hotelcategory/:id': 'HotelCategoryController.updateOne',
+'DELETE /api/hotelcategory/:id': 'HotelCategoryController.deleteOne',
+
+'POST /api/hotel': 'HotelController.create',
+'GET /api/hotel': 'HotelController.find',
+'GET /api/hotel/:id': 'HotelController.findOne',
+'PUT /api/hotel/:id': 'HotelController.updateOne',
+'DELETE /api/hotel/:id': 'HotelController.deleteOne',
+
+'POST /api/hotelimage': 'HotelImageController.create',
+'GET /api/hotelimage': 'HotelImageController.find',
+'GET /api/hotelimage/:id': 'HotelImageController.findOne',
+'PUT /api/hotelimage/:id': 'HotelImageController.updateOne',
+'DELETE /api/hotelimage/:id': 'HotelImageController.deleteOne',
+
 
 
   /***************************************************************************
