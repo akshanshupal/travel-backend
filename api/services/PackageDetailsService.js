@@ -1,4 +1,3 @@
-
 module.exports = {
     find: function (ctx, filter, params) {
         return new Promise(async (resolve, reject) => {
@@ -8,14 +7,6 @@ module.exports = {
             if (!params) {
                 params = {};
             }
-            if(!filter.hasOwnProperty('isDeleted')){
-                filter.isDeleted = { '!=': true };
-            }
-            if (filter.title && filter.title.trim()) filter.title = { contains: filter.title.trim() };
-            if (filter.alias && filter.alias.trim()) filter.alias = { contains: filter.alias.trim() };
-
-
-            
             let qryObj = {where : filter};
             //sort
             let sortField = 'createdAt';
@@ -41,15 +32,15 @@ module.exports = {
                 qryObj.select = params.select;
             }
             try {
-                var records = await Area.find(qryObj).meta({makeLikeModifierCaseInsensitive: true});
+                var records = await PackageDetails.find(qryObj);;
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
             //populate&& populate select
             if (params.populate) {
                 let assosiationModels = {};
-                for (let ami = 0; ami < sails.models.area.associations.length; ami++) {
-                    assosiationModels[sails.models.area.associations[ami].alias] = sails.models.area.associations[ami].model;
+                for (let ami = 0; ami < sails.models.packagedetails.associations.length; ami++) {
+                    assosiationModels[sails.models.packagedetails.associations[ami].alias] = sails.models.packagedetails.associations[ami].model;
                 }
                 for (let i = 0; i < records.length; i++) {
                     for (let populateKey of params.populate) {
@@ -75,7 +66,7 @@ module.exports = {
             //totalCount
             if (params.totalCount) {
                 try {
-                    var totalRecords = await Area.count(filter).meta({makeLikeModifierCaseInsensitive: true});
+                    var totalRecords = await PackageDetails.count(filter)
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
@@ -110,7 +101,7 @@ module.exports = {
                 qryObj.select = params.select;
             }
             try {
-                var record = await Area.findOne(qryObj);;
+                var record = await PackageDetails.findOne(qryObj);;
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -120,8 +111,8 @@ module.exports = {
             //populate&& populate select
             if (params.populate) {
                 let assosiationModels = {};
-                for (let ami = 0; ami < sails.models.area.associations.length; ami++) {
-                    assosiationModels[sails.models.area.associations[ami].alias] = sails.models.area.associations[ami].model;
+                for (let ami = 0; ami < sails.models.packagedetails.associations.length; ami++) {
+                    assosiationModels[sails.models.packagedetails.associations[ami].alias] = sails.models.packagedetails.associations[ami].model;
                 }
                 for (let populateKey of params.populate) {
                     if (!record[populateKey]) {
@@ -141,42 +132,50 @@ module.exports = {
                     }
                 }   
             }
-            return resolve(record);
+            const rtrn = { data: record }
+            return resolve({ data: record });
         })
     },
-    create: function (ctx, data) {
+    create: function (ctx, data, avoidRecordFetch) {
         return new Promise(async (resolve, reject) => {
             if (!data.company) {
                 data.company= ctx?.session?.activeCompany?.id;
             }
-   
+
             if (!data.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
-            if(!data.title){
-                return reject({ statusCode: 400, error: { message: 'Title is required!' } });
+            if (!data.type) {
+                return reject({ statusCode: 400, error: { message: 'type is required!' } });
             }
-            if(!data.alias){
-                return reject({ statusCode: 400, error: { message: 'Alias is required!' } });
+            if (!data.title) {
+                return reject({ statusCode: 400, error: { message: 'title is required!' } });
             }
-            if(!data.description){
-                return reject({ statusCode: 400, error: { message: 'Alias is required!' } });
+            if (!data.list) {
+                return reject({ statusCode: 400, error: { message: 'list is required!' } });
             }
-            if(!data.featureImg){
-                return reject({ statusCode: 400, error: { message: 'featureImg is required!' } });
+            if (!Array.isArray(data.list)) {
+                return reject({ statusCode: 400, error: { message: 'list array required!' } });
             }
-            if(!data.hasOwnProperty('status')){
-                data.status=true
-            }
-
-
-            try {
-                var record = await Area.create(data).fetch();
-            } catch (error) {
-                return reject({ statusCode: 500, error: error });
+            if (!data.hasOwnProperty('status')) {
+                data.status= false
             }
 
-            return resolve(record);
+            if (avoidRecordFetch) {
+                try {
+                    var record = await PackageDetails.create(data);
+                } catch (error) {
+                    return reject({ statusCode: 500, error: error });
+                }
+            } else {
+                try {
+                    var record = await PackageDetails.create(data).fetch();
+                } catch (error) {
+                    return reject({ statusCode: 500, error: error });
+                }
+            }
+
+            return resolve({ data: record || { created: true } });
         })
 
 
@@ -196,24 +195,24 @@ module.exports = {
             if (!updtBody.company) {
                 updtBody.company= filter.company;
             }
-            if(updtBody.hasOwnProperty('title')&&!updtBody.title){
+            if (updtBody.hasOwnProperty('title') && !updtBody.title) {
                 return reject({ statusCode: 400, error: { message: 'title is required!' } });
             }
-            if(updtBody.hasOwnProperty('alias')&&!updtBody.alias){
-                return reject({ statusCode: 400, error: { message: 'alias is required!' } });
+            if (updtBody.hasOwnProperty('list') && !Array.isArray(updtBody.list)) {
+                return reject({ statusCode: 400, error: { message: 'list array required!' } });
             }
-            if(updtBody.hasOwnProperty('description')&&!updtBody.description){
-                return reject({ statusCode: 400, error: { message: 'description is required!' } });
+
+            if (updtBody.hasOwnProperty('type') && !updtBody.type) {
+                return reject({ statusCode: 400, error: { message: 'type is required!' } });
             }
-            if(updtBody.hasOwnProperty('featureImg')&&!updtBody.featureImg){
-                return reject({ statusCode: 400, error: { message: 'featureImg is required!' } });
-            }
+
             try {
-                var record = await Area.updateOne(filter).set(updtBody);
+                var record = await PackageDetails.updateOne(filter).set(updtBody);
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
-            return resolve(record);
+
+            return resolve({ data: record || { modified: true } });
         })
     },
     deleteOne: function (ctx, id) {
@@ -228,13 +227,14 @@ module.exports = {
             if (!filter.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
-            let deletedArea
             try {
-                deletedArea =  await this.updateOne(ctx, id, {isDeleted:true})
+                await PackageDetails.destroyOne(filter);
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
-            return resolve(deletedArea);
+
+
+            return resolve({ data: { deleted: true } });
         })
-    },
+    }
 }

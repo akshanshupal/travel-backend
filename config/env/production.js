@@ -31,6 +31,11 @@ module.exports = {
   **************************************************************************/
   datastores: {
 
+  mongodbA: {
+    adapter: 'sails-mongo',
+    url: 'mongodb+srv://akshanshu:ashuMongo1234@cluster0.wygca.mongodb.net/travel?retryWrites=true&w=majority',
+  },
+
     /***************************************************************************
     *                                                                          *
     * Configure your default production database.                              *
@@ -79,7 +84,7 @@ module.exports = {
 
 
   models: {
-
+    datastore: 'mongodbA',
     /***************************************************************************
     *                                                                          *
     * To help avoid accidents, Sails automatically sets the automigration      *
@@ -91,6 +96,7 @@ module.exports = {
     *                                                                          *
     ***************************************************************************/
     migrate: 'safe',
+
 
     /***************************************************************************
     *                                                                          *
@@ -104,6 +110,28 @@ module.exports = {
     // cascadeOnDestroy: false,
 
   },
+  jwtSettings: {
+    secret: "4ukI0uIVnB3iI1yxj646fVXSE3ZVk4doZgz6fTbNg7jO41EAtl20J5F7Trtwe7OM",
+    refreshSecret: "4ukI0uIVnB3iI1yxj646fVXSE3ZVk4doZgz6fTbNg7jO41EAtl20J5F7Txprw7OM",
+    algorithm: "HS256",
+    refreshRxpiresIn: '180d', //30 days='30d'
+    expiresIn: '1d',//15 mins='15m'
+    issuer: "TRAVEL",
+    audience: "tripbliss.com",
+  },
+  bunnyCDN : {
+    HOSTNAME : 'sg.storage.bunnycdn.com',
+    BASE_URL: 'https://storage.bunnycdn.com',
+    STORAGE_ZONE_NAME : 'travelimg',
+    PASSWORD : '49faa86c-ff53-471b-86bb699c3e44-8aa9-433b',
+    baseUrl: "https://travelimg.b-cdn.net"
+  },
+  redis: {
+      // url:'redis://:edukit339master@216.48.178.79:6379'
+      url: "redis://127.0.0.1:6379",
+      expire: 6*30*24*60*60,//6 months expiry
+  },
+  cdnUrl: "http://localhost:1337",
 
 
 
@@ -340,7 +368,7 @@ module.exports = {
     * (https://sailsjs.com/config/http)                                        *
     *                                                                          *
     ***************************************************************************/
-    // trustProxy: true,
+    trustProxy: true,
 
   },
 
@@ -388,24 +416,6 @@ module.exports = {
   * > See config/custom.js for more info on how to configure these options. *
   *                                                                         *
   ***************************************************************************/
-  custom: {
-    baseUrl: 'https://example.com',
-    internalEmailAddress: 'support@example.com',
-
-    // sendgridSecret: 'SG.fake.3e0Bn0qSQVnwb1E4qNPz9JZP5vLZYqjh7sn8S93oSHU',
-    // stripeSecret: 'sk_prod__fake_Nfgh82401348jaDa3lkZ0d9Hm',
-    //--------------------------------------------------------------------------
-    // /\   OR, to avoid checking them in to version control, you might opt to
-    // ||   set sensitive credentials like these using environment variables.
-    //
-    // For example:
-    // ```
-    // sendgridSecret=SG.fake.3e0Bn0qSQVnwb1E4qNPz9JZP5vLZYqjh7sn8S93oSHU
-    // sails_custom__stripeSecret=sk_prod__fake_Nfgh82401348jaDa3lkZ0d9Hm
-    // ```
-    //--------------------------------------------------------------------------
-
-  },
 
 
 

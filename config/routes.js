@@ -87,6 +87,12 @@ module.exports.routes = {
 'PUT /api/hotelimage/:id': 'HotelImageController.updateOne',
 'DELETE /api/hotelimage/:id': 'HotelImageController.deleteOne',
 
+'POST /api/packagedetails': 'PackageDetailsController.create',
+'GET /api/packagedetails': 'PackageDetailsController.find',
+'GET /api/packagedetails/:id': 'PackageDetailsController.findOne',
+'PUT /api/packagedetails/:id': 'PackageDetailsController.updateOne',
+'DELETE /api/packagedetails/:id': 'PackageDetailsController.deleteOne',
+
 
 
   /***************************************************************************
