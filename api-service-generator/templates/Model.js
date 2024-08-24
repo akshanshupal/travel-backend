@@ -12,8 +12,8 @@ module.exports = {
         status: {
             type: 'boolean'
         },
-        client: {
-            model: 'client'
+        company: {
+            model: 'company'
         }
 
     }

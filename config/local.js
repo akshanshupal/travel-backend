@@ -5,7 +5,9 @@ module.exports = {
     datastores: {
         mongodbA: {
           adapter: 'sails-mongo',
-          url: 'mongodb+srv://akshanshu:ashuMongo1234@cluster0.wygca.mongodb.net/travel?retryWrites=true&w=majority'
+          url : "mongodb://localhost:27017/random"
+
+          // url: 'mongodb+srv://akshanshu:ashuMongo1234@cluster0.wygca.mongodb.net/travel?retryWrites=true&w=majority'
         },
     },
     models: {

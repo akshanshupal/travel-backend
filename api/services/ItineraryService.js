@@ -1,6 +1,6 @@
-  
-module.exports = {
 
+
+module.exports = {
     find: function (ctx, filter, params) {
         return new Promise(async (resolve, reject) => {
             if (!filter.company) {
@@ -9,12 +9,6 @@ module.exports = {
             if (!params) {
                 params = {};
             }
-            if(!filter.hasOwnProperty('isDeleted')){
-                filter.isDeleted = { '!=': true };
-            }
-            if (filter.name && filter.name.trim()) filter.name = { contains: filter.name.trim() };
-            if (filter.location && filter.location.trim()) filter.location = { contains: filter.location.trim() };
-            if (filter.address && filter.address.trim()) filter.address = { contains: filter.address.trim() };
             let qryObj = {where : filter};
             //sort
             let sortField = 'createdAt';
@@ -40,15 +34,15 @@ module.exports = {
                 qryObj.select = params.select;
             }
             try {
-                var records = await Hotel.find(qryObj).meta({makeLikeModifierCaseInsensitive: true});
+                var records = await Itinerary.find(qryObj);;
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
             //populate&& populate select
             if (params.populate) {
                 let assosiationModels = {};
-                for (let ami = 0; ami < sails.models.hotel.associations.length; ami++) {
-                    assosiationModels[sails.models.hotel.associations[ami].alias] = sails.models.hotel.associations[ami].model;
+                for (let ami = 0; ami < sails.models.itinerary.associations.length; ami++) {
+                    assosiationModels[sails.models.itinerary.associations[ami].alias] = sails.models.itinerary.associations[ami].model;
                 }
                 for (let i = 0; i < records.length; i++) {
                     for (let populateKey of params.populate) {
@@ -74,7 +68,7 @@ module.exports = {
             //totalCount
             if (params.totalCount) {
                 try {
-                    var totalRecords = await Hotel.count(filter).meta({makeLikeModifierCaseInsensitive: true});
+                    var totalRecords = await Itinerary.count(filter)
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
@@ -109,18 +103,19 @@ module.exports = {
                 qryObj.select = params.select;
             }
             try {
-                var record = await Hotel.findOne(qryObj);;
+                var record = await Itinerary.findOne(qryObj);;
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
             if (!record) {
                 return reject({ statusCode: 404, error: { code: "Not Found", message: "Data not found!" } });
             }
+
             //populate&& populate select
             if (params.populate) {
                 let assosiationModels = {};
-                for (let ami = 0; ami < sails.models.hotel.associations.length; ami++) {
-                    assosiationModels[sails.models.hotel.associations[ami].alias] = sails.models.hotel.associations[ami].model;
+                for (let ami = 0; ami < sails.models.itinerary.associations.length; ami++) {
+                    assosiationModels[sails.models.itinerary.associations[ami].alias] = sails.models.itinerary.associations[ami].model;
                 }
                 for (let populateKey of params.populate) {
                     if (!record[populateKey]) {
@@ -138,11 +133,37 @@ module.exports = {
                     } catch (error) {
                         return reject({ statusCode: 500, error: error });
                     }
-                }   
+                }
+                if (record.sites?.length) {
+                    for (let i = 0; i < record.sites.length; i++) {
+                        let siteObj = record.sites[i];
+                
+                        if (params.populate.includes('site') && siteObj.siteId) {
+                            const site = await SiteService.findOne(ctx, siteObj.siteId, { select: ['id', 'title', 'alias'] });
+                            if (site) {
+                                siteObj = { ...site, hotels: siteObj.hotels || [] };
+                            }
+                        }
+                
+                        if (params.populate.includes('hotel') && siteObj.hotels?.length) {
+                            for (let j = 0; j < siteObj.hotels.length; j++) {
+                                const hotelId = siteObj.hotels[j];
+                                const hotel = await HotelService.findOne(ctx, hotelId, { select: ['id', 'name'] });
+                                if (hotel) {
+                                    siteObj.hotels[j] = hotel;
+                                }
+                            }
+                        }
+                
+                        record.sites[i] = siteObj;
+                    }
+                }
             }
-            return resolve(record);
+            const rtrn = { data: record }
+            return resolve({ data: record });
         })
     },
+
     create: function (ctx, data, avoidRecordFetch) {
         return new Promise(async (resolve, reject) => {
             if (!data.company) {
@@ -152,22 +173,16 @@ module.exports = {
             if (!data.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
-            if (!data.name) {
-                return reject({ statusCode: 400, error: { message: 'name is required!' } });
-            }
-            if (!data.category) {
-                return reject({ statusCode: 400, error: { message: 'category is required!' } });
-            }
 
             if (avoidRecordFetch) {
                 try {
-                    var record = await Hotel.create(data);
+                    var record = await Itinerary.create(data);
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
             } else {
                 try {
-                    var record = await Hotel.create(data).fetch();
+                    var record = await Itinerary.create(data).fetch();
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
@@ -193,32 +208,9 @@ module.exports = {
             if (!updtBody.company) {
                 updtBody.company= filter.company;
             }
-            if (updtBody.hasOwnProperty('name')&&!updtBody.name) {
-                return reject({ statusCode: 400, error: { message: 'name is required!' } });
-            }
-            if (updtBody.hasOwnProperty('category')&&!updtBody.category) {
-                return reject({ statusCode: 400, error: { message: 'category is required!' } });
-            }
-
-            let data = {};
-            if(updtBody.hasOwnProperty('name')){
-                data.name = updtBody.name;
-            }
-            if(updtBody.hasOwnProperty('location')){
-                data.location = updtBody.location;
-            }
-            if(updtBody.hasOwnProperty('address')){
-                data.address = updtBody.address;
-            }
-            if(updtBody.hasOwnProperty('category')){
-                data.category = updtBody.category;
-            }
-            if(updtBody.hasOwnProperty('status')){
-                data.status = updtBody.status;
-            }
 
             try {
-                var record = await Hotel.updateOne(filter).set(updtBody);
+                var record = await Itinerary.updateOne(filter).set(updtBody);
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -239,7 +231,7 @@ module.exports = {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
             try {
-                await Hotel.destroyOne(filter);
+                await Itinerary.destroyOne(filter);
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }

@@ -1,9 +1,39 @@
+
 module.exports = {
     _config: {
         actions: false,
         shortcuts: false,
         rest: false
     },
+
+    fetchAndProcessPackages: async function (req, res) {
+        try {
+          const data = await Itold.find();
+          
+          if (data.length) {
+            for(let i=0;i<data.length;i++){
+              const pkg = data[i];
+              const newPkg = {
+                ...pkg,
+                status: true
+              };
+              delete newPkg.areamodel;
+              delete newPkg.id;
+    
+              // Create a new Itinerary record
+              let x = await Itinerary.create(newPkg).fetch();
+              console.log(i)
+            }
+
+          }
+          
+          return res.json({ message: 'Packages processed successfully' });
+        } catch (error) {
+          console.error('Error processing packages:', error);
+          return res.serverError(error);
+        }
+      },
+    
     find: async function (req, res) {
         const filter = req.query;
         filter.company = req.session.activeCompany.id;
@@ -48,7 +78,7 @@ module.exports = {
             );
         }
         try {
-            var records = await HotelService.find(req, filter, params);
+            var records = await ItoldService.find(req, filter, params);
         } catch (error) {
             return res.serverError(error);
         }
@@ -78,21 +108,21 @@ module.exports = {
             );
         }
         try {
-            var record = await HotelService.findOne(req, req.params.id,params);
+            var record = await ItoldService.findOne(req, req.params.id,params);
         } catch (error) {
             return res.serverError(error);
         }
         
-        return res.json(record);
+        return res.json(record.data);
     },
 
     create: async function (req, res) {
-        if (!req.body.name) {
-            return res.badRequest({ code: 'Error', message: 'name is missing' });
+        if (!req.body.title) {
+            return res.badRequest({ code: 'Error', message: 'Title is missing' });
         }
 
         try {
-            var record = await HotelService.create(req, req.body);
+            var record = await ItoldService.create(req, req.body);
         } catch (error) {
             return res.serverError(error);
         }
@@ -103,7 +133,7 @@ module.exports = {
     updateOne: async function (req, res) {
 
         try {
-            var record = await HotelService.updateOne(req, req.params.id, req.body);
+            var record = await ItoldService.updateOne(req, req.params.id, req.body);
         } catch (error) {
             return res.serverError(error);
         }
@@ -113,7 +143,7 @@ module.exports = {
     deleteOne: async function (req, res) {
 
         try {
-            var record = await HotelService.deleteOne(req, req.params.id);
+            var record = await ItoldService.deleteOne(req, req.params.id);
         } catch (error) {
             return res.serverError(error);
         }

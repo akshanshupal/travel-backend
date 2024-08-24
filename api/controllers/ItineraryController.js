@@ -48,7 +48,7 @@ module.exports = {
             );
         }
         try {
-            var records = await HotelService.find(req, filter, params);
+            var records = await ItineraryService.find(req, filter, params);
         } catch (error) {
             return res.serverError(error);
         }
@@ -78,21 +78,21 @@ module.exports = {
             );
         }
         try {
-            var record = await HotelService.findOne(req, req.params.id,params);
+            var record = await ItineraryService.findOne(req, req.params.id,params);
         } catch (error) {
             return res.serverError(error);
         }
         
-        return res.json(record);
+        return res.json(record.data);
     },
 
     create: async function (req, res) {
-        if (!req.body.name) {
-            return res.badRequest({ code: 'Error', message: 'name is missing' });
+        if (!req.body.title) {
+            return res.badRequest({ code: 'Error', message: 'Title is missing' });
         }
 
         try {
-            var record = await HotelService.create(req, req.body);
+            var record = await ItineraryService.create(req, req.body);
         } catch (error) {
             return res.serverError(error);
         }
@@ -103,7 +103,7 @@ module.exports = {
     updateOne: async function (req, res) {
 
         try {
-            var record = await HotelService.updateOne(req, req.params.id, req.body);
+            var record = await ItineraryService.updateOne(req, req.params.id, req.body);
         } catch (error) {
             return res.serverError(error);
         }
@@ -113,7 +113,7 @@ module.exports = {
     deleteOne: async function (req, res) {
 
         try {
-            var record = await HotelService.deleteOne(req, req.params.id);
+            var record = await ItineraryService.deleteOne(req, req.params.id);
         } catch (error) {
             return res.serverError(error);
         }
