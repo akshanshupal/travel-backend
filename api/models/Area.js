@@ -52,7 +52,6 @@ module.exports = {
         featureImgUploaded: {
             type: 'boolean',
         },
-
         isDeleted: { type: 'boolean'},
         deletedAt: { type: 'ref', columnType: 'datetime' },
         deletedBy: { model: 'user' },

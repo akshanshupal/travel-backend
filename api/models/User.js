@@ -37,7 +37,6 @@ module.exports = {
             type: 'string',
         },
         profileImg: { type: 'string' },
-
         isDeleted: { type: 'boolean'},
         deletedAt: { type: 'ref', columnType: 'datetime'},
         deletedBy: { model: 'user'},

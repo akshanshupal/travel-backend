@@ -236,5 +236,28 @@ module.exports = {
             return resolve(deletedSite);
         })
     },
+    count: function (ctx, filter) {
+        return new Promise(async (resolve, reject) => {
+            if (!filter) {
+                filter = {};
+            }
+            if (!filter.company) {
+                filter.company = ctx?.session?.activeCompany?.id;
+            }
+            
+            if (!filter.company) {
+                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+            }
+            if(!filter.hasOwnProperty('isDeleted')){
+                filter.isDeleted = { '!=': true };
+            }
+            try {
+                const count = await Site.count(filter);
+                return resolve(count);
+            } catch (error) {
+                return reject({ statusCode: 500, error: error });
+            }
+        })
+    }
 
 }

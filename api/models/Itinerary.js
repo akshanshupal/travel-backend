@@ -58,6 +58,9 @@ module.exports = {
         type: 'number',
         required: true,
       },
+      isDeleted: { type: 'boolean'},
+      deletedAt: { type: 'ref', columnType: 'datetime' },
+      deletedBy: { model: 'user' }
     },
   };
   

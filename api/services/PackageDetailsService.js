@@ -7,6 +7,9 @@ module.exports = {
             if (!params) {
                 params = {};
             }
+            if(!filter.hasOwnProperty('isDeleted')){
+                filter.isDeleted = { '!=': true };
+            }
             let qryObj = {where : filter};
             //sort
             let sortField = 'createdAt';

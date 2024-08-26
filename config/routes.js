@@ -100,8 +100,7 @@ module.exports.routes = {
 'DELETE /api/packagedetails/:id': 'PackageDetailsController.deleteOne',
 
 
-'GET /api/itold': 'ItoldController.fetchAndProcessPackages',
-
+'GET /api/dashboard/getSummary': 'DashboardController.getSummary',
 
 
   /***************************************************************************
