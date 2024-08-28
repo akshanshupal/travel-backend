@@ -50,7 +50,8 @@ module.exports = {
         try {
             var records = await AreaService.find(req, filter, params);
         } catch (error) {
-            return res.serverError(error);
+            return res.status(error?.statusCode).send(error.error); 
+
         }
         return res.json(records);
     },
@@ -80,7 +81,7 @@ module.exports = {
         try {
             var record = await AreaService.findOne(req, req.params.id,params);
         } catch (error) {
-            return res.serverError(error);
+            return res.status(error?.statusCode).send(error.error); 
         }
         
         return res.json(record);
@@ -94,7 +95,8 @@ module.exports = {
         try {
             var record = await AreaService.create(req, req.body);
         } catch (error) {
-            return res.serverError(error);
+            return res.status(error.statusCode).send(error.error); 
+
         }
 
         return res.json(record);
@@ -105,7 +107,8 @@ module.exports = {
         try {
             var record = await AreaService.updateOne(req, req.params.id, req.body);
         } catch (error) {
-            return res.serverError(error);
+            return res.status(error?.statusCode).send(error.error); 
+
         }
 
         return res.json(record);
@@ -114,7 +117,8 @@ module.exports = {
         try {
             var record = await AreaService.deleteOne(req, req.params.id);
         } catch (error) {
-            return res.serverError(error);
+            return res.status(error?.statusCode).send(error.error); 
+
         }
         return res.json(record);
     }

@@ -50,7 +50,7 @@ module.exports = {
         try {
             var records = await UserService.find(req, filter, params);
         } catch (error) {
-            return res.serverError(error);
+            return res.status(error?.statusCode).send(error.error); 
         }
         return res.json(records);
     },
@@ -80,7 +80,7 @@ module.exports = {
         try {
             var record = await UserService.findOne(req, req.params.id,params);
         } catch (error) {
-            return res.serverError(error);
+            return res.status(error?.statusCode).send(error.error); 
         }
         
         return res.json(record);
@@ -101,7 +101,7 @@ module.exports = {
         try {
             var record = await UserService.create(req, req.body);
         } catch (error) {
-            return res.serverError(error);
+            return res.status(error?.statusCode).send(error.error); 
         }
 
         return res.json(record);
@@ -112,7 +112,7 @@ module.exports = {
         try {
             var record = await UserService.updateOne(req, req.params.id, req.body);
         } catch (error) {
-            return res.serverError(error);
+            return res.status(error?.statusCode).send(error.error); 
         }
 
         return res.json(record);
@@ -133,7 +133,7 @@ module.exports = {
         try {
             var record = await UserService.getCacheUser(req, req.params.id);
         } catch (error) {
-            return res.serverError(error);
+            return res.status(error?.statusCode).send(error.error); 
         }
         
         return res.json(record);

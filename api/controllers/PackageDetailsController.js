@@ -50,7 +50,7 @@ module.exports = {
         try {
             var records = await PackageDetailsService.find(req, filter, params);
         } catch (error) {
-            return res.serverError(error);
+            return res.status(error?.statusCode).send(error.error); 
         }
         return res.json(records);
     },
@@ -80,7 +80,7 @@ module.exports = {
         try {
             var record = await PackageDetailsService.findOne(req, req.params.id,params);
         } catch (error) {
-            return res.serverError(error);
+            return res.status(error?.statusCode).send(error.error); 
         }
         
         return res.json(record.data);
@@ -94,7 +94,7 @@ module.exports = {
         try {
             var record = await PackageDetailsService.create(req, req.body);
         } catch (error) {
-            return res.serverError(error);
+            return res.status(error?.statusCode).send(error.error); 
         }
 
         return res.json(record.data);
@@ -105,7 +105,7 @@ module.exports = {
         try {
             var record = await PackageDetailsService.updateOne(req, req.params.id, req.body);
         } catch (error) {
-            return res.serverError(error);
+            return res.status(error?.statusCode).send(error.error); 
         }
 
         return res.json(record.data);
@@ -115,7 +115,7 @@ module.exports = {
         try {
             var record = await PackageDetailsService.deleteOne(req, req.params.id);
         } catch (error) {
-            return res.serverError(error);
+            return res.status(error?.statusCode).send(error.error); 
         }
 
         return res.json(record.data);

@@ -14,7 +14,7 @@ module.exports = {
         try {
             var summary = await DashboardService.getSummary(req, filter);
         } catch (error) {
-            return res.serverError(error);
+            return res.status(error?.statusCode).send(error.error); 
         }
         return res.json(summary);
     }
