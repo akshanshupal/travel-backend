@@ -18,13 +18,11 @@ module.exports = {
       area: {
         model: 'area',
       },
-
       company: {
         model: 'company',
       },
       sites: {
         type: 'json',
-        required: true,
       },
       inclusion: {
         type: 'string',
