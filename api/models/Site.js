@@ -41,6 +41,7 @@ module.exports = {
         deletedAt: { type: 'ref', columnType: 'datetime' },
         deletedBy: { model: 'user' },
     },
+
     customToJSON: function () {
         var obj = this;
         if (obj.description) {

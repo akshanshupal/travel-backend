@@ -50,14 +50,6 @@ module.exports = {
         type: 'boolean',
         defaultsTo: true,
       },
-      created_by: {
-        type: 'number',
-        required: true,
-      },
-      sent_by: {
-        type: 'number',
-        required: true,
-      },
       isDeleted: { type: 'boolean'},
       deletedAt: { type: 'ref', columnType: 'datetime' },
       deletedBy: { model: 'user' }
