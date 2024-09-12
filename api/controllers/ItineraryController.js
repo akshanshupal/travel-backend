@@ -87,9 +87,6 @@ module.exports = {
     },
 
     create: async function (req, res) {
-        if (!req.body.title) {
-            return res.badRequest({ code: 'Error', message: 'Title is missing' });
-        }
 
         try {
             var record = await ItineraryService.create(req, req.body);
