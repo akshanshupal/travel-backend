@@ -103,6 +103,13 @@ module.exports.routes = {
 'GET /api/dashboard/getSummary': 'DashboardController.getSummary',
 
 
+'POST /api/package': 'PackageController.create',
+'GET /api/package': 'PackageController.find',
+'GET /api/package/:id': 'PackageController.findOne',
+'PUT /api/package/:id': 'PackageController.updateOne',
+'DELETE /api/package/:id': 'PackageController.deleteOne',
+
+
   /***************************************************************************
   *                                                                          *
   * More custom routes here...                                               *

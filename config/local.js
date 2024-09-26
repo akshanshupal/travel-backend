@@ -5,7 +5,7 @@ module.exports = {
     datastores: {
         mongodbA: {
           adapter: 'sails-mongo',
-          url : "mongodb://localhost:27017/random"
+          url : "mongodb://localhost:27017/travel"
 
           // url: 'mongodb+srv://akshanshu:ashuMongo1234@cluster0.wygca.mongodb.net/travel?retryWrites=true&w=majority'
         },
@@ -19,7 +19,7 @@ module.exports = {
         refreshSecret: "4ukI0uIVnB3iI1yxj646fVXSE3ZVk4doZgz6fTbNg7jO41EAtl20J5F7Txprw7OM",
         algorithm: "HS256",
         refreshRxpiresIn: '180d', //30 days='30d'
-        expiresIn: '1m',//15 mins='15m' 1d
+        expiresIn: '30d',//15 mins='15m' 1d
         issuer: "TRAVEL",
         audience: "tripbliss.com",
     },

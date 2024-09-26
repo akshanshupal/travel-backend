@@ -17,7 +17,8 @@ module.exports.policies = {
   *                                                                          *
   ***************************************************************************/
 
-  '*': ['isAuthenticated'],
+  // '*': ['isAuthenticated'],
+  '*': true,
 
   AuthController: {
       signIn: true,

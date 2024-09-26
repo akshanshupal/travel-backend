@@ -17,7 +17,7 @@
     "multer": "^1.4.5-lts.1",
     "node-fetch": "^2.7.0",
     "redis": "^4.6.6",
-    "sails": "^1.5.8",
+    "sails": "^1.5.11",
     "sails-hook-grunt": "^5.0.0",
     "sails-hook-orm": "^4.0.0",
     "sails-hook-sockets": "^2.0.0",
