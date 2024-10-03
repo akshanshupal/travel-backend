@@ -110,6 +110,25 @@ module.exports.routes = {
 'DELETE /api/package/:id': 'PackageController.deleteOne',
 
 
+
+'POST /api/bookingstype': 'BookingsTypeController.create',
+'GET /api/bookingstype': 'BookingsTypeController.find',
+'GET /api/bookingstype/:id': 'BookingsTypeController.findOne',
+'PUT /api/bookingstype/:id': 'BookingsTypeController.updateOne',
+'DELETE /api/bookingstype/:id': 'BookingsTypeController.deleteOne',
+
+'POST /api/packagebooking': 'PackageBookingController.create',
+'GET /api/packagebooking': 'PackageBookingController.find',
+'GET /api/packagebooking/:id': 'PackageBookingController.findOne',
+'PUT /api/packagebooking/:id': 'PackageBookingController.updateOne',
+'DELETE /api/packagebooking/:id': 'PackageBookingController.deleteOne',
+
+'POST /api/clientitinerary': 'ClientItineraryController.create',
+'GET /api/clientitinerary': 'ClientItineraryController.find',
+'GET /api/clientitinerary/:id': 'ClientItineraryController.findOne',
+'PUT /api/clientitinerary/:id': 'ClientItineraryController.updateOne',
+'DELETE /api/clientitinerary/:id': 'ClientItineraryController.deleteOne',
+
   /***************************************************************************
   *                                                                          *
   * More custom routes here...                                               *

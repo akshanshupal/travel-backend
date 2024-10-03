@@ -230,7 +230,7 @@ module.exports = {
             }
             let deletedArea
             try {
-                deletedArea =  await this.updateOne(ctx, id, {isDeleted:true})
+                deletedArea =  await this.updateOne(ctx, id, {isDeleted:true, deletedAt: new Date(), deletedBy: ctx?.user?.id})
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }

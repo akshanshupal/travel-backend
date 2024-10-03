@@ -35,15 +35,15 @@ module.exports = {
                 qryObj.select = params.select;
             }
             try {
-                var records = await Package.find(qryObj);;
+                var records = await PackageBooking.find(qryObj);;
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
             //populate&& populate select
             if (params.populate) {
                 let assosiationModels = {};
-                for (let ami = 0; ami < sails.models.package.associations.length; ami++) {
-                    assosiationModels[sails.models.package.associations[ami].alias] = sails.models.package.associations[ami].model;
+                for (let ami = 0; ami < sails.models.packagebooking.associations.length; ami++) {
+                    assosiationModels[sails.models.packagebooking.associations[ami].alias] = sails.models.packagebooking.associations[ami].model;
                 }
                 for (let i = 0; i < records.length; i++) {
                     for (let populateKey of params.populate) {
@@ -69,7 +69,7 @@ module.exports = {
             //totalCount
             if (params.totalCount) {
                 try {
-                    var totalRecords = await Package.count(filter)
+                    var totalRecords = await PackageBooking.count(filter)
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
@@ -104,7 +104,7 @@ module.exports = {
                 qryObj.select = params.select;
             }
             try {
-                var record = await Package.findOne(qryObj);;
+                var record = await PackageBooking.findOne(qryObj);;
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -114,8 +114,8 @@ module.exports = {
             //populate&& populate select
             if (params.populate) {
                 let assosiationModels = {};
-                for (let ami = 0; ami < sails.models.package.associations.length; ami++) {
-                    assosiationModels[sails.models.package.associations[ami].alias] = sails.models.package.associations[ami].model;
+                for (let ami = 0; ami < sails.models.packagebooking.associations.length; ami++) {
+                    assosiationModels[sails.models.packagebooking.associations[ami].alias] = sails.models.packagebooking.associations[ami].model;
                 }
                 for (let populateKey of params.populate) {
                     if (!record[populateKey]) {
@@ -151,13 +151,13 @@ module.exports = {
 
             if (avoidRecordFetch) {
                 try {
-                    var record = await Package.create(data);
+                    var record = await PackageBooking.create(data);
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
             } else {
                 try {
-                    var record = await Package.create(data).fetch();
+                    var record = await PackageBooking.create(data).fetch();
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
@@ -185,7 +185,7 @@ module.exports = {
             }
 
             try {
-                var record = await Package.updateOne(filter).set(updtBody);
+                var record = await PackageBooking.updateOne(filter).set(updtBody);
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
