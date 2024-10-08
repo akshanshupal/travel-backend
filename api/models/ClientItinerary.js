@@ -21,6 +21,9 @@ module.exports = {
         user:{
             model: 'user'
         },
+        hotelcategory:{
+            model: 'hotelcategory'
+        },
         email:{
             type:'string'
         },
@@ -38,13 +41,13 @@ module.exports = {
             type:'string'
         },
         kidsAges:{
-            type:'string'
+            type:'json'
         },
         selectedFood:{
-            type:'string'
+            type:'json',
         },
         selectedTransport:{
-            type:'string'
+            type:'json'
         },
         noOfPackageDays:{
             type:'string'

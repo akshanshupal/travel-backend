@@ -65,13 +65,13 @@ module.exports = {
         hotelCategory: {
             type: 'string'
         },
-        meals: {
-            type: 'string'
+        selectedFood:{
+            type:'json',
         },
         specialInclusion: {
             type: 'string'
         },
-        testForBookingTeam: {
+        textForBookingTeam: {
             type: 'string'
         },
         stayDate: {

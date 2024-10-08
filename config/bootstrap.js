@@ -11,7 +11,9 @@
 
 
 const IORedis = require('ioredis');
+const dayjs = require('dayjs')
 module.exports.bootstrap = async function () {
+  sails.dayjs =dayjs;
   // Create a Redis client
   const redis = new IORedis({url: sails.config.redis.url});
   sails.redis = redis;

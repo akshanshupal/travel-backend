@@ -148,6 +148,14 @@ module.exports = {
             if (!data.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
+            if (data?.tourDate && typeof data?.tourDate === 'string') {
+                data.tourDate = sails.dayjs(data.tourDate);
+                if (!data.tourDate.isValid()) {
+                    return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid tourDate is required!' } });
+                } else {
+                    data.tourDate = data.tourDate.toDate();
+                }
+            }
 
             if (avoidRecordFetch) {
                 try {
