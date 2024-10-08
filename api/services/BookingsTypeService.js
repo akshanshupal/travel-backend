@@ -163,6 +163,7 @@ module.exports = {
                     return reject({ statusCode: 500, error: error });
                 }
             }
+            console.log(record,'record')
 
             return resolve({ data: record || { created: true } });
         })
@@ -213,7 +214,7 @@ module.exports = {
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
-            return resolve(deletedData);
+            // return resolve(deletedData);
 
 
             return resolve({ data: { deleted: true } });
