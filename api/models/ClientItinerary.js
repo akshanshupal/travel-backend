@@ -21,7 +21,7 @@ module.exports = {
         user:{
             model: 'user'
         },
-        hotelcategory:{
+        hotelCategory:{
             model: 'hotelcategory'
         },
         email:{

@@ -156,6 +156,9 @@ module.exports = {
                     data.tourDate = data.tourDate.toDate();
                 }
             }
+            if(!data.hasOwnProperty('status')){
+                data.status = true
+            }
 
             if (avoidRecordFetch) {
                 try {
