@@ -142,6 +142,8 @@ module.exports = {
     },
     create: function (ctx, data, avoidRecordFetch) {
         return new Promise(async (resolve, reject) => {
+            console.log(2)
+
             if (!data.company) {
                 data.company= ctx?.session?.activeCompany?.id;
             }

@@ -87,9 +87,11 @@ module.exports = {
     },
 
     create: async function (req, res) {
+
         if (!req.body.title) {
             return res.badRequest({ code: 'Error', message: 'Title is missing' });
         }
+        console.log(1)
 
         try {
             var record = await BookingsTypeService.create(req, req.body);
