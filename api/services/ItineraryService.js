@@ -178,7 +178,9 @@ module.exports = {
             if (!data.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
-
+            if(!data.hasOwnProperty('status')){
+                data.status = true
+            }
             if (avoidRecordFetch) {
                 try {
                     var record = await Itinerary.create(data);

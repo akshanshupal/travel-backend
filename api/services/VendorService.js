@@ -10,6 +10,7 @@ module.exports = {
             if(!filter.hasOwnProperty('isDeleted')){
                 filter.isDeleted = { '!=': true };
             }
+            if (filter.title && filter.title.trim()) filter.title = { contains: filter.title.trim() };
             let qryObj = {where : filter};
             //sort
             let sortField = 'createdAt';
@@ -35,15 +36,15 @@ module.exports = {
                 qryObj.select = params.select;
             }
             try {
-                var records = await ClientItinerary.find(qryObj);;
+                var records = await Vendor.find(qryObj);;
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
             //populate&& populate select
             if (params.populate) {
                 let assosiationModels = {};
-                for (let ami = 0; ami < sails.models.clientitinerary.associations.length; ami++) {
-                    assosiationModels[sails.models.clientitinerary.associations[ami].alias] = sails.models.clientitinerary.associations[ami].model;
+                for (let ami = 0; ami < sails.models.vendor.associations.length; ami++) {
+                    assosiationModels[sails.models.vendor.associations[ami].alias] = sails.models.vendor.associations[ami].model;
                 }
                 for (let i = 0; i < records.length; i++) {
                     for (let populateKey of params.populate) {
@@ -69,7 +70,7 @@ module.exports = {
             //totalCount
             if (params.totalCount) {
                 try {
-                    var totalRecords = await ClientItinerary.count(filter)
+                    var totalRecords = await Vendor.count(filter)
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
@@ -104,7 +105,7 @@ module.exports = {
                 qryObj.select = params.select;
             }
             try {
-                var record = await ClientItinerary.findOne(qryObj);;
+                var record = await Vendor.findOne(qryObj);;
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -114,8 +115,8 @@ module.exports = {
             //populate&& populate select
             if (params.populate) {
                 let assosiationModels = {};
-                for (let ami = 0; ami < sails.models.clientitinerary.associations.length; ami++) {
-                    assosiationModels[sails.models.clientitinerary.associations[ami].alias] = sails.models.clientitinerary.associations[ami].model;
+                for (let ami = 0; ami < sails.models.vendor.associations.length; ami++) {
+                    assosiationModels[sails.models.vendor.associations[ami].alias] = sails.models.vendor.associations[ami].model;
                 }
                 for (let populateKey of params.populate) {
                     if (!record[populateKey]) {
@@ -148,27 +149,18 @@ module.exports = {
             if (!data.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
-            if (data?.tourDate && typeof data?.tourDate === 'string') {
-                data.tourDate = sails.dayjs(data.tourDate);
-                if (!data.tourDate.isValid()) {
-                    return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid tourDate is required!' } });
-                } else {
-                    data.tourDate = data.tourDate.toDate();
-                }
-            }
             if(!data.hasOwnProperty('status')){
                 data.status = true
             }
-
             if (avoidRecordFetch) {
                 try {
-                    var record = await ClientItinerary.create(data);
+                    var record = await Vendor.create(data);
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
             } else {
                 try {
-                    var record = await ClientItinerary.create(data).fetch();
+                    var record = await Vendor.create(data).fetch();
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
@@ -196,7 +188,7 @@ module.exports = {
             }
 
             try {
-                var record = await ClientItinerary.updateOne(filter).set(updtBody);
+                var record = await Vendor.updateOne(filter).set(updtBody);
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }

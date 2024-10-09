@@ -129,6 +129,12 @@ module.exports.routes = {
 'PUT /api/clientitinerary/:id': 'ClientItineraryController.updateOne',
 'DELETE /api/clientitinerary/:id': 'ClientItineraryController.deleteOne',
 
+'POST /api/vendor': 'VendorController.create',
+'GET /api/vendor': 'VendorController.find',
+'GET /api/vendor/:id': 'VendorController.findOne',
+'PUT /api/vendor/:id': 'VendorController.updateOne',
+'DELETE /api/vendor/:id': 'VendorController.deleteOne',
+
   /***************************************************************************
   *                                                                          *
   * More custom routes here...                                               *
