@@ -158,7 +158,9 @@ module.exports = {
             if (!data.category) {
                 return reject({ statusCode: 400, error: { message: 'category is required!' } });
             }
-
+            if(!data.hasOwnProperty('status')){
+                data.status = true
+            }
             if (avoidRecordFetch) {
                 try {
                     var record = await Hotel.create(data);

@@ -157,8 +157,11 @@ module.exports = {
             if (!data.alias) {
                 return reject({ statusCode: 400, error: { message: 'alias is required!' } });
             }
-            if (!data.hasOwnProperty('status')) {
-                return reject({ statusCode: 400, error: { message: 'status is required!' } });
+            // if (!data.hasOwnProperty('status')) {
+            //     return reject({ statusCode: 400, error: { message: 'status is required!' } });
+            // }
+            if(!data.hasOwnProperty('status')){
+                data.status = true
             }
             if (avoidRecordFetch) {
                 try {

@@ -187,7 +187,9 @@ module.exports = {
             //   } catch (error) {
             //     console.error('Error importing hotel images:', error);
             //   }
-
+            if(!data.hasOwnProperty('status')){
+                data.status = true
+            }
             if (avoidRecordFetch) {
                 try {
                     var record = await HotelImage.create(data);
