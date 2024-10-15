@@ -135,6 +135,12 @@ module.exports.routes = {
 'PUT /api/vendor/:id': 'VendorController.updateOne',
 'DELETE /api/vendor/:id': 'VendorController.deleteOne',
 
+'POST /api/sendmail': 'SendMailController.create',
+'GET /api/sendmail': 'SendMailController.find',
+'GET /api/sendmail/:id': 'SendMailController.findOne',
+'PUT /api/sendmail/:id': 'SendMailController.updateOne',
+'DELETE /api/sendmail/:id': 'SendMailController.deleteOne',
+
   /***************************************************************************
   *                                                                          *
   * More custom routes here...                                               *
