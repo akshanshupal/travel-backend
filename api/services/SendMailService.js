@@ -10,14 +10,21 @@ module.exports = {
             if(!filter.hasOwnProperty('isDeleted')){
                 filter.isDeleted = { '!=': true };
             }
+
             if (filter.clientName && filter.clientName.trim()) filter.clientName = { contains: filter.clientName.trim() };
             if (filter.mail && filter.mail.trim()) filter.mail = { contains: filter.mail.trim() };
             if (filter.phone && filter.phone.trim()) filter.phone = { contains: filter.phone.trim() };
             if (filter.createdAt) {
-                let df = new Date(sails.dayjs(filter.createdAt).startOf('date'));
-                let dt = new Date(sails.dayjs(filter.createdAt).endOf('date'));
+                let df = sails.dayjs(filter.createdAt).startOf('date').toDate();
+                let dt = sails.dayjs(filter.createdAt).endOf('date').toDate();
                 filter.createdAt = { '>=': df, '<=': dt };
             }
+            if(filter.clientDetails){
+                const searchCriteriaOr = [{ clientName: { contains: filter.clientDetails } },{ mail: { contains: filter.clientDetails } },{ mobile: { contains: filter.clientDetails } }];
+                filter.or = searchCriteriaOr;
+                delete filter.clientDetails
+            }
+            
 
             let qryObj = {where : filter};
             //sort
