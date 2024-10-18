@@ -138,7 +138,8 @@ module.exports = {
                     }
                 }   
             }
-            return resolve(record);
+            return resolve(JSON.parse(JSON.stringify(record)));
+
         })
     },
     create: function (ctx, data) {

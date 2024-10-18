@@ -41,28 +41,47 @@ module.exports = {
         deletedAt: { type: 'ref', columnType: 'datetime' },
         deletedBy: { model: 'user' },
     },
-
     customToJSON: function () {
+        function isBase64(str) {
+            try {
+                return btoa(atob(str)) === str;
+            } catch (err) {
+                return false;
+            }
+        }
         var obj = this;
-        if (obj.description) {
-            let qCon = Buffer.from(obj.description, 'base64');
-            obj.description = qCon.toString('utf8');
+        if (obj.description && isBase64(obj.description)) {
+            let con = Buffer.from(obj.description, 'base64');
+            obj.description = con.toString('utf8');
         }
         return obj;
+
     },
+
     beforeUpdate: function (values, next) {
-        if (values.description && values.description.trim() != '') {
+        function isBase64(str) {
+            try {
+                return btoa(atob(str)) === str;
+            } catch (err) {
+                return false;
+            }
+        }
+        if (values.description && values.description.trim() != '' && !isBase64(values.description)) {
             let pCon = Buffer.from(values.description);
             values.description = pCon.toString('base64');
         }
+
         next();
     },
     beforeCreate: function (values, next) {
+
         if (values.description && values.description.trim() != '') {
             let pCon = Buffer.from(values.description);
             values.description = pCon.toString('base64');
         }
         next();
-    }
+    },
+
+
 };
 
