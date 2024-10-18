@@ -37,7 +37,7 @@ module.exports = {
     //     const token = CipherService.createToken({
     //         user: {
     //             id: user.id,
-    //             firstName: user.firstName,
+    //             name: user.name,
     //             lastName: user.lastName,
     //             username: user.username,
     //             role: user.role,
@@ -86,8 +86,7 @@ module.exports = {
             }
             const outputUser = {
                 id: user.id,
-                firstName: user.firstName,
-                lastName: user.lastName,
+                name: user.name,
                 username: user.username,
                 company: user.company,
                 email: user.email,

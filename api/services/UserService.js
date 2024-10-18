@@ -14,7 +14,7 @@ module.exports = {
                 filter.isDeleted = { '!=': true };
             }
             if(filter.userDetails){
-                const searchCriteriaOr = [{ firstName: { contains: filter.userDetails } },{ email: { contains: filter.userDetails } },{ mobile: { contains: filter.userDetails } }];
+                const searchCriteriaOr = [{ name: { contains: filter.userDetails } },{ email: { contains: filter.userDetails } },{ mobile: { contains: filter.userDetails } }];
                 filter.or = searchCriteriaOr;
                 delete filter.userDetails
             }
@@ -160,11 +160,14 @@ module.exports = {
             if (!data.username) {
                 return reject({ statusCode: 400, error: { message: 'username is required!' } });
             }
-            if (!data.firstName) {
-                return reject({ statusCode: 400, error: { message: 'firstName is required!' } });
+            if (!data.name) {
+                return reject({ statusCode: 400, error: { message: 'name is required!' } });
             }
             if (!data.mobile) {
                 return reject({ statusCode: 400, error: { message: 'mobile is required!' } });
+            }
+            if(!data.hasOwnProperty('status')){
+                data.status = true
             }
             let existingUser;
             try {

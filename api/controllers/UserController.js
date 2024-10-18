@@ -91,8 +91,8 @@ module.exports = {
         if (!req.body.username) {
             return res.badRequest({ code: 'Error', message: 'username is missing' });
         }
-        if (!req.body.firstName) {
-            return res.badRequest({ code: 'Error', message: 'firstName is missing' });
+        if (!req.body.name) {
+            return res.badRequest({ code: 'Error', message: 'Name is missing' });
         }
         if (!req.body.mobile) {
             return res.badRequest({ code: 'Error', message: 'mobile is missing' });

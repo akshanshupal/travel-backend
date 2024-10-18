@@ -11,13 +11,10 @@ module.exports = {
             required: true
 
         },
-        firstName: {
+        name: {
             type: 'string',
             required: true
 
-        },
-        lastName: {
-            type: 'string'
         },
         company: {
             model: 'company',
