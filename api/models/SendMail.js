@@ -18,7 +18,10 @@ module.exports = {
         clientItinerary :{
            model: 'clientItinerary'
         },
-        mail: {
+        mailData: {
+            type: 'string',
+        },
+        email: {
             type:'string'
         },
         mobile: {

@@ -2,6 +2,9 @@ module.exports = {
     find: function (ctx, filter, params) {
         return new Promise(async (resolve, reject) => {
             if (!filter.company) {
+                filter.company= ctx.session?.activeCompany?.id
+            }
+            if (!filter.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
             if (!params) {
@@ -10,6 +13,13 @@ module.exports = {
             if(!filter.hasOwnProperty('isDeleted')){
                 filter.isDeleted = { '!=': true };
             }
+            if(filter.userDetails){
+                const searchCriteriaOr = [{ firstName: { contains: filter.userDetails } },{ email: { contains: filter.userDetails } },{ mobile: { contains: filter.userDetails } }];
+                filter.or = searchCriteriaOr;
+                delete filter.userDetails
+            }
+            if (filter.username && filter.username.trim()) filter.username = { contains: filter.username.trim() };
+
             let qryObj = {where : filter};
             //sort
 
@@ -36,7 +46,7 @@ module.exports = {
                 qryObj.select = params.select;
             }
             try {
-                var records = await User.find(qryObj);;
+                var records = await User.find(qryObj).meta({makeLikeModifierCaseInsensitive: true});
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -70,7 +80,7 @@ module.exports = {
             //totalCount
             if (params.totalCount) {
                 try {
-                    var totalRecords = await User.count(filter)
+                    var totalRecords = await User.count(filter).meta({makeLikeModifierCaseInsensitive: true});
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
@@ -158,7 +168,11 @@ module.exports = {
             }
             let existingUser;
             try {
-                existingUser = await this.getCacheUserByUsername(ctx, data.username)
+
+                const [record] = await this.find(ctx, {username: data.username});
+                if(record){
+                    existingUser = record
+                }
             } catch (error) {
                 return reject({ statusCode: 400, error: { message: 'error in fetching existing user' } });
             }
@@ -197,7 +211,6 @@ module.exports = {
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
-            this.deleteCacheUser(record)
             return resolve(record);
         })
     },

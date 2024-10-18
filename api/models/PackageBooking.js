@@ -22,7 +22,7 @@ module.exports = {
              type: 'ref',
             columnType: 'date'
         },
-       
+
         amount:{
             type: 'string'
         },
