@@ -146,7 +146,7 @@ module.exports = {
                         if (params.populate.includes('site') && siteObj.siteId) {
                             const site = await SiteService.findOne(ctx, siteObj.siteId, { select: ['id', 'title', 'alias', 'description', 'featureImg'] });
                             if (site) {
-                                siteObj = { ...site, hotels: siteObj.hotels || [] };
+                                siteObj = { ...site, hotels: siteObj.hotels || [], days: record.sites[i].days || 1 };
                             }
                         }
                 
