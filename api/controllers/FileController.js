@@ -71,7 +71,8 @@ module.exports = {
                 STORAGE_ZONE_NAME = `travelimg/${folder}`;
             }            
             // Properly URL encode the filename
-            const FILENAME_TO_UPLOAD = encodeURIComponent(file.stream.filename.replace(/[^a-zA-Z0-9-,\(/\)/.#_]/g, ''));
+            let FILENAME_TO_UPLOAD = encodeURIComponent(file.stream.filename.replace(/[^a-zA-Z0-9-,\(/\)/.#_]/g, ''));
+            FILENAME_TO_UPLOAD = FILENAME_TO_UPLOAD+new Date().getTime()
     
     
             const options = {
