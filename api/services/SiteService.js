@@ -13,6 +13,10 @@ module.exports = {
             }
             if (filter.title && filter.title.trim()) filter.title = { contains: filter.title.trim() };
             if (filter.alias && filter.alias.trim()) filter.alias = { contains: filter.alias.trim() };
+            if (filter.ids && filter.ids.trim()) {
+                filter.id = filter.ids.split(',');
+                delete filter.ids;
+            }
             let qryObj = {where : filter};
             //sort
             let sortField = 'createdAt';
