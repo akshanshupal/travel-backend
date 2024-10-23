@@ -26,4 +26,16 @@ Note:  Generators are usually run using the globally-installed `sails` CLI (comm
 
 sails generate api-service feedbackResponse
 
+                const {data: dt} = await ItineraryService.findOne(ctx,id, 
+                {
+                    select: ['area','sites'], 
+                    populate : ['area','site', 'hotel'], 
+                    populate_select: {
+                        select_area: ['id','title','headerContent','footerContent','description', 'featureImg', 'hotelImg'], 
+                        select_site: ['id','title','description','featureImg'], 
+                        select_hotel: ['id','title','description','featureImg']
+                    }
+                });
+
+
 

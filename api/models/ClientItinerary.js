@@ -70,10 +70,20 @@ module.exports = {
         company: {
             model: 'company'
         },
+        params: {
+            type: 'json',
+        },
+        clientArea: {
+            type: 'json',
+        },
+        clientSites: {
+            type: 'json',
+        },
         
         isDeleted: { type: 'boolean'},
         deletedAt: { type: 'ref', columnType: 'datetime' },
         deletedBy: { model: 'user' }
 
-    }
+    },
+
 };

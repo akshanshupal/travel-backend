@@ -135,6 +135,30 @@ module.exports = {
                     }
                 }   
             }
+            if(record?.clientArea){
+                let obj = record.clientArea;
+                function isBase64(str) {
+                    try {
+                        return btoa(atob(str)) === str;
+                    } catch (err) {
+                        return false;
+                    }
+                }
+                if (obj.description && isBase64(obj.description)) {
+                    let con = Buffer.from(obj.description, 'base64');
+                    obj.description = con.toString('utf8');
+                }
+                if (obj.headerContent && isBase64(obj.headerContent)) {
+                    let con = Buffer.from(obj.headerContent, 'base64');
+                    obj.headerContent = con.toString('utf8');
+                }
+                if (obj.footerContent && isBase64(obj.footerContent)) {
+                    let con = Buffer.from(obj.footerContent, 'base64');
+                    obj.footerContent = con.toString('utf8');
+                }
+                record.clientArea = obj;
+            }
+
             const rtrn = { data: record }
             return resolve({ data: record });
         })
@@ -148,6 +172,9 @@ module.exports = {
             if (!data.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
+            if(!data.itinerary){
+                return reject({ statusCode: 400, error: { message: 'itinerary id is required!' } });
+            }
             if (data?.tourDate && typeof data?.tourDate === 'string') {
                 data.tourDate = sails.dayjs(data.tourDate);
                 if (!data.tourDate.isValid()) {
@@ -159,6 +186,19 @@ module.exports = {
             if(!data.hasOwnProperty('status')){
                 data.status = true
             }
+            let itineraryData;
+            try {
+                const {data: dt} = await ItineraryService.findOne(ctx,data.itinerary, {select: ['area','sites'], populate : ['area','site', 'hotel'], populate_select: {select_area: ['id','title','headerContent','footerContent','description', 'featureImg', 'hotelImg'], select_site: ['id','title','description','featureImg'], select_hotel: ['id','title','description','featureImg']}});
+                if(!dt){
+                    return reject({ statusCode: 400, error: { message: 'itinerary not found!' } });
+                }
+                itineraryData = dt;
+                
+            } catch (error) {
+                return reject(error); 
+            }
+            data.clientArea = itineraryData.area;
+            data.clientSites = itineraryData.sites;
 
             if (avoidRecordFetch) {
                 try {
