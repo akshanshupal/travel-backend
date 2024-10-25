@@ -205,9 +205,32 @@ module.exports = {
             if (!filter.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
+            if(updtBody.hasOwnProperty('password')&&!updtBody?.password.trim()){
+                return reject({ statusCode: 400, error: { message: 'Password cannot be blank!' } });
+            }
             if (!updtBody.company) {
                 updtBody.company= filter.company;
             }
+
+            let existingUser;
+            try {
+
+                const data = await this.findOne(ctx,id);
+                if(data){
+                    existingUser = data
+                }
+            } catch (error) {
+                return reject({ statusCode: 400, error: { message: 'error in fetching existing user' } });
+            }
+            if(updtBody.hasOwnProperty('password')&&updtBody?.password.trim()){
+                existingUser['password'] = updtBody?.password;
+                CipherService.hashPassword(existingUser);
+                updtBody.password = existingUser.password;
+                
+
+            }
+
+
 
             try {
                 var record = await User.updateOne(filter).set(updtBody);
