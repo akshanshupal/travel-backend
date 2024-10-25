@@ -40,5 +40,11 @@ module.exports.policies = {
   fileNewController: {
     'download' : true
   },
+  sendEmailController: {
+    'findOne' : true
+  },
+  hotelInfoController: {
+    'find' : true
+  }
 
 };
