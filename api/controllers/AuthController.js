@@ -101,7 +101,7 @@ module.exports = {
         const refreshToken = CipherService.createToken({user:outputUser}, 'refresh');
         let companyConfig
         try{
-            const [data] = await CompanyconfigService.findOne({company:outputUser.company});
+            const [data] = await CompanyconfigService.find({company:outputUser.company});
             if(data){
                 companyConfig = data[0]
             }
@@ -113,7 +113,6 @@ module.exports = {
             token,
             refreshToken,
             user:  outputUser,
-            companyConfig: {logo: companyConfig?.logo, favicon: companyConfig?.favicon}
           });
         } catch (error) {
           return res.status(500).json({ error: 'Internal server error' });
