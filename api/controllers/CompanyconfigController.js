@@ -6,7 +6,6 @@ module.exports = {
     },
     find: async function (req, res) {
         const filter = req.query;
-        filter.company = req.session.activeCompany;
         let {populate,select,totalCount,sortField, sortOrder, page,limit } = req.query;
         const params = {};
         if(populate){
