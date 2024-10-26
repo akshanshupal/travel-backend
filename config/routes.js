@@ -47,11 +47,12 @@ module.exports.routes = {
   'PUT /api/company/:id': 'CompanyController.updateOne',
   'DELETE /api/company/:id': 'CompanyController.deleteOne',
 
-'POST /api/companyconfig': 'CompanyconfigController.create',
-'GET /api/companyconfig': 'CompanyconfigController.find',
-'GET /api/companyconfig/:id': 'CompanyconfigController.findOne',
-'PUT /api/companyconfig/:id': 'CompanyconfigController.updateOne',
-'DELETE /api/companyconfig/:id': 'CompanyconfigController.deleteOne',
+  'POST /api/companyconfig': 'CompanyconfigController.create',
+  'GET /api/companyconfig': 'CompanyconfigController.find',
+  'GET /api/companyconfig/:id': 'CompanyconfigController.findOne',
+  'PUT /api/companyconfig/:id': 'CompanyconfigController.updateOne',
+  'DELETE /api/companyconfig/:id': 'CompanyconfigController.deleteOne',
+  'PUT /api/companyconfig/update-company-config': 'CompanyconfigController.updateCompanyConfig',
 
 
 

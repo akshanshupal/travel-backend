@@ -1,6 +1,9 @@
 module.exports = {
     find: function (ctx, filter, params) {
         return new Promise(async (resolve, reject) => {
+            if(!filter?.company){
+                filter.company = ctx?.session?.activeCompany?.id;
+            }
             if (!params) {
                 params = {};
             }
@@ -193,6 +196,33 @@ module.exports = {
             }
 
             return resolve({ data: record || { modified: true } });
+        })
+    },
+    updateCompanyConfig: function (ctx, updtBody) {
+        return new Promise(async (resolve, reject) => {
+            let existingCompanyConfig;
+            
+            try{
+                const [data] = await this.find(ctx);
+                if(data){
+                    existingCompanyConfig = data
+                }
+
+            }catch(error){
+                reject(error)
+            }
+            let updatedData
+
+            try {
+                const {data} = await this.updateOne(ctx, existingCompanyConfig.id);
+                if(data){
+                    updatedData = data
+                }
+            } catch (error) {
+                return reject({ statusCode: 500, error: error });
+            }
+
+            return resolve({ data: updatedData || { modified: true } });
         })
     },
     deleteOne: function (ctx, id) {

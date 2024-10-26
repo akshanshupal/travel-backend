@@ -106,6 +106,16 @@ module.exports = {
 
         return res.json(record.data);
     },
+    updateCompanyConfig: async function (req, res) {
+
+        try {
+            var record = await CompanyconfigService.updateOne(req, req.body);
+        } catch (error) {
+            return res.serverError(error);
+        }
+
+        return res.json(record.data);
+    },
     deleteOne: async function (req, res) {
 
         try {
