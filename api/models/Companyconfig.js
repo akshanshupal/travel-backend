@@ -18,8 +18,12 @@ module.exports = {
         },
         apiKey : {
             type: 'string'
+        },
+        logo : {
+            type: 'string'
+        },
+        favicon : {
+            type: 'string'
         }
-
-
     }
 };
