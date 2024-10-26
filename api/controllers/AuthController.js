@@ -99,21 +99,21 @@ module.exports = {
             
         const token = CipherService.createToken({user:outputUser});
         const refreshToken = CipherService.createToken({user:outputUser}, 'refresh');
-        let companyConfig
-        try{
-            const [data] = await CompanyconfigService.findOne({company:outputUser.company});
-            if(data){
-                companyConfig = data[0]
-            }
-        }catch(error){
-            return res.status(500).json({ error: 'Internal server error' });
-        }
+        // let companyConfig
+        // try{
+        //     const [data] = await CompanyconfigService.find({company:outputUser.company});
+        //     if(data){
+        //         companyConfig = data
+        //     }
+        // }catch(error){
+        //     return res.status(500).json({ error: 'Internal server error' });
+        // }
           
           return res.json({
             token,
             refreshToken,
             user:  outputUser,
-            companyConfig: {logo: companyConfig?.logo, favicon: companyConfig?.favicon}
+            // companyConfig: {logo: companyConfig?.logo, favicon: companyConfig?.favicon}
           });
         } catch (error) {
           return res.status(500).json({ error: 'Internal server error' });
