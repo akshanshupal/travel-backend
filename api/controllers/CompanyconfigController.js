@@ -6,7 +6,7 @@ module.exports = {
     },
     find: async function (req, res) {
         const filter = req.query;
-        filter.company = req.session.activeCompany;
+        filter.company = req.session.activeCompany.id;
         let {populate,select,totalCount,sortField, sortOrder, page,limit } = req.query;
         const params = {};
         if(populate){
@@ -109,7 +109,7 @@ module.exports = {
     updateCompanyConfig: async function (req, res) {
 
         try {
-            var record = await CompanyconfigService.updateOne(req, req.body);
+            var record = await CompanyconfigService.updateCompanyConfig(req, req.body);
         } catch (error) {
             return res.serverError(error);
         }

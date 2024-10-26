@@ -28,9 +28,7 @@ module.exports.policies = {
       getApiVersion: true,
 
   },
-  CompanyconfigController: {
-    '*' : true
-  },
+
   CompanyController: {
     '*' : true
   },

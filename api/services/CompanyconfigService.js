@@ -1,5 +1,5 @@
 module.exports = {
-    find: function (ctx, filter, params) {
+    find: function (ctx, filter={}, params) {
         return new Promise(async (resolve, reject) => {
             if(!filter?.company){
                 filter.company = ctx?.session?.activeCompany?.id;
@@ -214,7 +214,7 @@ module.exports = {
             let updatedData
 
             try {
-                const {data} = await this.updateOne(ctx, existingCompanyConfig.id);
+                const {data} = await this.updateOne(ctx, existingCompanyConfig.id, updtBody);
                 if(data){
                     updatedData = data
                 }

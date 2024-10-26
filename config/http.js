@@ -66,7 +66,7 @@ module.exports.http = {
           // clientConfig.path = path.resolve(__dirname, '../clients/' + clientConfig.publicDir);
           sails.activeClient = companyConfig[0].client;
           next();
-      } else if (req?.method == 'OPTIONS' || req.url == '/api/health' || req.url == '/api/companyconfig' || req.url?.includes("/api/file/download/")) {
+      } else if (req?.method == 'OPTIONS' || req.url == '/api/health' || req.url?.includes("/api/file/download/")) {
           next();
       } else if (req?.headers?.origin || req?.headers?.apihost) {
           let url;
