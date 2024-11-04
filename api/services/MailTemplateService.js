@@ -10,19 +10,8 @@ module.exports = {
             if(!filter.hasOwnProperty('isDeleted')){
                 filter.isDeleted = { '!=': true };
             }
-            if (filter.clientName && filter.clientName.trim()) filter.clientName = { contains: filter.clientName.trim() };
-            if (filter.email && filter.email.trim()) filter.email = { contains: filter.email.trim() };
-            if (filter.mobile && filter.mobile.trim()) filter.mobile = { contains: filter.mobile.trim() };
-            if (filter.tourDate) {
-                let df = sails.dayjs(filter.tourDate).startOf('date').toDate();
-                let dt = sails.dayjs(filter.tourDate).endOf('date').toDate();
-                filter.tourDate = { '>=': df, '<=': dt };
-            }
-            if(filter.clientDetails){
-                const searchCriteriaOr = [{ clientName: { contains: filter.clientDetails } },{ email: { contains: filter.clientDetails } },{ mobile: { contains: filter.clientDetails } }];
-                filter.or = searchCriteriaOr;
-                delete filter.clientDetails
-            }
+            if (filter.title && filter.title.trim()) filter.title = { contains: filter.title.trim() };
+
             let qryObj = {where : filter};
             //sort
             let sortField = 'createdAt';
@@ -48,15 +37,15 @@ module.exports = {
                 qryObj.select = params.select;
             }
             try {
-                var records = await ClientItinerary.find(qryObj);;
+                var records = await MailTemplate.find(qryObj);;
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
             //populate&& populate select
             if (params.populate) {
                 let assosiationModels = {};
-                for (let ami = 0; ami < sails.models.clientitinerary.associations.length; ami++) {
-                    assosiationModels[sails.models.clientitinerary.associations[ami].alias] = sails.models.clientitinerary.associations[ami].model;
+                for (let ami = 0; ami < sails.models.mailtemplate.associations.length; ami++) {
+                    assosiationModels[sails.models.mailtemplate.associations[ami].alias] = sails.models.mailtemplate.associations[ami].model;
                 }
                 for (let i = 0; i < records.length; i++) {
                     for (let populateKey of params.populate) {
@@ -82,7 +71,7 @@ module.exports = {
             //totalCount
             if (params.totalCount) {
                 try {
-                    var totalRecords = await ClientItinerary.count(filter)
+                    var totalRecords = await MailTemplate.count(filter)
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
@@ -117,7 +106,7 @@ module.exports = {
                 qryObj.select = params.select;
             }
             try {
-                var record = await ClientItinerary.findOne(qryObj);;
+                var record = await MailTemplate.findOne(qryObj);;
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -127,8 +116,8 @@ module.exports = {
             //populate&& populate select
             if (params.populate) {
                 let assosiationModels = {};
-                for (let ami = 0; ami < sails.models.clientitinerary.associations.length; ami++) {
-                    assosiationModels[sails.models.clientitinerary.associations[ami].alias] = sails.models.clientitinerary.associations[ami].model;
+                for (let ami = 0; ami < sails.models.mailtemplate.associations.length; ami++) {
+                    assosiationModels[sails.models.mailtemplate.associations[ami].alias] = sails.models.mailtemplate.associations[ami].model;
                 }
                 for (let populateKey of params.populate) {
                     if (!record[populateKey]) {
@@ -148,30 +137,6 @@ module.exports = {
                     }
                 }   
             }
-            if(record?.clientArea){
-                let obj = record.clientArea;
-                function isBase64(str) {
-                    try {
-                        return btoa(atob(str)) === str;
-                    } catch (err) {
-                        return false;
-                    }
-                }
-                if (obj.description && isBase64(obj.description)) {
-                    let con = Buffer.from(obj.description, 'base64');
-                    obj.description = con.toString('utf8');
-                }
-                if (obj.headerContent && isBase64(obj.headerContent)) {
-                    let con = Buffer.from(obj.headerContent, 'base64');
-                    obj.headerContent = con.toString('utf8');
-                }
-                if (obj.footerContent && isBase64(obj.footerContent)) {
-                    let con = Buffer.from(obj.footerContent, 'base64');
-                    obj.footerContent = con.toString('utf8');
-                }
-                record.clientArea = obj;
-            }
-
             const rtrn = { data: record }
             return resolve({ data: record });
         })
@@ -185,43 +150,18 @@ module.exports = {
             if (!data.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
-            if(!data.itinerary){
-                return reject({ statusCode: 400, error: { message: 'itinerary id is required!' } });
-            }
-            if (data?.tourDate && typeof data?.tourDate === 'string') {
-                data.tourDate = sails.dayjs(data.tourDate);
-                if (!data.tourDate.isValid()) {
-                    return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid tourDate is required!' } });
-                } else {
-                    data.tourDate = data.tourDate.toDate();
-                }
-            }
             if(!data.hasOwnProperty('status')){
                 data.status = true
             }
-            let itineraryData;
-            try {
-                const {data: dt} = await ItineraryService.findOne(ctx,data.itinerary, {select: ['area','sites'], populate : ['area','site', 'hotel'], populate_select: {select_area: ['id','title','headerContent','footerContent','description', 'featureImg', 'hotelImg'], select_site: ['id','title','description','featureImg'], select_hotel: ['id','title','description','featureImg']}});
-                if(!dt){
-                    return reject({ statusCode: 400, error: { message: 'itinerary not found!' } });
-                }
-                itineraryData = dt;
-                
-            } catch (error) {
-                return reject(error); 
-            }
-            data.clientArea = itineraryData.area;
-            data.clientSites = itineraryData.sites;
-
             if (avoidRecordFetch) {
                 try {
-                    var record = await ClientItinerary.create(data);
+                    var record = await MailTemplate.create(data);
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
             } else {
                 try {
-                    var record = await ClientItinerary.create(data).fetch();
+                    var record = await MailTemplate.create(data).fetch();
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
@@ -249,7 +189,7 @@ module.exports = {
             }
 
             try {
-                var record = await ClientItinerary.updateOne(filter).set(updtBody);
+                var record = await MailTemplate.updateOne(filter).set(updtBody);
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -269,15 +209,14 @@ module.exports = {
             if (!filter.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
-            let deletedData
             try {
-                deletedData =  await this.updateOne(ctx, id, {isDeleted:true, deletedAt: new Date(), deletedBy: ctx?.user?.id})
+                await MailTemplate.destroyOne(filter);
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
-            return resolve(deletedData);
 
-            // return resolve({ data: { deleted: true } });
+
+            return resolve({ data: { deleted: true } });
         })
     }
 }
