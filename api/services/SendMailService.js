@@ -236,5 +236,21 @@ module.exports = {
 
             // return resolve({ data: { deleted: true } });
         })
-    }
+    },
+    sendWelcomeEmail: async function (ctx,data) {
+        return new Promise(async (resolve, reject) => {
+            
+            const email = data.email; // Assume email is sent in the request body
+            const subject = data?.subject || 'Welcome to Our Service';
+            const text = data?.text || 'Thank you for signing up!';
+            const html = data?.html || '<h1>Welcome!</h1><p>Thank you for signing up!</p>';
+    
+            try {
+                await EmailService.sendEmail(email, subject, text, html);
+                return resolve({data: { message: 'Email sent successfully!' }});
+            } catch (error) {
+                return reject(error);
+            }
+        })
+    },
 }

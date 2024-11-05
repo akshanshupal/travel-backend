@@ -114,6 +114,14 @@ module.exports = {
         }
 
         return res.json(record.data);
-    }
+    },
+    sendWelcomeEmail: async function (req, res) {
+        try {
+            var record = await SendMailService.sendWelcomeEmail(req, req.body);
+        } catch (error) {
+            return res.serverError(error);
+        }
+        return res.json(record.data);
+    },
 
 };
