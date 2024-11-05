@@ -58,9 +58,6 @@ module.exports = {
         noOfKids: {
             type: 'string'
         },
-        featureImg: {
-            type: 'string'
-        },
         carSeater: {
             type: 'string'
         },
