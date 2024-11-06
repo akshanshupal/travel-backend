@@ -137,6 +137,7 @@ module.exports.routes = {
   'DELETE /api/vendor/:id': 'VendorController.deleteOne',
 
   'POST /api/sendmail': 'SendMailController.create',
+  'POST /api/sendmail/send-itinerary': 'SendMailController.sendWelcomeEmail',
   'GET /api/sendmail': 'SendMailController.find',
   'GET /api/sendmail/:id': 'SendMailController.findOne',
   'PUT /api/sendmail/:id': 'SendMailController.updateOne',
