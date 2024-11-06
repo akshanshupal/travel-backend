@@ -123,5 +123,13 @@ module.exports = {
         }
         return res.json(record.data);
     },
+    sendItineraryMail: async function (req, res) {
+        try {
+            var record = await SendMailService.sendItineraryMail(req, req.params.id);
+        } catch (error) {
+            return res.serverError(error);
+        }
+        return res.json(record.data);
+    },
 
 };
