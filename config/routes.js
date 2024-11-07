@@ -136,12 +136,12 @@ module.exports.routes = {
   'PUT /api/vendor/:id': 'VendorController.updateOne',
   'DELETE /api/vendor/:id': 'VendorController.deleteOne',
 
-  'POST /api/sendmail': 'SendMailController.create',
-  'POST /api/sendmail/send-itinerary': 'SendMailController.sendWelcomeEmail',
-  'GET /api/sendmail': 'SendMailController.find',
-  'GET /api/sendmail/:id': 'SendMailController.findOne',
-  'PUT /api/sendmail/:id': 'SendMailController.updateOne',
-  'DELETE /api/sendmail/:id': 'SendMailController.deleteOne',
+  'POST /api/saved-itinerary': 'SavedItineraryController.create',
+  'POST /api/saved-itinerary/send-itinerary': 'SavedItineraryController.sendWelcomeEmail',
+  'GET /api/saved-itinerary': 'SavedItineraryController.find',
+  'GET /api/saved-itinerary/:id': 'SavedItineraryController.findOne',
+  'PUT /api/saved-itinerary/:id': 'SavedItineraryController.updateOne',
+  'DELETE /api/saved-itinerary/:id': 'SavedItineraryController.deleteOne',
 
 
   'POST /api/mailtemplate': 'MailTemplateController.create',

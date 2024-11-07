@@ -15,6 +15,10 @@ module.exports = {
         company: {
             model: 'company'
         },
+        logo: {
+            type: 'string',
+            allowNull: true
+        },
         userIcon : {
             type: 'string',
             allowNull: true

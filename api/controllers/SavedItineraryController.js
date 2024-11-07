@@ -48,7 +48,7 @@ module.exports = {
             );
         }
         try {
-            var records = await SendMailService.find(req, filter, params);
+            var records = await SavedItineraryService.find(req, filter, params);
         } catch (error) {
             return res.serverError(error);
         }
@@ -78,7 +78,7 @@ module.exports = {
             );
         }
         try {
-            var record = await SendMailService.findOne(req, req.params.id,params);
+            var record = await SavedItineraryService.findOne(req, req.params.id,params);
         } catch (error) {
             return res.serverError(error);
         }
@@ -88,7 +88,7 @@ module.exports = {
 
     create: async function (req, res) {
         try {
-            var record = await SendMailService.create(req, req.body);
+            var record = await SavedItineraryService.create(req, req.body);
         } catch (error) {
             return res.serverError(error);
         }
@@ -98,7 +98,7 @@ module.exports = {
     updateOne: async function (req, res) {
 
         try {
-            var record = await SendMailService.updateOne(req, req.params.id, req.body);
+            var record = await SavedItineraryService.updateOne(req, req.params.id, req.body);
         } catch (error) {
             return res.serverError(error);
         }
@@ -108,7 +108,7 @@ module.exports = {
     deleteOne: async function (req, res) {
 
         try {
-            var record = await SendMailService.deleteOne(req, req.params.id);
+            var record = await SavedItineraryService.deleteOne(req, req.params.id);
         } catch (error) {
             return res.serverError(error);
         }
@@ -117,7 +117,7 @@ module.exports = {
     },
     sendWelcomeEmail: async function (req, res) {
         try {
-            var record = await SendMailService.sendWelcomeEmail(req, req.body);
+            var record = await SavedItineraryService.sendWelcomeEmail(req, req.body);
         } catch (error) {
             return res.serverError(error);
         }

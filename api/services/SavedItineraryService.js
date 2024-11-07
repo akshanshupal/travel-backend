@@ -51,16 +51,16 @@ module.exports = {
                 qryObj.select = params.select;
             }
             try {
-                // var records = await SendMail.find(qryObj);;
-                var records = await SendMail.find(qryObj).meta({makeLikeModifierCaseInsensitive: true});
+                // var records = await SavedItinerary.find(qryObj);;
+                var records = await SavedItinerary.find(qryObj).meta({makeLikeModifierCaseInsensitive: true});
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
             //populate&& populate select
             if (params.populate) {
                 let assosiationModels = {};
-                for (let ami = 0; ami < sails.models.sendmail.associations.length; ami++) {
-                    assosiationModels[sails.models.sendmail.associations[ami].alias] = sails.models.sendmail.associations[ami].model;
+                for (let ami = 0; ami < sails.models.saveditinerary.associations.length; ami++) {
+                    assosiationModels[sails.models.saveditinerary.associations[ami].alias] = sails.models.saveditinerary.associations[ami].model;
                 }
                 for (let i = 0; i < records.length; i++) {
                     for (let populateKey of params.populate) {
@@ -86,8 +86,8 @@ module.exports = {
             //totalCount
             if (params.totalCount) {
                 try {
-                    // var totalRecords = await SendMail.count(filter)
-                    var totalRecords = await SendMail.count(filter).meta({makeLikeModifierCaseInsensitive: true});
+                    // var totalRecords = await SavedItinerary.count(filter)
+                    var totalRecords = await SavedItinerary.count(filter).meta({makeLikeModifierCaseInsensitive: true});
 
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
@@ -123,7 +123,7 @@ module.exports = {
                 qryObj.select = params.select;
             }
             try {
-                var record = await SendMail.findOne(qryObj);;
+                var record = await SavedItinerary.findOne(qryObj);;
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -133,8 +133,8 @@ module.exports = {
             //populate&& populate select
             if (params.populate) {
                 let assosiationModels = {};
-                for (let ami = 0; ami < sails.models.sendmail.associations.length; ami++) {
-                    assosiationModels[sails.models.sendmail.associations[ami].alias] = sails.models.sendmail.associations[ami].model;
+                for (let ami = 0; ami < sails.models.saveditinerary.associations.length; ami++) {
+                    assosiationModels[sails.models.saveditinerary.associations[ami].alias] = sails.models.saveditinerary.associations[ami].model;
                 }
                 for (let populateKey of params.populate) {
                     if (!record[populateKey]) {
@@ -172,13 +172,13 @@ module.exports = {
             }
             if (avoidRecordFetch) {
                 try {
-                    var record = await SendMail.create(data);
+                    var record = await SavedItinerary.create(data);
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
             } else {
                 try {
-                    var record = await SendMail.create(data).fetch();
+                    var record = await SavedItinerary.create(data).fetch();
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
@@ -206,7 +206,7 @@ module.exports = {
             }
 
             try {
-                var record = await SendMail.updateOne(filter).set(updtBody);
+                var record = await SavedItinerary.updateOne(filter).set(updtBody);
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }

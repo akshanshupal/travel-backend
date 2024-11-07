@@ -97,8 +97,8 @@ module.exports = {
         tollParkingAdded: {
             type: 'boolean'
         },
-        sendMail: {
-            model: 'sendmail'
+        savedItinerary: {
+            model: 'savedItinerary'
         },
         waveLink: {
             type: 'string'
