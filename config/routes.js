@@ -78,6 +78,7 @@ module.exports.routes = {
 
   'POST /api/hotel': 'HotelController.create',
   'GET /api/hotel': 'HotelController.find',
+  'GET /api/hotel/export-no-hotel-image': 'HotelController.exportNoHotelImageCsv',
   'GET /api/hotel/:id': 'HotelController.findOne',
   'PUT /api/hotel/:id': 'HotelController.updateOne',
   'DELETE /api/hotel/:id': 'HotelController.deleteOne',
