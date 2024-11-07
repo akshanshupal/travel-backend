@@ -45,10 +45,11 @@ module.exports = {
                 qryObj.select = params.select;
             }
             try {
-                var records = await Hotel.find(qryObj).meta({makeLikeModifierCaseInsensitive: true});
+                var records = await Hotel.find(qryObj);
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
+            
             //populate&& populate select
             if (params.populate) {
                 let assosiationModels = {};
