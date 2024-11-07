@@ -31,6 +31,13 @@ module.exports = {
         {
             type:'json'
         },
+        emailIcon : {
+            type: 'string',
+            allowNull: true
+        },
+        disclaimer:{
+            type:'string'
+        },
         isDeleted: { type: 'boolean'},
         deletedAt: { type: 'ref', columnType: 'datetime' },
         deletedBy: { model: 'user' },

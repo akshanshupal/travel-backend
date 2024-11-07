@@ -18,6 +18,9 @@ module.exports = {
         itinerary:{
             model: 'itinerary'
         },
+        templateId:{
+            model: 'mailtemplate'
+        },
         user:{
             model: 'user'
         },

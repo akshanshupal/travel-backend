@@ -282,7 +282,14 @@ module.exports = {
     getHotelWithNoImage : function(ctx,filter){
         return new Promise(async(resolve, reject) => {
             try {
-                const hotels = await this.find(ctx,{},{ pagination: {limit:'all'}} )
+                const params = {};
+                if(filter.limit){
+                    params.limit=filter.limit
+                }
+                if(filter.page){
+                    params.page=filter.page
+                }
+                const hotels = await this.find(ctx,{},{ pagination: params} )
                 let exportHotels = []
                 for(const item of hotels){
     

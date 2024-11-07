@@ -129,7 +129,10 @@ module.exports = {
     },
     async exportNoHotelImageCsv(req, res) {
         try {
-          const record = await HotelService.getHotelWithNoImage(req);
+        let {page,limit} = req.query;
+        const filter = {page,limit}
+
+          const record = await HotelService.getHotelWithNoImage(req, filter);
           const fields = Object.keys(record[0]);
           const json2csvParser = new Parser({ fields });
           const csv = json2csvParser.parse(record);
