@@ -77,12 +77,12 @@ module.exports.http = {
           }
           const hostname = url.hostname;
           console.log('hostname', hostname);
-
-          try {
-              var hostCompany = await sails.redis.hgetall('host:' + hostname + ':company');
-          } catch (error) {
-              return res.status(403).send(error);
-          }
+           var hostCompany
+        //   try {
+        //     hostCompany = await sails.redis.hgetall('host:' + hostname + ':company');
+        //   } catch (error) {
+        //       return res.status(403).send(error);
+        //   }
           let method = req.method;
           if (hostCompany?.reqHost == hostname) {
               if (method == 'GET') {
@@ -110,12 +110,12 @@ module.exports.http = {
                   id: companyConfig[0].company.toString(),
                   reqHost: companyConfig[0].panelUrl,
               };
-              try {
-                  await sails.redis.hset('host:' + hostname + ':company', cacheConf);
-              } catch (error) {
-                  console.log(error);
-                  return res.status(403).send(error);
-              }
+            //   try {
+            //       await sails.redis.hset('host:' + hostname + ':company', cacheConf);
+            //   } catch (error) {
+            //       console.log(error);
+            //       return res.status(403).send(error);
+            //   }
               if(!req.session) {
                 req.session = {};
                 }

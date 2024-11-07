@@ -253,4 +253,71 @@ module.exports = {
             }
         })
     },
+    sendItineraryMail: async function (ctx, id) {
+        return new Promise(async (resolve, reject) => {
+            let sendMail;
+            try {
+                const {data}= await this.findOne(ctx, id, { populate: ['salesExecutive','company'] });
+                if(data){
+                    sendMail = data
+                    let html = `<div style="max-width: 600px; margin: 0 auto; text-align: center; border: 1px solid #ccc; padding: 20px;">
+                    <h1 style="color: #555; font-size: 24px; font-weight: bold;">
+                        Here is the quotation you requested from us!!
+                    </h1>
+                
+                    <div style="margin: 20px 0;">
+                        <button style="background-color: #1a73e8; color: #fff; padding: 15px 30px; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer;">
+                           <a href="http://localhost:1337/package-itinerary-mail/${sendMail?.id}" style="color: #fff; text-decoration: none;">
+                             <span>Click here to View Package!!</span>
+                           </a> 
+                        </button>
+                    </div>
+                
+                    <p style="color: #1a73e8; font-size: 14px; margin-top: 0;">
+                        This package is valid for 24 Hrs. Freeze your Package by Paying immediately INR 5000/-
+                    </p>
+                
+                    <h2 style="color: #1a73e8; font-size: 20px; font-weight: bold;">
+                        Seal the deal now!
+                    </h2>
+                
+                    <p style="color: #333; font-size: 14px;">
+                        Make the payment today to get the best deal possible
+                    </p>
+                
+                    <div style="margin: 20px 0;">
+                        <button style="background-color: #1a73e8; color: #fff; padding: 10px 20px; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer;">
+                           <a href="https://thetripbliss.com/payment" style="color: #fff; text-decoration: none;">Pay Now</a>
+                        </button>
+                    </div>
+                
+                    <p style="color: #555; font-size: 14px; margin-top: 20px;">
+                        For any queries please contact your Travel Expert.
+                    </p>
+                
+                    <p style="color: #333; font-size: 14px;">
+                        <strong>${sendMail?.salesExecutive?.name}</strong><br>
+                        Phone Number: +91 ${sendMail?.salesExecutive?.mobile}<br>
+                        Email: <a href="mailto:sales@thetripbliss" style="color: #1a73e8;">sales@thetripbliss</a>
+                    </p>
+                   </div>`
+                    let subject = `${sendMail?.company?.name} Itinerary for Domestic Package -Ms ${sendMail?.salesExecutive?.name}-${sendMail?.salesExecutive?.mobile}-${sendMail?.tourDate}`
+                    try {
+                        const {data} = await this.sendWelcomeEmail(ctx,{email:sendMail?.email, subject:subject, html:html});
+                        if(data){
+                            resolve({data:data.message});
+                        }
+                    } catch (error) {
+                        reject(error)
+                        
+                    }
+                }
+                
+            } catch (error) {
+                reject(error)  
+            }
+        })
+    
+
+    }
 }
