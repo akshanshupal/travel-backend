@@ -137,7 +137,7 @@ module.exports.routes = {
   'DELETE /api/vendor/:id': 'VendorController.deleteOne',
 
   'POST /api/saved-itinerary': 'SavedItineraryController.create',
-  'POST /api/saved-itinerary/send-itinerary': 'SavedItineraryController.sendWelcomeEmail',
+  'POST /api/saved-itinerary/send-itinerary/:id': 'SavedItineraryController.sendItineraryMail',
   'GET /api/saved-itinerary': 'SavedItineraryController.find',
   'GET /api/saved-itinerary/:id': 'SavedItineraryController.findOne',
   'PUT /api/saved-itinerary/:id': 'SavedItineraryController.updateOne',

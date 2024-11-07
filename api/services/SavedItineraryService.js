@@ -253,7 +253,7 @@ module.exports = {
             }
         })
     },
-    sendItineraryMail: async function (ctx, id) {
+    sendItineraryMail: async function (ctx, id, bodyData) {
         return new Promise(async (resolve, reject) => {
             let sendMail;
             try {
@@ -267,7 +267,7 @@ module.exports = {
                 
                     <div style="margin: 20px 0;">
                         <button style="background-color: #1a73e8; color: #fff; padding: 15px 30px; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer;">
-                           <a href="http://localhost:1337/package-itinerary-mail/${sendMail?.id}" style="color: #fff; text-decoration: none;">
+                           <a href="http://localhost:3000/saved-itinerary-preview/${sendMail?.id}" style="color: #fff; text-decoration: none;">
                              <span>Click here to View Package!!</span>
                            </a> 
                         </button>
@@ -303,7 +303,7 @@ module.exports = {
                    </div>`
                     let subject = `${sendMail?.company?.name} Itinerary for Domestic Package -Ms ${sendMail?.salesExecutive?.name}-${sendMail?.salesExecutive?.mobile}-${sendMail?.tourDate}`
                     try {
-                        const {data} = await this.sendWelcomeEmail(ctx,{email:sendMail?.email, subject:subject, html:html});
+                        const {data} = await this.sendWelcomeEmail(ctx,{email:bodyData.email || sendMail?.email, subject:subject, html:html});
                         if(data){
                             resolve({data:data.message});
                         }
