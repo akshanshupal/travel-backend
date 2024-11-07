@@ -305,9 +305,33 @@ module.exports = {
                     try {
                         const {data} = await this.sendWelcomeEmail(ctx,{email:bodyData.email || sendMail?.email, subject:subject, html:html});
                         if(data){
+                            try {
+                                await SendmailService.create(ctx, {
+                                    email: sendMail?.email,
+                                    subject: subject,
+                                    html: html,
+                                    savedItinerary: id,
+                                    sendBy: ctx?.session?.user?.id,
+                                    status: true
+                                });
+                            } catch (error) {
+                                reject(error)
+                            }
                             resolve({data:data.message});
                         }
                     } catch (error) {
+                        try {
+                            await SendmailService.create(ctx, {
+                                email: sendMail?.email,
+                                subject: subject,
+                                html: html,
+                                savedItinerary: id,
+                                sendBy: ctx?.session?.user?.id,
+                                status: false
+                            });
+                        } catch (error) {
+                            reject(error)
+                        }
                         reject(error)
                         
                     }
