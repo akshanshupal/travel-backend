@@ -1,3 +1,5 @@
+const { Parser } = require('json2csv');
+
 module.exports = {
     _config: {
         actions: false,
@@ -124,6 +126,21 @@ module.exports = {
         }
 
         return res.json(record.data);
-    }
+    },
+    async exportNoHotelImageCsv(req, res) {
+        try {
+          const record = await HotelService.getHotelWithNoImage(req);
+          const fields = Object.keys(record[0]);
+          const json2csvParser = new Parser({ fields });
+          const csv = json2csvParser.parse(record);
+          res.setHeader('Content-Disposition', 'attachment; filename="users.csv"');
+          res.setHeader('Content-Type', 'text/csv');
+        //   return res.json(record)
+    
+          return res.send(csv);
+        } catch (error) {
+          return res.status(error?.statusCode).send(error.error); 
+        }
+      }
 
 };

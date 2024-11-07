@@ -1,8 +1,12 @@
-  
+const { Parser } = require('json2csv');
+
 module.exports = {
 
     find: function (ctx, filter, params) {
         return new Promise(async (resolve, reject) => {
+            if (!filter.company) {
+                filter.company = ctx?.session?.activeCompany?.id;
+            }
             if (!filter.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
@@ -12,6 +16,7 @@ module.exports = {
             if(!filter.hasOwnProperty('isDeleted')){
                 filter.isDeleted = { '!=': true };
             }
+
             if (filter.name && filter.name.trim()) filter.name = { contains: filter.name.trim() };
             if (filter.location && filter.location.trim()) filter.location = { contains: filter.location.trim() };
             if (filter.address && filter.address.trim()) filter.address = { contains: filter.address.trim() };
@@ -71,6 +76,7 @@ module.exports = {
                 }
             }
             const rtrn = { data : records }
+
             //totalCount
             if (params.totalCount) {
                 try {
@@ -272,5 +278,29 @@ module.exports = {
                 return reject({ statusCode: 500, error: error });
             }
         })
+    },
+    getHotelWithNoImage : function(ctx,filter){
+        return new Promise(async(resolve, reject) => {
+            try {
+                const hotels = await this.find(ctx,{},{ pagination: {limit:'all'}} )
+                let exportHotels = []
+                for(const item of hotels){
+    
+                    try {
+                        const [image] = await HotelImageService.find(ctx,{hotel:item.id}, {pagination: {limit:1}, select: ['id']});
+                        if(!image){
+                            exportHotels.push({...item, url: `http://admin.thetripbliss.com/itinerary/hotel/image/${item.id}`})
+                        }  
+                    } catch (error) {
+                        reject(error)
+                    }
+                }
+                resolve(exportHotels)  
+                
+            } catch (error) {
+                reject(error) 
+            }
+        })
+
     }
 }

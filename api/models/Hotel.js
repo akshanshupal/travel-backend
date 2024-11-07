@@ -19,6 +19,7 @@ module.exports = {
         category: {
             model: 'hotelcategory'
         },
+
         sqlId: {
             type: 'string'
         },
