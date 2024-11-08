@@ -292,6 +292,8 @@ module.exports = {
                 }
                 const hotels = await this.find(ctx,{},{ pagination: params} )
                 let exportHotels = []
+                let index = 0;
+
                 for(const item of hotels){
     
                     try {
@@ -302,6 +304,9 @@ module.exports = {
                     } catch (error) {
                         reject(error)
                     }
+                    index++;
+                    console.log(index)
+
                 }
                 resolve(exportHotels)  
                 
