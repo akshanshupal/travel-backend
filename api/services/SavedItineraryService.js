@@ -267,7 +267,7 @@ module.exports = {
                 
                     <div style="margin: 20px 0;">
                         <button style="background-color: #1a73e8; color: #fff; padding: 15px 30px; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer;">
-                           <a href="https://admin.thetripbliss.com/saved-itinerary-preview/${sendMail?.id}" style="color: #fff; text-decoration: none;">
+                           <a href="https://admin.thetripbliss.com/package-mail/${sendMail?.id}" style="color: #fff; text-decoration: none;">
                              <span>Click here to View Package!!</span>
                            </a> 
                         </button>
@@ -301,7 +301,9 @@ module.exports = {
                         Email: <a href="mailto:sales@thetripbliss" style="color: #1a73e8;">sales@thetripbliss</a>
                     </p>
                    </div>`
-                    let subject = `${sendMail?.company?.name} Itinerary for Domestic Package -Ms ${sendMail?.salesExecutive?.name}-${sendMail?.salesExecutive?.mobile}-${sendMail?.tourDate}`
+                   const formattedDate = sails.dayjs(sendMail?.tourDate).format("DD-MMM-YY");
+
+                    let subject = `${sendMail?.company?.name} Itinerary for Domestic Package -Ms ${sendMail?.salesExecutive?.name}-${sendMail?.salesExecutive?.mobile}-${formattedDate}`
                     try {
                         const {data} = await this.sendWelcomeEmail(ctx,{email:bodyData.email || sendMail?.email, subject:subject, html:html});
                         if(data){
