@@ -267,7 +267,7 @@ module.exports = {
                 
                     <div style="margin: 20px 0;">
                         <button style="background-color: #1a73e8; color: #fff; padding: 15px 30px; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer;">
-                           <a href="http://localhost:3000/saved-itinerary-preview/${sendMail?.id}" style="color: #fff; text-decoration: none;">
+                           <a href="https://admin.thetripbliss.com/saved-itinerary-preview/${sendMail?.id}" style="color: #fff; text-decoration: none;">
                              <span>Click here to View Package!!</span>
                            </a> 
                         </button>
