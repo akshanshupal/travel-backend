@@ -38,7 +38,7 @@ module.exports.policies = {
   fileNewController: {
     'download' : true
   },
-  sendEmailController: {
+  SavedItineraryController: {
     'findOne' : true
   },
   hotelInfoController: {
