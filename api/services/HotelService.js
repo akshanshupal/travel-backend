@@ -1,6 +1,5 @@
 const path = require('path');
 const fs = require('fs');
-const { createObjectCsvWriter } = require('csv-writer');
 
 module.exports = {
 
