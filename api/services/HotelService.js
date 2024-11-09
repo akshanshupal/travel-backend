@@ -47,7 +47,7 @@ module.exports = {
                 qryObj.select = params.select;
             }
             try {
-                var records = await Hotel.find(qryObj);
+                var records = await Hotel.find(qryObj).meta({makeLikeModifierCaseInsensitive: true});
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
