@@ -1,4 +1,7 @@
 const { Parser } = require('json2csv');
+const path = require('path');
+const fs = require('fs');
+const { createObjectCsvWriter } = require('csv-writer');
 
 module.exports = {
     _config: {
@@ -133,16 +136,38 @@ module.exports = {
         const filter = {page,limit}
 
           const record = await HotelService.getHotelWithNoImage(req, filter);
+          
           const fields = Object.keys(record[0]);
-          const json2csvParser = new Parser({ fields });
-          const csv = json2csvParser.parse(record);
-          res.setHeader('Content-Disposition', 'attachment; filename="users.csv"');
-          res.setHeader('Content-Type', 'text/csv');
-        //   return res.json(record)
+        //   const json2csvParser = new Parser({ fields });
+        //   const csv = json2csvParser.parse(record);
+        //   res.setHeader('Content-Disposition', 'attachment; filename="users.csv"');
+        //   res.setHeader('Content-Type', 'text/csv');
+
+
+          const csvWriter = createObjectCsvWriter({
+            path: './assets/files/data.csv', // Save the CSV file in the assets folder
+            header: fields.map((el=>({id:el, title: el})))
+          });
+          await csvWriter.writeRecords(record);
+            const filePath = path.resolve(__dirname, '../../assets/files/data.csv');
+
+            // Check if file exists before sending it
+            if (!fs.existsSync(filePath)) {
+                return res.status(404).send('CSV file not found. Please generate it first.');
+            }
+
+            // Send the CSV file as a download
+            res.attachment('data.csv'); // Sets the filename for download
     
-          return res.send(csv);
+            // Send the file as a stream
+            const fileStream = fs.createReadStream(filePath);
+            fileStream.pipe(res).on('error', (err) => {
+            console.error('Error sending file:', err);
+            res.status(500).json({ message: 'Error sending the file.' });
+            });
+
         } catch (error) {
-          return res.status(error?.statusCode).send(error.error); 
+            return res.status(error?.statusCode).send(error?.error); 
         }
       }
 

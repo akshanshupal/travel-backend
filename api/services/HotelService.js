@@ -1,4 +1,6 @@
-const { Parser } = require('json2csv');
+const path = require('path');
+const fs = require('fs');
+const { createObjectCsvWriter } = require('csv-writer');
 
 module.exports = {
 

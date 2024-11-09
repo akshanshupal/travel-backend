@@ -9,6 +9,7 @@
     "@sailshq/lodash": "^3.10.3",
     "@sailshq/socket.io-redis": "^5.2.0",
     "bcryptjs": "^2.4.3",
+    "csv-writer": "^1.6.0",
     "dayjs": "^1.11.13",
     "gridfs-stream": "^1.1.1",
     "grunt": "1.0.4",
