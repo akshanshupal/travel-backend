@@ -55,7 +55,6 @@ module.exports = {
         try {
             // Assuming you are using the 'skipper-s3' adapter for file uploads
             const uploadedFile = req.file('fmFile');
-    
             if (!uploadedFile || !uploadedFile._files[0]) {
                 return res.status(400).send('No files were uploaded.');
             }
@@ -63,17 +62,18 @@ module.exports = {
             if(req.body?.folder){
                 folder= req.body?.folder;
             }
-    
             const file = uploadedFile._files[0];
-
             let STORAGE_ZONE_NAME = sails.config.bunnyCDN.STORAGE_ZONE_NAME;
             if(folder){
                 STORAGE_ZONE_NAME = `travelimg/${folder}`;
             }            
             // Properly URL encode the filename
+
             let FILENAME_TO_UPLOAD = encodeURIComponent(file.stream.filename.replace(/[^a-zA-Z0-9-,\(/\)/.#_]/g, ''));
-            FILENAME_TO_UPLOAD = FILENAME_TO_UPLOAD+new Date().getTime()
-    
+            const urlParts = FILENAME_TO_UPLOAD.split('.');
+            const newUrl = `${urlParts.slice(0, -1).join('.')}_${new Date().getTime()}.${urlParts[urlParts.length - 1]}`;
+
+            FILENAME_TO_UPLOAD = newUrl;
     
             const options = {
                 method: 'PUT',
@@ -84,16 +84,15 @@ module.exports = {
                     'Content-Type': 'application/octet-stream',
                 },
             };
+            console.log(options)
     
             const uploadReq = https.request(options, (response) => {
                 let data = '';
-    
                 response.on('data', (chunk) => {
                     console.log(chunk.toString('utf8'), 'jhb');
 
                     data += chunk;
                 });
-    
                 response.on('end', () => {
                     if(!folder){
                         console.log('file uploaded')
@@ -105,11 +104,11 @@ module.exports = {
                     }
                 });
                 response.on('error', (error) => {
+                    console.log(error)
                     console.error(error);
                     res.serverError('Internal Server Error');
                 });
             });
-    
             // Pipe the file stream directly to the HTTP request
             file.stream.pipe(uploadReq);
         } catch (error) {
