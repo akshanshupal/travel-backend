@@ -147,7 +147,7 @@ module.exports = {
         };
 
         const maxRetries = 3; // Set the maximum number of retries
-        const delay = 1000;   // Initial delay in milliseconds
+        const delay = 100;   // Initial delay in milliseconds
 
         // Retry logic
         async function uploadWithRetry(attempt = 1) {
