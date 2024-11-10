@@ -51,71 +51,147 @@ module.exports = {
         };
         await uploadFile()
     },
+    // uploadFile: async function(req, res) {
+    //     try {
+    //         // Assuming you are using the 'skipper-s3' adapter for file uploads
+    //         const uploadedFile = req.file('fmFile');
+    //         if (!uploadedFile || !uploadedFile._files[0]) {
+    //             return res.status(400).send('No files were uploaded.');
+    //         }
+    //         let folder;
+    //         if(req.body?.folder){
+    //             folder= req.body?.folder;
+    //         }
+    //         const file = uploadedFile._files[0];
+    //         let STORAGE_ZONE_NAME = sails.config.bunnyCDN.STORAGE_ZONE_NAME;
+    //         if(folder){
+    //             STORAGE_ZONE_NAME = `travelimg/${folder}`;
+    //         }            
+    //         // Properly URL encode the filename
+
+    //         let FILENAME_TO_UPLOAD = encodeURIComponent(file.stream.filename.replace(/[^a-zA-Z0-9-,\(/\)/.#_]/g, ''));
+    //         const urlParts = FILENAME_TO_UPLOAD.split('.');
+    //         const newUrl = `${urlParts.slice(0, -1).join('.')}_${new Date().getTime()}.${urlParts[urlParts.length - 1]}`;
+
+    //         FILENAME_TO_UPLOAD = newUrl;
+    
+    //         const options = {
+    //             method: 'PUT',
+    //             host: sails.config.bunnyCDN.HOSTNAME,
+    //             path: `/${STORAGE_ZONE_NAME}/${FILENAME_TO_UPLOAD}`,
+    //             headers: {
+    //                 AccessKey: sails.config.bunnyCDN.PASSWORD,
+    //                 'Content-Type': 'application/octet-stream',
+    //             },
+    //         };
+    //         console.log(options)
+    
+    //         const uploadReq = https.request(options, (response) => {
+    //             let data = '';
+    //             response.on('data', (chunk) => {
+    //                 console.log(chunk.toString('utf8'), 'jhb');
+
+    //                 data += chunk;
+    //             });
+    //             response.on('end', () => {
+    //                 if(!folder){
+    //                     console.log('file uploaded')
+
+    //                     res.ok(`${sails.config.bunnyCDN.baseUrl}/${FILENAME_TO_UPLOAD}`);
+    //                 }else{
+
+    //                     res.ok(`${sails.config.bunnyCDN.baseUrl}/${folder}/${FILENAME_TO_UPLOAD}`);
+    //                 }
+    //             });
+    //             response.on('error', (error) => {
+    //                 console.log(error)
+    //                 console.error(error);
+    //                 res.serverError('Internal Server Error');
+    //             });
+    //         });
+    //         // Pipe the file stream directly to the HTTP request
+    //         file.stream.pipe(uploadReq);
+    //     } catch (error) {
+    //         console.error('Error uploading file:', error);
+    //         res.serverError('Internal Server Error');
+    //     }
+    // },
+
     uploadFile: async function(req, res) {
         try {
-            // Assuming you are using the 'skipper-s3' adapter for file uploads
-            const uploadedFile = req.file('fmFile');
-            if (!uploadedFile || !uploadedFile._files[0]) {
-                return res.status(400).send('No files were uploaded.');
-            }
-            let folder;
-            if(req.body?.folder){
-                folder= req.body?.folder;
-            }
-            const file = uploadedFile._files[0];
-            let STORAGE_ZONE_NAME = sails.config.bunnyCDN.STORAGE_ZONE_NAME;
-            if(folder){
-                STORAGE_ZONE_NAME = `travelimg/${folder}`;
-            }            
-            // Properly URL encode the filename
+        const uploadedFile = req.file('fmFile');
+        if (!uploadedFile || !uploadedFile._files[0]) {
+            return res.status(400).send('No files were uploaded.');
+        }
 
-            let FILENAME_TO_UPLOAD = encodeURIComponent(file.stream.filename.replace(/[^a-zA-Z0-9-,\(/\)/.#_]/g, ''));
-            const urlParts = FILENAME_TO_UPLOAD.split('.');
-            const newUrl = `${urlParts.slice(0, -1).join('.')}_${new Date().getTime()}.${urlParts[urlParts.length - 1]}`;
+        let folder = req.body?.folder || '';
+        const file = uploadedFile._files[0];
+        let STORAGE_ZONE_NAME = sails.config.bunnyCDN.STORAGE_ZONE_NAME;
+        if (folder) {
+            STORAGE_ZONE_NAME = `travelimg/${folder}`;
+        }
 
-            FILENAME_TO_UPLOAD = newUrl;
-    
-            const options = {
-                method: 'PUT',
-                host: sails.config.bunnyCDN.HOSTNAME,
-                path: `/${STORAGE_ZONE_NAME}/${FILENAME_TO_UPLOAD}`,
-                headers: {
-                    AccessKey: sails.config.bunnyCDN.PASSWORD,
-                    'Content-Type': 'application/octet-stream',
-                },
-            };
-            console.log(options)
-    
+        let FILENAME_TO_UPLOAD = encodeURIComponent(file.stream.filename.replace(/[^a-zA-Z0-9-,\(/\)/.#_]/g, ''));
+        const urlParts = FILENAME_TO_UPLOAD.split('.');
+        const newUrl = `${urlParts.slice(0, -1).join('.')}_${new Date().getTime()}.${urlParts[urlParts.length - 1]}`;
+        FILENAME_TO_UPLOAD = newUrl;
+
+        const options = {
+            method: 'PUT',
+            host: sails.config.bunnyCDN.HOSTNAME,
+            path: `/${STORAGE_ZONE_NAME}/${FILENAME_TO_UPLOAD}`,
+            headers: {
+            AccessKey: sails.config.bunnyCDN.PASSWORD,
+            'Content-Type': 'application/octet-stream',
+            },
+        };
+
+        const maxRetries = 3; // Set the maximum number of retries
+        const delay = 1000;   // Initial delay in milliseconds
+
+        // Retry logic
+        async function uploadWithRetry(attempt = 1) {
+            return new Promise((resolve, reject) => {
             const uploadReq = https.request(options, (response) => {
                 let data = '';
                 response.on('data', (chunk) => {
-                    console.log(chunk.toString('utf8'), 'jhb');
-
-                    data += chunk;
+                data += chunk;
                 });
                 response.on('end', () => {
-                    if(!folder){
-                        console.log('file uploaded')
-
-                        res.ok(`${sails.config.bunnyCDN.baseUrl}/${FILENAME_TO_UPLOAD}`);
-                    }else{
-
-                        res.ok(`${sails.config.bunnyCDN.baseUrl}/${folder}/${FILENAME_TO_UPLOAD}`);
-                    }
-                });
-                response.on('error', (error) => {
-                    console.log(error)
-                    console.error(error);
-                    res.serverError('Internal Server Error');
+                if (response.statusCode === 200||response.statusCode === 201) {
+                    const fileUrl = folder ? `${sails.config.bunnyCDN.baseUrl}/${folder}/${FILENAME_TO_UPLOAD}` : `${sails.config.bunnyCDN.baseUrl}/${FILENAME_TO_UPLOAD}`;
+                    resolve(fileUrl);
+                } else {
+                    const error = new Error(`Upload failed with status code: ${response.statusCode}`);
+                    reject(error);
+                }
                 });
             });
-            // Pipe the file stream directly to the HTTP request
+
+            uploadReq.on('error', (error) => reject(error));
             file.stream.pipe(uploadReq);
+            })
+            .catch(async (error) => {
+            console.error(`Attempt ${attempt} failed:`, error.message);
+            if (attempt < maxRetries) {
+                // Wait with exponential backoff before retrying
+                await new Promise(resolve => setTimeout(resolve, delay * attempt));
+                return uploadWithRetry(attempt + 1);
+            }
+            throw new Error('Max retries reached. Upload failed.');
+            });
+        }
+
+        // Perform upload with retry logic
+        const fileUrl = await uploadWithRetry();
+        return res.ok(fileUrl);
+
         } catch (error) {
-            console.error('Error uploading file:', error);
-            res.serverError('Internal Server Error');
+        console.error('Error uploading file:', error);
+        res.serverError('Internal Server Error');
         }
     },
+
     deleteFile: async function(req, res) {
         try {
     
