@@ -112,7 +112,7 @@ module.exports = {
         }
 
         return res.json(record);
-    },
+    }, 
     deleteOne: async function (req, res) {
         try {
             var record = await AreaService.deleteOne(req, req.params.id);

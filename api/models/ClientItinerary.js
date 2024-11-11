@@ -82,6 +82,12 @@ module.exports = {
         clientSites: {
             type: 'json',
         },
+        pickUpLocation: {
+            type: 'string',
+        },
+        dropLocation: {
+            type: 'string',
+        },
         
         isDeleted: { type: 'boolean'},
         deletedAt: { type: 'ref', columnType: 'datetime' },

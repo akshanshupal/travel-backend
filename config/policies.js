@@ -8,6 +8,8 @@
  * https://sailsjs.com/docs/concepts/policies
  */
 
+const SendMailController = require("../api/controllers/SendMailController");
+
 module.exports.policies = {
 
   /***************************************************************************
@@ -41,6 +43,7 @@ module.exports.policies = {
   SavedItineraryController: {
     'findOne' : true
   },
+  
   hotelInfoController: {
     'find' : true
   }

@@ -38,6 +38,13 @@ module.exports = {
         disclaimer:{
             type:'string'
         },
+        hotlineNumber:{
+            type:'string'
+
+        },
+        mailId:{
+            type:'json',
+        },
         isDeleted: { type: 'boolean'},
         deletedAt: { type: 'ref', columnType: 'datetime' },
         deletedBy: { model: 'user' },

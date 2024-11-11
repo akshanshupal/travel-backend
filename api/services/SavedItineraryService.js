@@ -236,7 +236,7 @@ module.exports = {
 
             // return resolve({ data: { deleted: true } });
         })
-    },
+    }, 
     sendWelcomeEmail: async function (ctx,data) {
         return new Promise(async (resolve, reject) => {
             
