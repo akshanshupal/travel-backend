@@ -87,9 +87,9 @@ module.exports = {
     },
 
     create: async function (req, res) {
-        if (!req.body.title) {
-            return res.badRequest({ code: 'Error', message: 'Title is missing' });
-        }
+        // if (!req.body.title) {
+        //     return res.badRequest({ code: 'Error', message: 'Title is missing' });
+        // }
 
         try {
             var record = await AssignmentService.create(req, req.body);

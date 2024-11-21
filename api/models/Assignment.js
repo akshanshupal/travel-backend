@@ -6,6 +6,9 @@
 module.exports = {
 
     attributes: {
+        agent: {
+            model: 'user'
+        },
         title: {
             type: 'string'
         },
@@ -15,24 +18,8 @@ module.exports = {
         company: {
             model: 'company'
         },
-        agentName: {
-            type: 'string'
-        },
-       
         bookingDate: {
               type: 'ref', columnType: 'datetime'
-        },
-        totalCost: {
-            type: 'string'
-        },
-        paymentMode: {
-            type: 'string'
-        },
-        mobile: {
-            type: 'string'
-        },
-        email: {
-            type: 'string'
         },
         travelDate: {
                type: 'ref', columnType: 'datetime'
@@ -46,7 +33,22 @@ module.exports = {
         packageCost: {
             type: 'string'
         },
+        taxes:{
+            type:'string'
+        },
         finalPackageCost: {
+            type: 'string'
+        },
+        tokenAmount:{
+            type:'string'
+        },
+        paymentMode: {
+            type: 'string'
+        },
+        mobile: {
+            type: 'string'
+        },
+        email: {
             type: 'string'
         },
         noOfDays: {
@@ -58,29 +60,32 @@ module.exports = {
         noOfKids: {
             type: 'string'
         },
-        carSeater: {
-            type: 'string'
-        },
         noOfRooms: {
             type: 'string'
         },
         hotelCategory: {
             model: 'hotelcategory'
         },
-        selectedFood: {
-             type:'json'
+        carSeater: {
+            type: 'string'
         },
         specialInclusion:{
             type: 'string'
         },
+        selectedFood: {
+            type:'json'
+        },
         textForBookingTeam: {
-            type: 'string'
+           type: 'string'
         },
         stayDate: {
-               type: 'ref', columnType: 'datetime'
+            type: 'ref', columnType: 'datetime'
         },
         stayLocation: {
             type: 'string'
+        },
+        sightSeeing: {
+            type: 'boolean'
         },
         pickUpAddress: {
             type: 'string'
@@ -93,19 +98,35 @@ module.exports = {
         },
         dropAddress: {
             type: 'string'
+        },    
+        whatsappSent: {
+            type: "boolean"
+        },
+        itineraryLink:{
+            type:'string'
+        },
+        emailSent: {
+            type: "boolean"
         },
         tollParkingAdded: {
             type: 'boolean'
         },
-        savedItinerary: {
-            model: 'savedItinerary'
-        },
         waveLink: {
             type: 'string'
         },
-       idProof:{
-           type:'json'
-       },
+        savedItinerary: {
+            model: 'savedItinerary'
+        },
+        kidsAges: {
+            type: 'json'
+        },
+
+        // totalCost: {
+        //     type: 'string'
+        // },
+        idProof:{
+            type:'json'
+        },
         isDeleted: { type: 'boolean'},
         deletedAt: { type: 'ref', columnType: 'datetime' },
         deletedBy: { model: 'user' },
