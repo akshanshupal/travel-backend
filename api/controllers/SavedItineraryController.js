@@ -90,7 +90,7 @@ module.exports = {
         try {
             var record = await SavedItineraryService.create(req, req.body);
         } catch (error) {
-            return res.serverError(error);
+            return res.status(error?.statusCode || 500).json({ error: error?.error || error });
         }
         return res.json(record.data);
     },
