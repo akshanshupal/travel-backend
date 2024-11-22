@@ -158,7 +158,6 @@ module.exports = {
                 if (params?.select) {
                     qryObj.select = params.select;
                 }
-                filter['abc']='232'
     
                 const records = await SavedItinerary.find(qryObj).meta({ makeLikeModifierCaseInsensitive: true });
     
@@ -455,6 +454,7 @@ module.exports = {
     
                 return resolve({ data: record || { created: true } });
             } catch (error) {
+                let x = error.error;
                 if (error instanceof ReferenceError) {
                     return reject({
                         statusCode: 500,
@@ -463,7 +463,7 @@ module.exports = {
                 }
                 return reject({
                     statusCode: 500,
-                    error: { message: error.message }
+                    error: { message: error?.error?.message || "Error in creating data" }
                 });
             }
         });
