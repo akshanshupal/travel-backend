@@ -96,6 +96,22 @@ module.exports = {
 
         return res.json(record.data);
     },
+    duplicate: async function (req, res) {
+        if(!req.body.id){
+            res.badRequest('ID is missing');
+        }
+        if(!req.body.title){
+            res.badRequest('title is missing');
+        }
+
+        try {
+            var record = await ItineraryService.duplicate(req, req.body);
+        } catch (error) {
+            return res.status(error?.statusCode).send(error.error); 
+        }
+
+        return res.json(record.data);
+    },
 
     updateOne: async function (req, res) {
 

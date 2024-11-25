@@ -90,6 +90,7 @@ module.exports.routes = {
   'DELETE /api/hotelimage/:id': 'HotelImageController.deleteOne',
 
   'POST /api/itinerary': 'ItineraryController.create',
+  'POST /api/itinerary/duplicate': 'ItineraryController.duplicate',
   'GET /api/itinerary': 'ItineraryController.find',
   'GET /api/itinerary/:id': 'ItineraryController.findOne',
   'PUT /api/itinerary/:id': 'ItineraryController.updateOne',
