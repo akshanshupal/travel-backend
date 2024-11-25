@@ -1,5 +1,3 @@
-
-
 module.exports = {
     find: function (ctx, filter, params) {
         return new Promise(async (resolve, reject) => {
@@ -9,11 +7,6 @@ module.exports = {
             if (!params) {
                 params = {};
             }
-            if(!filter.hasOwnProperty('isDeleted')){
-                filter.isDeleted = { '!=': true };
-            }
-            if (filter.title && filter.title.trim()) filter.title = { contains: filter.title.trim() };
-
             let qryObj = {where : filter};
             //sort
             let sortField = 'createdAt';
@@ -39,15 +32,15 @@ module.exports = {
                 qryObj.select = params.select;
             }
             try {
-                var records = await Itinerary.find(qryObj).meta({makeLikeModifierCaseInsensitive: true});
+                var records = await GeneralData.find(qryObj);;
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
             //populate&& populate select
             if (params.populate) {
                 let assosiationModels = {};
-                for (let ami = 0; ami < sails.models.itinerary.associations.length; ami++) {
-                    assosiationModels[sails.models.itinerary.associations[ami].alias] = sails.models.itinerary.associations[ami].model;
+                for (let ami = 0; ami < sails.models.generaldata.associations.length; ami++) {
+                    assosiationModels[sails.models.generaldata.associations[ami].alias] = sails.models.generaldata.associations[ami].model;
                 }
                 for (let i = 0; i < records.length; i++) {
                     for (let populateKey of params.populate) {
@@ -73,7 +66,7 @@ module.exports = {
             //totalCount
             if (params.totalCount) {
                 try {
-                    var totalRecords = await Itinerary.count(filter).meta({makeLikeModifierCaseInsensitive: true});
+                    var totalRecords = await GeneralData.count(filter)
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
@@ -108,20 +101,18 @@ module.exports = {
                 qryObj.select = params.select;
             }
             try {
-                var record = await Itinerary.findOne(qryObj);;
+                var record = await GeneralData.findOne(qryObj);;
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
             if (!record) {
                 return reject({ statusCode: 404, error: { code: "Not Found", message: "Data not found!" } });
             }
-            console.log('1 is reached')
-
             //populate&& populate select
             if (params.populate) {
                 let assosiationModels = {};
-                for (let ami = 0; ami < sails.models.itinerary.associations.length; ami++) {
-                    assosiationModels[sails.models.itinerary.associations[ami].alias] = sails.models.itinerary.associations[ami].model;
+                for (let ami = 0; ami < sails.models.generaldata.associations.length; ami++) {
+                    assosiationModels[sails.models.generaldata.associations[ami].alias] = sails.models.generaldata.associations[ami].model;
                 }
                 for (let populateKey of params.populate) {
                     if (!record[populateKey]) {
@@ -136,54 +127,15 @@ module.exports = {
                     let modelName = assosiationModels[populateKey];                        
                     try {
                         record[populateKey] = await sails.models[modelName].findOne(cond);
-                        console.log('2 is reached')
-
                     } catch (error) {
                         return reject({ statusCode: 500, error: error });
                     }
-                }
-                if (record.sites?.length) {
-                    for (let i = 0; i < record.sites.length; i++) {
-                        let siteObj = record.sites[i];
-                
-                        if (params.populate.includes('site') && siteObj.siteId) {
-                            let site;
-                            try {
-                                site = await SiteService.findOne(ctx, siteObj.siteId, { select: ['id', 'title', 'alias', 'description', 'featureImg'] });
-                            } catch (error) {
-                                console.log(error)
-                                return reject({ statusCode: 500, error: error }); 
-                            }
-                            if (site) {
-                                siteObj = { ...site, hotels: siteObj.hotels || [], days: record.sites[i].days || 1 };
-                            }
-                        }
-                
-                        if (params.populate.includes('hotel') && siteObj.hotels?.length) {
-                            for (let j = 0; j < siteObj.hotels.length; j++) {
-                                const hotelId = siteObj.hotels[j];
-                                let hotel
-                                try {
-                                    hotel = await HotelService.findOne(ctx, hotelId, { select: ['id', 'name'] });
-                                } catch (error) {
-                                    console.log(error); 
-                                    reject({ statusCode: 500, error: error }); 
-                                }
-                                if (hotel) {
-                                    siteObj.hotels[j] = hotel;
-                                }
-                            }
-                        }
-                
-                        record.sites[i] = siteObj;
-                    }
-                }
+                }   
             }
             const rtrn = { data: record }
             return resolve({ data: record });
         })
     },
-
     create: function (ctx, data, avoidRecordFetch) {
         return new Promise(async (resolve, reject) => {
             if (!data.company) {
@@ -198,13 +150,13 @@ module.exports = {
             }
             if (avoidRecordFetch) {
                 try {
-                    var record = await Itinerary.create(data);
+                    var record = await GeneralData.create(data);
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
             } else {
                 try {
-                    var record = await Itinerary.create(data).fetch();
+                    var record = await GeneralData.create(data).fetch();
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
@@ -232,7 +184,7 @@ module.exports = {
             }
 
             try {
-                var record = await Itinerary.updateOne(filter).set(updtBody);
+                var record = await GeneralData.updateOne(filter).set(updtBody);
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -253,36 +205,13 @@ module.exports = {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
             try {
-                await Itinerary.destroyOne(filter);
+                await GeneralData.destroyOne(filter);
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
 
 
             return resolve({ data: { deleted: true } });
-        })
-    },
-    count: function (ctx, filter) {
-        return new Promise(async (resolve, reject) => {
-            if (!filter) {
-                filter = {};
-            }
-            if (!filter.company) {
-                filter.company = ctx?.session?.activeCompany?.id;
-            }
-            
-            if (!filter.company) {
-                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
-            }
-            if(!filter.hasOwnProperty('isDeleted')){
-                filter.isDeleted = { '!=': true };
-            }
-            try {
-                const count = await Itinerary.count(filter);
-                return resolve(count);
-            } catch (error) {
-                return reject({ statusCode: 500, error: error });
-            }
         })
     }
 }
