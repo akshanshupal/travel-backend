@@ -247,6 +247,11 @@ module.exports = {
             delete existingItinerary.id;
             delete existingItinerary.createdAt;
             delete existingItinerary.updatedAt;
+            if(!data?.hotelCopy){
+                let sites = existingItinerary.sites;
+                sites.forEach(el=>el.hotels = []);
+                existingItinerary.sites = sites;
+            }
 
             try {
                 var record = await Itinerary.create(existingItinerary).fetch();
