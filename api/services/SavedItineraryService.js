@@ -193,9 +193,7 @@ module.exports = {
     
                 if (params?.totalCount) {
                     try {
-                        const totalRecords = await SavedItinerary.count(filter).meta({
-                            makeLikeModifierCaseInsensitive: true
-                        });
+                        const totalRecords = await SavedItinerary.count(filter).meta({makeLikeModifierCaseInsensitive: true});
                         result.totalCount = totalRecords;
                     } catch (error) {
                         return reject({
@@ -436,8 +434,14 @@ module.exports = {
                 if (data.clientItinerary) {    
                     const records = await this.find(ctx, { clientItinerary: data.clientItinerary });
                     if (records?.length) {
+                        console.log(1)
                         for (const el of records) {
+                            console.log(2)
+
                             if (el.mailData === data.mailData) {
+                                console.log(3)
+
+
                                 return reject({
                                     statusCode: 400,
                                     error: {
