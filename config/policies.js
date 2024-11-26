@@ -42,6 +42,9 @@ module.exports.policies = {
   SavedItineraryController: {
     'findOne' : true
   },
+  HotelImageController: {
+    'find' : true
+  },
   
   hotelInfoController: {
     'find' : true
