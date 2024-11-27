@@ -126,11 +126,11 @@ module.exports = {
                 if (filter.clientName && filter.clientName.trim()) {
                     filter.clientName = { contains: filter.clientName.trim() };
                 }
-                if (filter.mail && filter.mail.trim()) {
-                    filter.mail = { contains: filter.mail.trim() };
+                if (filter.email && filter.email.trim()) {
+                    filter.email = { contains: filter.email.trim() };
                 }
-                if (filter.phone && filter.phone.trim()) {
-                    filter.phone = { contains: filter.phone.trim() };
+                if (filter.mobile && filter.mobile.trim()) {
+                    filter.mobile = { contains: filter.mobile.trim() };
                 }
                 if (filter.createdAt) {
                     const df = sails.dayjs(filter.createdAt).startOf('date').toDate();
@@ -140,7 +140,7 @@ module.exports = {
                 if (filter.clientDetails) {
                     const searchCriteriaOr = [
                         { clientName: { contains: filter.clientDetails } },
-                        { mail: { contains: filter.clientDetails } },
+                        { email: { contains: filter.clientDetails } },
                         { mobile: { contains: filter.clientDetails } }
                     ];
                     filter.or = searchCriteriaOr;
@@ -220,6 +220,7 @@ module.exports = {
             }
         });
     },
+    
     
     // findOne: function (ctx, id, params) {
     //     return new Promise(async (resolve, reject) => {
