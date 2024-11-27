@@ -45,6 +45,9 @@ module.exports.policies = {
   HotelImageController: {
     'find' : true
   },
+  HotelController: {
+    'findOne' : true
+  },
   
   hotelInfoController: {
     'find' : true
