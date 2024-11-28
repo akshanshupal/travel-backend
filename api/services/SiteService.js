@@ -182,6 +182,51 @@ module.exports = {
 
 
     },
+    duplicate: function (ctx, data) {
+        return new Promise(async (resolve, reject) => {
+            if (!data.company) {
+                data.company= ctx?.session?.activeCompany?.id;
+            }
+
+            if (!data.company) {
+                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+            }
+            if(!data.id){
+                return reject({ statusCode: 400, error: { message: 'id is not allowed!' } });
+            }
+            if(!data.title){
+                return reject({ statusCode: 400, error: { message: 'Title is required!' } });
+            }
+            let existingSite;
+            try {
+                const newData = await this.findOne(ctx, data.id);
+                if(!newData){
+                    return reject({ statusCode: 400, error: { message: 'site not found!' } });
+                }
+                if(newData){
+                    existingSite = newData
+                }
+            } catch (error) {
+                return reject(error);  
+            }
+            existingSite.title = data.title;
+            existingSite.area =data.area;
+            delete existingSite.id;
+            delete existingSite.createdAt;
+            delete existingSite.updatedAt;
+    
+
+            try {
+                var record = await Site.create(existingSite).fetch();
+            } catch (error) {
+                return reject({ statusCode: 500, error: error });
+            }
+
+            return resolve({ data: record || { created: true } });
+        })
+
+
+    },
     updateOne: function (ctx, id, updtBody) {
         return new Promise(async (resolve, reject) => {
             const filter = {

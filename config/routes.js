@@ -57,6 +57,7 @@ module.exports.routes = {
 
 
   'POST /api/site': 'siteController.create',
+  'POST /api/site/duplicate': 'siteController.duplicate',
   'GET /api/site': 'siteController.find',
   'GET /api/site/:id': 'siteController.findOne',
   'PUT /api/site/:id': 'siteController.updateOne',

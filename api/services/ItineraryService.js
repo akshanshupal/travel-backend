@@ -1,6 +1,5 @@
 const { duplicate } = require("../controllers/ItineraryController");
 
-
 module.exports = {
     find: function (ctx, filter, params) {
         return new Promise(async (resolve, reject) => {
