@@ -3,6 +3,9 @@ module.exports = {
     find: function (ctx, filter, params) {
         return new Promise(async (resolve, reject) => {
             if (!filter.company) {
+                filter.company= ctx?.session?.activeCompany?.id;
+            }
+            if (!filter.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
             if (!params) {
@@ -173,7 +176,19 @@ module.exports = {
                 data.status=true
             }
             try {
+                if (data.title && data.area) {
+                    try {
+                        const [duplicateSite] = await this.find(ctx, { title: data.title, area: data.area }, {limit:1});
+                        if (duplicateSite) {
+                            return reject({ statusCode: 400, error: { message: 'A site with the same title already exists on this area!' } });
+                        }
+                    } catch (error) {
+                        return reject(error);
+                    }
+                }
+
                 var record = await Site.create(data).fetch();
+                
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -257,6 +272,18 @@ module.exports = {
             if(updtBody.hasOwnProperty('area')&&!updtBody.area){
                 return reject({ statusCode: 400, error: { message: 'area is required!' } });
             }
+            if (updtBody.title && updtBody.area) {
+                try {
+                    const [duplicateSite] = await this.find(ctx, { title: updtBody.title, area: updtBody.area }, {limit:1});
+    
+                    if (duplicateSite) {
+                        return reject({ statusCode: 400, error: { message: 'A site with the same title already exists on this area!' } });
+                    }
+                } catch (error) {
+                    return reject(error);
+                }
+            }
+    
             try {
                 var record = await Site.updateOne(filter).set(updtBody);
             } catch (error) {
