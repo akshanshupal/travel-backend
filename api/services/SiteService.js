@@ -275,8 +275,8 @@ module.exports = {
             if (updtBody.title && updtBody.area) {
                 try {
                     const [duplicateSite] = await this.find(ctx, { title: updtBody.title, area: updtBody.area }, {limit:1});
-    
-                    if (duplicateSite) {
+                    
+                    if (duplicateSite?.id != id) {
                         return reject({ statusCode: 400, error: { message: 'A site with the same title already exists on this area!' } });
                     }
                 } catch (error) {
