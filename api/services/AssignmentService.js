@@ -208,12 +208,17 @@ module.exports = {
             if (!filter.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
+            // try {
+            //     await Assignment.destroyOne(filter);
+            // } catch (error) {
+            //     return reject({ statusCode: 500, error: error });
+            // }
+            let deletedData
             try {
-                await Assignment.destroyOne(filter);
+                deletedData =  await this.updateOne(ctx, id, {isDeleted:true, deletedAt: new Date(), deletedBy: ctx?.user?.id})
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
-
 
             return resolve({ data: { deleted: true } });
         })

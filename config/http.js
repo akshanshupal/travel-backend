@@ -35,6 +35,7 @@ module.exports.http = {
       // 'session',
       'bodyParser',
       'parseCompany',
+      // 'setSessionUser',
       'compress',
       // 'poweredBy',
       'router',

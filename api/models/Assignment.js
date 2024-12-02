@@ -21,7 +21,7 @@ module.exports = {
         bookingDate: {
               type: 'ref', columnType: 'datetime'
         },
-        travelDate: {
+        tourDate: {
                type: 'ref', columnType: 'datetime'
         },
         travelLocation: {
