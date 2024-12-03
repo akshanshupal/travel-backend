@@ -8,6 +8,9 @@ module.exports = {
             // if (!filter.company) {
             //     return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             // }
+            if (filter.company) {
+                delete filter.company
+            }
             if (!params) {
                 params = {};
             }
@@ -97,7 +100,7 @@ module.exports = {
                 id: id,
             };
             if (!filter.id) {
-                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+                return reject({ statusCode: 400, error: { message: 'id is required!' } });
             }
             // if (!filter.company) {
             //     return reject({ statusCode: 400, error: { message: 'company id is required!' } });
@@ -198,9 +201,9 @@ module.exports = {
     },
     duplicate: function (ctx, data) {
         return new Promise(async (resolve, reject) => {
-            // if (!data.company) {
-            //     data.company= ctx?.session?.activeCompany?.id;
-            // }
+            if (!data.company) {
+                data.company= ctx?.session?.activeCompany?.id;
+            }
 
             if (!data.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
@@ -250,12 +253,12 @@ module.exports = {
             if (!filter.id) {
                 return reject({ statusCode: 400, error: { message: 'id is required!' } });
             }
-            if (!filter.company) {
-                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
-            }
-            if (!updtBody.company) {
-                updtBody.company= filter.company;
-            }
+            // if (!filter.company) {
+            //     return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+            // }
+            // if (!updtBody.company) {
+            //     updtBody.company= filter.company;
+            // }
             if(updtBody.hasOwnProperty('title')&&!updtBody.title){
                 return reject({ statusCode: 400, error: { message: 'title is required!' } });
             }
@@ -300,9 +303,9 @@ module.exports = {
             if (!filter.id) {
                 return reject({ statusCode: 400, error: { message: 'id is required!' } });
             }
-            if (!filter.company) {
-                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
-            }
+            // if (!filter.company) {
+            //     return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+            // }
             let deletedSite
             try {
                 deletedSite =  await this.updateOne(ctx, id, {isDeleted:true})

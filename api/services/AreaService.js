@@ -2,9 +2,9 @@
 module.exports = {
     find: function (ctx, filter, params) {
         return new Promise(async (resolve, reject) => {
-            // if (!filter.company) {
-            //     return reject({ statusCode: 400, error: { message: 'company id is required!' } });
-            // }
+            if (filter.company) {
+                delete filter.company
+            }
             if (!params) {
                 params = {};
             }
@@ -147,13 +147,13 @@ module.exports = {
     },
     create: function (ctx, data) {
         return new Promise(async (resolve, reject) => {
-            // if (!data.company) {
-            //     data.company= ctx?.session?.activeCompany?.id;
-            // }
+            if (!data.company) {
+                data.company= ctx?.session?.activeCompany?.id;
+            }
    
-            // if (!data.company) {
-            //     return reject({ statusCode: 400, error: { message: 'company id is required!' } });
-            // }
+            if (!data.company) {
+                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+            }
             if(!data.title){
                 return reject({ statusCode: 400, error: { message: 'Title is required!' } });
             }
