@@ -1,12 +1,12 @@
 module.exports = {
     find: function (ctx, filter, params) {
         return new Promise(async (resolve, reject) => {
-            if (!filter.company) {
-                filter.company= ctx?.session?.activeCompany?.id;
-            }
-            if (!filter.company) {
-                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
-            }
+            // if (!filter.company) {
+            //     filter.company= ctx?.session?.activeCompany?.id;
+            // }
+            // if (!filter.company) {
+            //     return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+            // }
             if (!params) {
                 params = {};
             }
@@ -88,14 +88,14 @@ module.exports = {
         return new Promise(async (resolve, reject) => {
             const filter = {
                 id: id,
-                company: ctx?.session?.activeCompany?.id,
             };
+            // company: ctx?.session?.activeCompany?.id,
             if (!filter.id) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
-            if (!filter.company) {
-                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
-            }
+            // if (!filter.company) {
+            //     return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+            // }
             let qryObj = { where: filter };
             if(!qryObj.where?.id){
                 return reject({ statusCode: 400, error: { message: "ID Missing!" } });
@@ -144,13 +144,13 @@ module.exports = {
     },
     create: function (ctx, data, avoidRecordFetch) {
         return new Promise(async (resolve, reject) => {
-            if (!data.company) {
-                data.company= ctx?.session?.activeCompany?.id;
-            }
+            // if (!data.company) {
+            //     data.company= ctx?.session?.activeCompany?.id;
+            // }
 
-            if (!data.company) {
-                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
-            }
+            // if (!data.company) {
+            //     return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+            // }
             // try {
             //     // Function to process and save images in batches
             //     async function saveImagesInBatches(images, batchSize) {
@@ -216,17 +216,17 @@ module.exports = {
         return new Promise(async (resolve, reject) => {
             const filter = {
                 id: id,
-                company: ctx?.session?.activeCompany?.id,
             };
+            // company: ctx?.session?.activeCompany?.id,
             if (!filter.id) {
                 return reject({ statusCode: 400, error: { message: 'id is required!' } });
             }
-            if (!filter.company) {
-                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
-            }
-            if (!updtBody.company) {
-                updtBody.company= filter.company;
-            }
+            // if (!filter.company) {
+            //     return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+            // }
+            // if (!updtBody.company) {
+            //     updtBody.company= filter.company;
+            // }
 
             try {
                 var record = await HotelImage.updateOne(filter).set(updtBody);
@@ -241,14 +241,14 @@ module.exports = {
         return new Promise(async (resolve, reject) => {
             const filter = {
                 id: id,
-                company: ctx?.session?.activeCompany?.id,
             };
+            // company: ctx?.session?.activeCompany?.id,
             if (!filter.id) {
                 return reject({ statusCode: 400, error: { message: 'id is required!' } });
             }
-            if (!filter.company) {
-                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
-            }
+            // if (!filter.company) {
+            //     return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+            // }
             try {
                 await HotelImage.destroyOne(filter);
             } catch (error) {
