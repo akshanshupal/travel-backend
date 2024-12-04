@@ -85,7 +85,7 @@ module.exports = {
             type: 'string'
         },
         sightSeeing: {
-            type: 'boolean'
+            type: 'string'
         },
         pickUpAddress: {
             type: 'string'
