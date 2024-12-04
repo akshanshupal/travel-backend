@@ -1,8 +1,11 @@
 module.exports = {
     find: function (ctx, filter, params) {
         return new Promise(async (resolve, reject) => {
-            if (!filter.company) {
-                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+            // if (!filter.company) {
+            //     return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+            // }
+            if (filter.company) {
+                delete filter.company
             }
             if (!params) {
                 params = {};
@@ -88,14 +91,14 @@ module.exports = {
         return new Promise(async (resolve, reject) => {
             const filter = {
                 id: id,
-                company: ctx?.session?.activeCompany?.id,
             };
+            // company: ctx?.session?.activeCompany?.id,
             if (!filter.id) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
-            if (!filter.company) {
-                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
-            }
+            // if (!filter.company) {
+            //     return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+            // }
             let qryObj = { where: filter };
             if(!qryObj.where?.id){
                 return reject({ statusCode: 400, error: { message: "ID Missing!" } });
@@ -186,14 +189,14 @@ module.exports = {
         return new Promise(async (resolve, reject) => {
             const filter = {
                 id: id,
-                company: ctx?.session?.activeCompany?.id,
             };
+            // company: ctx?.session?.activeCompany?.id,
             if (!filter.id) {
                 return reject({ statusCode: 400, error: { message: 'id is required!' } });
             }
-            if (!filter.company) {
-                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
-            }
+            // if (!filter.company) {
+            //     return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+            // }
             const data = {}
             if (updtBody.hasOwnProperty('title')) {
                 data.title= updtBody.title;
@@ -218,14 +221,14 @@ module.exports = {
         return new Promise(async (resolve, reject) => {
             const filter = {
                 id: id,
-                company: ctx?.session?.activeCompany?.id,
             };
+            // company: ctx?.session?.activeCompany?.id,
             if (!filter.id) {
                 return reject({ statusCode: 400, error: { message: 'id is required!' } });
             }
-            if (!filter.company) {
-                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
-            }
+            // if (!filter.company) {
+            //     return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+            // }
             try {
                 await HotelCategory.destroyOne(filter);
             } catch (error) {
@@ -241,13 +244,13 @@ module.exports = {
             if (!filter) {
                 filter = {};
             }
-            if (!filter.company) {
-                filter.company = ctx?.session?.activeCompany?.id;
-            }
+            // if (!filter.company) {
+            //     filter.company = ctx?.session?.activeCompany?.id;
+            // }
             
-            if (!filter.company) {
-                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
-            }
+            // if (!filter.company) {
+            //     return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+            // }
             if(!filter.hasOwnProperty('isDeleted')){
                 filter.isDeleted = { '!=': true };
             }

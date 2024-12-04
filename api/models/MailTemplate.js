@@ -19,6 +19,9 @@ module.exports = {
             type: 'string',
             allowNull: true
         },
+        website: {
+            type: 'string',
+        },
         userIcon : {
             type: 'string',
             allowNull: true
