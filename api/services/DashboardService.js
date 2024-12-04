@@ -5,13 +5,13 @@ module.exports = {
             if (!filter) {
                 filter = {};
             }
-            if (!filter.company) {
-                filter.company = ctx?.session?.activeCompany?.id;
-            }
+            // if (!filter.company) {
+            //     filter.company = ctx?.session?.activeCompany?.id;
+            // }
             
-            if (!filter.company) {
-                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
-            }
+            // if (!filter.company) {
+            //     return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+            // }
 
             let data = {
                 itineraries: 0,
