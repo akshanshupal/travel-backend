@@ -170,10 +170,14 @@ module.exports = {
                                     hotel = await HotelService.findOne(ctx, hotelId, { select: ['id', 'name'] });
                                 } catch (error) {
                                     console.log(error); 
-                                    reject({ statusCode: 500, error: error }); 
+                                                                        // reject({ statusCode: 500, error: error }); 
                                 }
                                 if (hotel) {
                                     siteObj.hotels[j] = hotel;
+                                }else{
+                                    siteObj.hotels.splice(j, 1);
+                                    j--; 
+                                    
                                 }
                             }
                         }
