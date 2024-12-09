@@ -10,6 +10,26 @@ module.exports = {
             if(!filter.hasOwnProperty('isDeleted')){
                 filter.isDeleted = { '!=': true };
             }
+            if (filter.title && filter.title.trim()) filter.title = { contains: filter.title.trim() };
+            if (filter.clientName && filter.clientName.trim()) filter.clientName = { contains: filter.clientName.trim() };
+            if (filter.email && filter.email.trim()) filter.email = { contains: filter.email.trim() };
+            if (filter.mobile && filter.mobile.trim()) filter.mobile = { contains: filter.mobile.trim() };
+            if (filter.tourDate) {
+                let df = sails.dayjs(filter.tourDate).startOf('date').toDate();
+                let dt = sails.dayjs(filter.tourDate).endOf('date').toDate();
+                filter.tourDate = { '>=': df, '<=': dt };
+            }
+            if (filter.bookingDate) {
+                let df = sails.dayjs(filter.bookingDate).startOf('date').toDate();
+                let dt = sails.dayjs(filter.bookingDate).endOf('date').toDate();
+                filter.bookingDate = { '>=': df, '<=': dt };
+            }
+            if(filter.clientDetails){
+                const searchCriteriaOr = [{ clientName: { contains: filter.clientDetails } },{ email: { contains: filter.clientDetails } },{ mobile: { contains: filter.clientDetails } }];
+                filter.or = searchCriteriaOr;
+                delete filter.clientDetails
+            }
+
             let qryObj = {where : filter};
             //sort
             let sortField = 'createdAt';

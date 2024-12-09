@@ -6,8 +6,11 @@
 module.exports = {
 
     attributes: {
-        agent: {
+        agentName: {
             model: 'user'
+        },
+        clientName: {
+            type: 'string'
         },
         title: {
             type: 'string'

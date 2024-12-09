@@ -3,27 +3,53 @@
 const nodemailer = require('nodemailer');
 
 module.exports = {
-  sendEmail: function (to, subject, text, html) {
+  sendEmail: function (ctx,to, subject, text, html) {
     return new Promise(async (resolve, reject) => {
-        // Set up transporter configuration
-        const transporter = nodemailer.createTransport({
-            host: 'smtpout.secureserver.net',
-            port: 465,
-            secure: true,
-            auth: {
-                user: 'sales@thetripbliss.com',
-                pass: 'Shalini@123',
-            },
-        });
+        let transporter;
+        let mailOptions
+        if(ctx.session&&ctx.session.activeCompany&&ctx.session.activeCompany.id=='65fb18f4566f341facb8d1a9'){
 
-        // Configure mail options
-        const mailOptions = {
-            from: 'sales@thetripbliss.com',
-            to,
-            subject,
-            text,
-            html,
-        };
+            transporter = nodemailer.createTransport({
+                host: 'smtpout.secureserver.net',
+                port: 465,
+                secure: true,
+                auth: {
+                    user: 'sales@thetripbliss.com',
+                    pass: 'Shalini@123',
+                },
+            });
+    
+            // Configure mail options
+            mailOptions = {
+                from: 'sales@thetripbliss.com',
+                to,
+                subject,
+                text,
+                html,
+            };
+        }
+        if(ctx.session&&ctx.session.activeCompany&&ctx.session.activeCompany.id=='674f3fa327a4eb7981d4df5a'){
+            //tripzipper
+            transporter = nodemailer.createTransport({
+                host: 'smtpout.secureserver.net',
+                port: 465,
+                secure: true,
+                auth: {
+                    user: 'enquiry@tripzipper.co.in',
+                    pass: 'Nokia@5310',
+                },
+            });
+    
+            // Configure mail options
+            mailOptions = {
+                from: 'enquiry@tripzipper.co.in',
+                to,
+                subject,
+                text,
+                html,
+            };
+        }
+        // Set up transporter configuration
 
         // Attempt to send email
         try {

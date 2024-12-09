@@ -531,7 +531,7 @@ module.exports = {
             const html = data?.html || '<h1>Welcome!</h1><p>Thank you for signing up!</p>';
     
             try {
-                await EmailService.sendEmail(email, subject, text, html);
+                await EmailService.sendEmail(ctx,email, subject, text, html);
                 return resolve({data: { message: 'Email sent successfully!' }});
             } catch (error) {
                 return reject(error);
@@ -545,47 +545,93 @@ module.exports = {
                 const {data}= await this.findOne(ctx, id, { populate: ['salesExecutive','company'] });
                 if(data){
                     sendMail = data
-                    let html = `<div style="max-width: 600px; margin: 0 auto; text-align: center; border: 1px solid #ccc; padding: 20px;">
-                    <h1 style="color: #555; font-size: 24px; font-weight: bold;">
-                        Here is the quotation you requested from us!!
-                    </h1>
-                
-                    <div style="margin: 20px 0;">
-                        <button style="background-color: #1a73e8; color: #fff; padding: 15px 30px; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer;">
-                           <a href="https://admin.thetripbliss.com/package-mail/${sendMail?.id}" style="color: #fff; text-decoration: none;">
-                             <span>Click here to View Package!!</span>
-                           </a> 
-                        </button>
-                    </div>
-                
-                    <p style="color: #1a73e8; font-size: 14px; margin-top: 0;">
-                        This package is valid for 24 Hrs. Freeze your Package by Paying immediately INR 5000/-
-                    </p>
-                
-                    <h2 style="color: #1a73e8; font-size: 20px; font-weight: bold;">
-                        Seal the deal now!
-                    </h2>
-                
-                    <p style="color: #333; font-size: 14px;">
-                        Make the payment today to get the best deal possible
-                    </p>
-                
-                    <div style="margin: 20px 0;">
-                        <button style="background-color: #1a73e8; color: #fff; padding: 10px 20px; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer;">
-                           <a href="https://thetripbliss.com/payment" style="color: #fff; text-decoration: none;">Pay Now</a>
-                        </button>
-                    </div>
-                
-                    <p style="color: #555; font-size: 14px; margin-top: 20px;">
-                        For any queries please contact your Travel Expert.
-                    </p>
-                
-                    <p style="color: #333; font-size: 14px;">
-                        <strong>${sendMail?.salesExecutive?.name}</strong><br>
-                        Phone Number: +91 ${sendMail?.salesExecutive?.mobile}<br>
-                        Email: <a href="mailto:sales@thetripbliss" style="color: #1a73e8;">sales@thetripbliss</a>
-                    </p>
-                   </div>`
+                    let html 
+                    if(ctx.session&&ctx.session.activeCompany&&ctx.session.activeCompany.id=='65fb18f4566f341facb8d1a9'){  
+                         html = `<div style="max-width: 600px; margin: 0 auto; text-align: center; border: 1px solid #ccc; padding: 20px;">
+                        <h1 style="color: #555; font-size: 24px; font-weight: bold;">
+                            Here is the quotation you requested from us!!
+                        </h1>
+                    
+                        <div style="margin: 20px 0;">
+                            <button style="background-color: #1a73e8; color: #fff; padding: 15px 30px; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer;">
+                               <a href="https://admin.thetripbliss.com/package-mail/${sendMail?.id}" style="color: #fff; text-decoration: none;">
+                                 <span>Click here to View Package!!</span>
+                               </a> 
+                            </button>
+                        </div>
+                    
+                        <p style="color: #1a73e8; font-size: 14px; margin-top: 0;">
+                            This package is valid for 24 Hrs. Freeze your Package by Paying immediately INR 5000/-
+                        </p>
+                    
+                        <h2 style="color: #1a73e8; font-size: 20px; font-weight: bold;">
+                            Seal the deal now!
+                        </h2>
+                    
+                        <p style="color: #333; font-size: 14px;">
+                            Make the payment today to get the best deal possible
+                        </p>
+                    
+                        <div style="margin: 20px 0;">
+                            <button style="background-color: #1a73e8; color: #fff; padding: 10px 20px; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer;">
+                               <a href="https://thetripbliss.com/payment" style="color: #fff; text-decoration: none;">Pay Now</a>
+                            </button>
+                        </div>
+                    
+                        <p style="color: #555; font-size: 14px; margin-top: 20px;">
+                            For any queries please contact your Travel Expert.
+                        </p>
+                    
+                        <p style="color: #333; font-size: 14px;">
+                            <strong>${sendMail?.salesExecutive?.name}</strong><br>
+                            Phone Number: +91 ${sendMail?.salesExecutive?.mobile}<br>
+                            Email: <a href="mailto:sales@thetripbliss" style="color: #1a73e8;">sales@thetripbliss</a>
+                        </p>
+                       </div>`
+                    }
+                    if(ctx.session&&ctx.session.activeCompany&&ctx.session.activeCompany.id=='674f3fa327a4eb7981d4df5a'){  
+                         html = `<div style="max-width: 600px; margin: 0 auto; text-align: center; border: 1px solid #ccc; padding: 20px;">
+                        <h1 style="color: #555; font-size: 24px; font-weight: bold;">
+                            Here is the quotation you requested from us!!
+                        </h1>
+                    
+                        <div style="margin: 20px 0;">
+                            <button style="background-color: #1a73e8; color: #fff; padding: 15px 30px; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer;">
+                               <a href="https://admin.tripzipper.co.in/package-mail/${sendMail?.id}" style="color: #fff; text-decoration: none;">
+                                 <span>Click here to View Package!!</span>
+                               </a> 
+                            </button>
+                        </div>
+                    
+                        <p style="color: #1a73e8; font-size: 14px; margin-top: 0;">
+                            This package is valid for 24 Hrs. Freeze your Package by Paying immediately INR 5000/-
+                        </p>
+                    
+                        <h2 style="color: #1a73e8; font-size: 20px; font-weight: bold;">
+                            Seal the deal now!
+                        </h2>
+                    
+                        <p style="color: #333; font-size: 14px;">
+                            Make the payment today to get the best deal possible
+                        </p>
+                    
+                        <div style="margin: 20px 0;">
+                            <button style="background-color: #1a73e8; color: #fff; padding: 10px 20px; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer;">
+                               <a href="https://tripzipper.co.in/payment" style="color: #fff; text-decoration: none;">Pay Now</a>
+                            </button>
+                        </div>
+                    
+                        <p style="color: #555; font-size: 14px; margin-top: 20px;">
+                            For any queries please contact your Travel Expert.
+                        </p>
+                    
+                        <p style="color: #333; font-size: 14px;">
+                            <strong>${sendMail?.salesExecutive?.name}</strong><br>
+                            Phone Number: +91 ${sendMail?.salesExecutive?.mobile}<br>
+                            Email: <a href="mailto:enquiry@tripzipper.co.in" style="color: #1a73e8;">enquiry@tripzipper.co.in</a>
+                        </p>
+                       </div>`
+                    }
                    const formattedDate = sails.dayjs(sendMail?.tourDate).format("DD-MMM-YY");
 
                     let subject = `${sendMail?.company?.name} Itinerary for Domestic Package -Ms ${sendMail?.salesExecutive?.name}-${sendMail?.salesExecutive?.mobile}-${formattedDate}`
