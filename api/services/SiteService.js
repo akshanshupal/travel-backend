@@ -17,7 +17,14 @@ module.exports = {
             if(!filter.hasOwnProperty('isDeleted')){
                 filter.isDeleted = { '!=': true };
             }
-            if (filter.title && filter.title.trim()) filter.title = { contains: filter.title.trim() };
+            if (filter.title && filter.title.trim()){
+                if(filter.exactMatchTitle){
+                    filter.title = filter.title.trim();
+                    delete filter.exactMatchTitle
+                }else{
+                    filter.title = { contains: filter.title.trim() };
+                }
+            } 
             if (filter.alias && filter.alias.trim()) filter.alias = { contains: filter.alias.trim() };
             if (filter.ids && filter.ids.trim()) {
                 filter.id = filter.ids.split(',');
@@ -180,7 +187,7 @@ module.exports = {
             try {
                 if (data.title && data.area) {
                     try {
-                        const [duplicateSite] = await this.find(ctx, { title: data.title, area: data.area }, {limit:1});
+                        const [duplicateSite] = await this.find(ctx, { title: data.title,  exactMatchTitle: true, area: data.area }, {limit:1});
                         if (duplicateSite) {
                             return reject({ statusCode: 400, error: { message: 'A site with the same title already exists on this area!' } });
                         }
@@ -276,7 +283,7 @@ module.exports = {
             }
             if (updtBody.title && updtBody.area) {
                 try {
-                    const [duplicateSite] = await this.find(ctx, { title: updtBody.title, area: updtBody.area }, {limit:1});
+                    const [duplicateSite] = await this.find(ctx, { title: updtBody.title, exactMatchTitle: true, area: updtBody.area }, {limit:1});
                     
                     if (duplicateSite?.id != id) {
                         return reject({ statusCode: 400, error: { message: 'A site with the same title already exists on this area!' } });
