@@ -169,8 +169,14 @@ module.exports = {
             if(!data.hasOwnProperty('status')){
                 data.status=true
             }
-
-
+            try {
+                const [dt] = await this.find(ctx,{alias:data.alias}, {pagination: {limit:1}})
+                if(dt){
+                    return reject({ statusCode: 400, error: { message: 'Area with this alias exists in the panel' } });
+                } 
+            } catch (error) {
+                return reject(error);    
+            }
             try {
                 var record = await Area.create(data).fetch();
             } catch (error) {
