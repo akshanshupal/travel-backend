@@ -18,14 +18,17 @@ module.exports = {
                 filter.isDeleted = { '!=': true };
             }
             if (filter.title && filter.title.trim()){
-                if(filter.exactMatchTitle){
-                    filter.title = filter.title.trim();
-                    delete filter.exactMatchTitle
+                filter.title = { contains: filter.title.trim() };
+
+            } 
+            if (filter.alias && filter.alias.trim()){
+                if(filter.exactMatch){
+                    filter.alias = filter.alias.trim();
+                    delete filter.exactMatch
                 }else{
-                    filter.title = { contains: filter.title.trim() };
+                    filter.alias = { contains: filter.alias.trim() };
                 }
             } 
-            if (filter.alias && filter.alias.trim()) filter.alias = { contains: filter.alias.trim() };
             if (filter.ids && filter.ids.trim()) {
                 filter.id = filter.ids.split(',');
                 delete filter.ids;
@@ -187,7 +190,7 @@ module.exports = {
             try {
                 if (data.alias && data.area) {
                     try {
-                        const [duplicateSite] = await this.find(ctx, { alias: data.alias,  exactMatchTitle: true, area: data.area }, {limit:1});
+                        const [duplicateSite] = await this.find(ctx, { alias: data.alias,  exactMatch: true, area: data.area }, {limit:1});
                         if (duplicateSite) {
                             return reject({ statusCode: 400, error: { message: 'A site with the same title already exists on this area!' } });
                         }
@@ -284,7 +287,7 @@ module.exports = {
             }
             if (updtBody.alias && updtBody.area) {
                 try {
-                    const [duplicateSite] = await this.find(ctx, { alias: updtBody.alias, exactMatchTitle: true, area: updtBody.area }, {limit:1});
+                    const [duplicateSite] = await this.find(ctx, { alias: updtBody.alias, exactMatch: true, area: updtBody.area }, {limit:1});
                     
                     if (duplicateSite?.id != id) {
                         return reject({ statusCode: 400, error: { message: 'A site with the same title already exists on this area!' } });
