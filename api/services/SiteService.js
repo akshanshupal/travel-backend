@@ -185,9 +185,9 @@ module.exports = {
                 data.status=true
             }
             try {
-                if (data.title && data.area) {
+                if (data.alias && data.area) {
                     try {
-                        const [duplicateSite] = await this.find(ctx, { title: data.title,  exactMatchTitle: true, area: data.area }, {limit:1});
+                        const [duplicateSite] = await this.find(ctx, { alias: data.alias,  exactMatchTitle: true, area: data.area }, {limit:1});
                         if (duplicateSite) {
                             return reject({ statusCode: 400, error: { message: 'A site with the same title already exists on this area!' } });
                         }
@@ -234,6 +234,7 @@ module.exports = {
                 return reject(error);  
             }
             existingSite.title = data.title;
+            existingSite.alias = data.title;
             existingSite.area =data.area;
             delete existingSite.id;
             delete existingSite.createdAt;
@@ -281,9 +282,9 @@ module.exports = {
             if(updtBody.hasOwnProperty('area')&&!updtBody.area){
                 return reject({ statusCode: 400, error: { message: 'area is required!' } });
             }
-            if (updtBody.title && updtBody.area) {
+            if (updtBody.alias && updtBody.area) {
                 try {
-                    const [duplicateSite] = await this.find(ctx, { title: updtBody.title, exactMatchTitle: true, area: updtBody.area }, {limit:1});
+                    const [duplicateSite] = await this.find(ctx, { alias: updtBody.alias, exactMatchTitle: true, area: updtBody.area }, {limit:1});
                     
                     if (duplicateSite?.id != id) {
                         return reject({ statusCode: 400, error: { message: 'A site with the same title already exists on this area!' } });
