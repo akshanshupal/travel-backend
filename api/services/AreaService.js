@@ -12,7 +12,12 @@ module.exports = {
                 filter.isDeleted = { '!=': true };
             }
             if (filter.title && filter.title.trim()) filter.title = { contains: filter.title.trim() };
-            if (filter.alias && filter.alias.trim()) filter.alias = { contains: filter.alias.trim() };
+            if(filter.exactMatch&&filter.alias && filter.alias.trim()){
+                filter.alias = filter.alias.trim();
+                delete filter.exactMatch
+            }else if(filter.alias && filter.alias.trim()){
+                filter.alias = { contains: filter.alias.trim() };
+            }
 
 
             
@@ -170,7 +175,7 @@ module.exports = {
                 data.status=true
             }
             try {
-                const [dt] = await this.find(ctx,{alias:data.alias}, {pagination: {limit:1}})
+                const [dt] = await this.find(ctx,{alias:data.alias, exactMatch:true}, {pagination: {limit:1}})
                 if(dt){
                     return reject({ statusCode: 400, error: { message: 'Area with this alias exists in the panel' } });
                 } 
@@ -214,6 +219,25 @@ module.exports = {
             }
             if(updtBody.hasOwnProperty('featureImg')&&!updtBody.featureImg){
                 return reject({ statusCode: 400, error: { message: 'featureImg is required!' } });
+            }
+            if(updtBody.alias){
+                try {
+                    const [dt] = await this.find(ctx,{alias:updtBody.alias, exactMatch:true}, {pagination: {limit:1}})
+                    if(dt.id !=id){
+                        return reject({ statusCode: 400, error: { message: 'Area with this alias exists in the panel' } });
+                    } 
+                } catch (error) {
+                    return reject(error);    
+                }
+
+            }
+            try {
+                const [dt] = await this.find(ctx,{alias:data.alias}, {pagination: {limit:1}})
+                if(dt){
+                    return reject({ statusCode: 400, error: { message: 'Area with this alias exists in the panel' } });
+                } 
+            } catch (error) {
+                return reject(error);    
             }
             try {
                 var record = await Area.updateOne(filter).set(updtBody);
