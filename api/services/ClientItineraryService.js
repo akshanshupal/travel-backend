@@ -250,7 +250,7 @@ module.exports = {
                 updtBody.company= filter.company;
             }
 
-            data.updatedBy = ctx?.session?.user?.id;
+            updtBody.updatedBy = ctx?.session?.user?.id;
 
 
             try {
