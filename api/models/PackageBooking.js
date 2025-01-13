@@ -31,17 +31,20 @@ module.exports = {
         },
         checkInDate:{
             type: 'ref',
-            columnType: 'date'
+            columnType: 'datetime'
         },
         checkOutDate:{
             type: 'ref',
-            columnType: 'date'
+            columnType: 'datetime'
+        },
+        customParams : {
+            type: 'json'
         },
         noOfNight:{
             type: 'string'
         },
         vendor:{
-            type: 'string'
+            model: 'vendor'
         },
         company: {
             model: 'company'
