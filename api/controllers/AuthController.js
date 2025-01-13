@@ -70,8 +70,9 @@ module.exports = {
         }
         try {
             username = username.trim().toLowerCase();
+            let company = req?.session?.activeCompany?.id
 
-            var user = await User.findOne({ username: username, isDeleted: { '!=': true } });
+            var user = await User.findOne({ username: username,company:company, isDeleted: { '!=': true } });
             if (!user) {
                 return res.badRequest({ code: 404, message: 'Wrong username or password!' });
             }

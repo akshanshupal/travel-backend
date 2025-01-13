@@ -12,6 +12,9 @@ module.exports = {
         status: {
             type: 'boolean'
         },
+        customParams: {
+            type: 'json'
+        },
         company: {
             model: 'company'
         },
