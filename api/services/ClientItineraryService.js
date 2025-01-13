@@ -213,6 +213,8 @@ module.exports = {
             data.clientArea = itineraryData.area;
             data.clientSites = itineraryData.sites;
 
+            data.createdBy = ctx?.session?.user?.id;
+
             if (avoidRecordFetch) {
                 try {
                     var record = await ClientItinerary.create(data);
@@ -247,6 +249,9 @@ module.exports = {
             if (!updtBody.company) {
                 updtBody.company= filter.company;
             }
+
+            data.updatedBy = ctx?.session?.user?.id;
+
 
             try {
                 var record = await ClientItinerary.updateOne(filter).set(updtBody);

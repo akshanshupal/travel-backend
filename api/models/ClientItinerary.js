@@ -91,7 +91,9 @@ module.exports = {
         
         isDeleted: { type: 'boolean'},
         deletedAt: { type: 'ref', columnType: 'datetime' },
-        deletedBy: { model: 'user' }
+        deletedBy: { model: 'user' },
+        createdBy: { model: 'user' },
+        updatedBy: { model: 'user' }
 
     },
 
