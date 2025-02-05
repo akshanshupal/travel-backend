@@ -22,32 +22,37 @@ module.exports = {
              type: 'ref',
             columnType: 'date'
         },
-
         amount:{
             type: 'string'
         },
-        location:{
-            type: 'string'
-        },
-        checkInDate:{
+        startDate:{
             type: 'ref',
             columnType: 'datetime'
         },
-        checkOutDate:{
+        endDate:{
             type: 'ref',
             columnType: 'datetime'
         },
         customParams : {
             type: 'json'
         },
-        noOfNight:{
-            type: 'string'
-        },
         vendor:{
             model: 'vendor'
         },
         company: {
             model: 'company'
+        },
+        bookedStatus:{
+            type: 'string' ,
+            allowNull: true,
+            isIn : [ 'bookedWithPartialPayment', 'bookedWithFullPayment']
+        },
+        bookingStatus: {
+            type: 'string',
+            isIn : ['pending', 'booked']
+        },
+        pendingAmount: {
+            type: 'string',
         },
         isDeleted: { type: 'boolean'},
         deletedAt: { type: 'ref', columnType: 'datetime' },

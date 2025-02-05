@@ -10,28 +10,8 @@ module.exports = {
             if(!filter.hasOwnProperty('isDeleted')){
                 filter.isDeleted = { '!=': true };
             }
-            if (filter.title && filter.title.trim()) filter.title = { contains: filter.title.trim() };
-            if (filter.clientName && filter.clientName.trim()) filter.clientName = { contains: filter.clientName.trim() };
-            if (filter.email && filter.email.trim()) filter.email = { contains: filter.email.trim() };
-            if (filter.mobile && filter.mobile.trim()) filter.mobile = { contains: filter.mobile.trim() };
-            if (filter.tourDate) {
-                let df = sails.dayjs(filter.tourDate).startOf('date').toDate();
-                let dt = sails.dayjs(filter.tourDate).endOf('date').toDate();
-                filter.tourDate = { '>=': df, '<=': dt };
-            }
-            if (filter.bookingDate) {
-                let df = sails.dayjs(filter.bookingDate).startOf('date').toDate();
-                let dt = sails.dayjs(filter.bookingDate).endOf('date').toDate();
-                filter.bookingDate = { '>=': df, '<=': dt };
-            }
-            if(filter.clientDetails){
-                const searchCriteriaOr = [{ clientName: { contains: filter.clientDetails } },{ email: { contains: filter.clientDetails } },{ mobile: { contains: filter.clientDetails } }];
-                filter.or = searchCriteriaOr;
-                delete filter.clientDetails
-            }
-
             let qryObj = {where : filter};
-            //sort
+            //sort 
             let sortField = 'createdAt';
             let sortOrder = 'DESC';
             qryObj.sort = sortField + ' ' + sortOrder;
@@ -55,15 +35,15 @@ module.exports = {
                 qryObj.select = params.select;
             }
             try {
-                var records = await Assignment.find(qryObj);;
+                var records = await Payments.find(qryObj);;
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
             //populate&& populate select
             if (params.populate) {
                 let assosiationModels = {};
-                for (let ami = 0; ami < sails.models.assignment.associations.length; ami++) {
-                    assosiationModels[sails.models.assignment.associations[ami].alias] = sails.models.assignment.associations[ami].model;
+                for (let ami = 0; ami < sails.models.payments.associations.length; ami++) {
+                    assosiationModels[sails.models.payments.associations[ami].alias] = sails.models.payments.associations[ami].model;
                 }
                 for (let i = 0; i < records.length; i++) {
                     for (let populateKey of params.populate) {
@@ -89,7 +69,7 @@ module.exports = {
             //totalCount
             if (params.totalCount) {
                 try {
-                    var totalRecords = await Assignment.count(filter)
+                    var totalRecords = await Payments.count(filter)
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
@@ -124,7 +104,7 @@ module.exports = {
                 qryObj.select = params.select;
             }
             try {
-                var record = await Assignment.findOne(qryObj);;
+                var record = await Payments.findOne(qryObj);;
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -134,8 +114,8 @@ module.exports = {
             //populate&& populate select
             if (params.populate) {
                 let assosiationModels = {};
-                for (let ami = 0; ami < sails.models.assignment.associations.length; ami++) {
-                    assosiationModels[sails.models.assignment.associations[ami].alias] = sails.models.assignment.associations[ami].model;
+                for (let ami = 0; ami < sails.models.payments.associations.length; ami++) {
+                    assosiationModels[sails.models.payments.associations[ami].alias] = sails.models.payments.associations[ami].model;
                 }
                 for (let populateKey of params.populate) {
                     if (!record[populateKey]) {
@@ -171,24 +151,16 @@ module.exports = {
             if(!data.hasOwnProperty('status')){
                 data.status = true
             }
-            if (data?.bookingDate && typeof data?.bookingDate === 'string') {
-                data.bookingDate = sails.dayjs(data.bookingDate);
-                if (!data.bookingDate.isValid()) {
-                    return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid bookingDate is required!' } });
-                } else {
-                    data.bookingDate = data.bookingDate.toDate();
-                }
-            }
 
             if (avoidRecordFetch) {
                 try {
-                    var record = await Assignment.create(data);
+                    var record = await Payments.create(data);
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
             } else {
                 try {
-                    var record = await Assignment.create(data).fetch();
+                    var record = await Payments.create(data).fetch();
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
@@ -216,7 +188,7 @@ module.exports = {
             }
 
             try {
-                var record = await Assignment.updateOne(filter).set(updtBody);
+                var record = await Payments.updateOne(filter).set(updtBody);
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -228,6 +200,7 @@ module.exports = {
         return new Promise(async (resolve, reject) => {
             const filter = {
                 id: id,
+                
                 company: ctx?.session?.activeCompany?.id,
             };
             if (!filter.id) {
@@ -236,11 +209,6 @@ module.exports = {
             if (!filter.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
-            // try {
-            //     await Assignment.destroyOne(filter);
-            // } catch (error) {
-            //     return reject({ statusCode: 500, error: error });
-            // }
             let deletedData
             try {
                 deletedData =  await this.updateOne(ctx, id, {isDeleted:true, deletedAt: new Date(), deletedBy: ctx?.user?.id})
@@ -249,6 +217,14 @@ module.exports = {
             }
 
             return resolve({ data: { deleted: true } });
+            // try {
+            //     await Payments.destroyOne(filter);
+            // } catch (error) {
+            //     return reject({ statusCode: 500, error: error });
+            // }
+
+
+            // return resolve({ data: { deleted: true } });
         })
     }
 }

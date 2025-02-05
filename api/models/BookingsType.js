@@ -15,6 +15,7 @@ module.exports = {
         customParams: {
             type: 'json'
         },
+    
         company: {
             model: 'company'
         },

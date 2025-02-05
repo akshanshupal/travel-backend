@@ -22,10 +22,10 @@ module.exports = {
             model: 'company'
         },
         bookingDate: {
-              type: 'ref', columnType: 'datetime'
+              type: 'ref', columnType: 'date'
         },
         tourDate: {
-               type: 'ref', columnType: 'datetime'
+               type: 'ref', columnType: 'date'
         },
         travelLocation: {
             type: 'string'
@@ -54,9 +54,9 @@ module.exports = {
         email: {
             type: 'string'
         },
-        noOfDays: {
-            type: 'string'
-        },
+        // noOfDays: {
+        //     type: 'string'
+        // },
         noOfAdult: {
             type: 'string'
         },
@@ -65,6 +65,12 @@ module.exports = {
         },
         noOfRooms: {
             type: 'string'
+        },
+        noOfPackageDays:{
+            type:'string'
+        },
+        noOfPackageNights:{
+            type:'string'
         },
         hotelCategory: {
             model: 'hotelcategory'

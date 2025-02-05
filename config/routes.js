@@ -172,6 +172,19 @@ module.exports.routes = {
   'GET /api/generaldata/:id': 'GeneralDataController.findOne',
   'PUT /api/generaldata/:id': 'GeneralDataController.updateOne',
   'DELETE /api/generaldata/:id': 'GeneralDataController.deleteOne',
+
+
+  'POST /api/payments': 'PaymentsController.create',
+  'GET /api/payments': 'PaymentsController.find',
+  'GET /api/payments/:id': 'PaymentsController.findOne',
+  'PUT /api/payments/:id': 'PaymentsController.updateOne',
+  'DELETE /api/payments/:id': 'PaymentsController.deleteOne',
+
+  'POST /api/reports': 'ReportsController.create',
+  'GET /api/reports': 'ReportsController.find',
+  'GET /api/reports/:id': 'ReportsController.findOne',
+  'PUT /api/reports/:id': 'ReportsController.updateOne',
+  'DELETE /api/reports/:id': 'ReportsController.deleteOne',
   /***************************************************************************
   *                                                                          *
   * More custom routes here...                                               *
