@@ -111,7 +111,6 @@ module.exports = {
         return res.json(record.data);
     },
     deleteOne: async function (req, res) {
-
         try {
             var record = await PaymentsService.deleteOne(req, req.params.id);
         } catch (error) {

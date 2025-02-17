@@ -18,7 +18,7 @@ module.exports = {
         mobile: {
             type: 'string',
         },
-        travelDate: {
+        tourDate: {
             type: 'ref',
             columnType: 'date'
         },

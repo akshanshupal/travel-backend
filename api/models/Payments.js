@@ -27,7 +27,7 @@ module.exports = {
         },
         paymentTo :{
             type: 'string',
-            isIn: ['paymentToCustomer', 'hotel', 'vendor', 'other']
+            isIn: ['paymentToCompany', 'hotel', 'vendor', 'other']
         },
         mode: {
             type: 'string',
@@ -37,6 +37,10 @@ module.exports = {
             type: 'string',
             isIn: ['Dr', 'Cr']
         },
+        packageBooking: {
+            model: 'packageBooking'
+        },
+        
         isDeleted: { type: 'boolean'},
         deletedAt: { type: 'ref', columnType: 'datetime' },
         deletedBy: { model: 'user' }

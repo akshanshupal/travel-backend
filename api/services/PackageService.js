@@ -10,6 +10,11 @@ module.exports = {
             if(!filter.hasOwnProperty('isDeleted')){
                 filter.isDeleted = { '!=': true };
             }
+            if (filter.tourDate) {
+                let df = sails.dayjs(filter.tourDate).startOf('date').toDate();
+                let dt = sails.dayjs(filter.tourDate).endOf('date').toDate();
+                filter.tourDate = { '>=': df, '<=': dt };
+            }
             let qryObj = {where : filter};
             //sort
             let sortField = 'createdAt';
@@ -79,7 +84,6 @@ module.exports = {
             }
             return resolve(rtrn);
         })
-
     },
     findOne: function (ctx, id, params) {
         return new Promise(async (resolve, reject) => {
@@ -151,6 +155,15 @@ module.exports = {
             if(!data.hasOwnProperty('status')){
                 data.status = true
             }
+
+            if (data?.tourDate && typeof data?.tourDate === 'string') {
+                data.tourDate = sails.dayjs(data.tourDate);
+                if (!data.tourDate.isValid()) {
+                    return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid tourDate is required!' } });
+                } else {
+                    data.tourDate = data.tourDate.toDate();
+                }
+            }
             if (avoidRecordFetch) {
                 try {
                     var record = await Package.create(data);
@@ -185,7 +198,14 @@ module.exports = {
             if (!updtBody.company) {
                 updtBody.company= filter.company;
             }
-
+            if (updtBody?.tourDate && typeof updtBody?.tourDate === 'string') {
+                updtBody.tourDate = sails.dayjs(updtBody.tourDate);
+                if (!updtBody.tourDate.isValid()) {
+                    return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid tourDate is required!' } });
+                } else {
+                    updtBody.tourDate = updtBody.tourDate.toDate();
+                }
+            }
             try {
                 var record = await Package.updateOne(filter).set(updtBody);
             } catch (error) {

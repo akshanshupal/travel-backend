@@ -10,6 +10,15 @@ module.exports = {
             if(!filter.hasOwnProperty('isDeleted')){
                 filter.isDeleted = { '!=': true };
             }
+            if (filter.paymentDate) {
+                let df = sails.dayjs(filter.paymentDate).startOf('date').toDate();
+                let dt = sails.dayjs(filter.paymentDate).endOf('date').toDate();
+                filter.paymentDate = { '>=': df, '<=': dt };
+            }
+            // if(filter.paymentType){
+
+            // }
+
             let qryObj = {where : filter};
             //sort 
             let sortField = 'createdAt';
@@ -151,6 +160,14 @@ module.exports = {
             if(!data.hasOwnProperty('status')){
                 data.status = true
             }
+            if (data?.paymentDate && typeof data?.paymentDate === 'string') {
+                data.paymentDate = sails.dayjs(data.paymentDate);
+                if (!data.paymentDate.isValid()) {
+                    return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid paymentDate is required!' } });
+                } else {
+                    data.paymentDate = data.paymentDate.toDate();
+                }
+            }
 
             if (avoidRecordFetch) {
                 try {
@@ -186,7 +203,14 @@ module.exports = {
             if (!updtBody.company) {
                 updtBody.company= filter.company;
             }
-
+            if (updtBody?.paymentDate && typeof updtBody?.paymentDate === 'string') {
+                updtBody.paymentDate = sails.dayjs(updtBody.paymentDate);
+                if (!updtBody.paymentDate.isValid()) {
+                    return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid paymentDate is required!' } });
+                } else {
+                    updtBody.paymentDate = updtBody.paymentDate.toDate();
+                }
+            }
             try {
                 var record = await Payments.updateOne(filter).set(updtBody);
             } catch (error) {

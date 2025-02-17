@@ -151,6 +151,15 @@ module.exports = {
             if(!data.hasOwnProperty('status')){
                 data.status = true
             }
+
+            if (data?.nextPaymentDate && typeof data?.nextPaymentDate === 'string') {
+                data.nextPaymentDate = sails.dayjs(data.nextPaymentDate);
+                if (!data.nextPaymentDate.isValid()) {
+                    return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid nextPaymentDate is required!' } });
+                } else {
+                    data.nextPaymentDate = data.nextPaymentDate.toDate();
+                }
+            }
             if (avoidRecordFetch) {
                 try {
                     var record = await PackageBooking.create(data);
@@ -185,7 +194,27 @@ module.exports = {
             if (!updtBody.company) {
                 updtBody.company= filter.company;
             }
+            if (updtBody?.nextPaymentDate && typeof updtBody?.nextPaymentDate === 'string') {
+                updtBody.nextPaymentDate = sails.dayjs(updtBody.nextPaymentDate);
+                if (!updtBody.nextPaymentDate.isValid()) {
+                    return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid nextPaymentDate is required!' } });
+                } else {
+                    updtBody.nextPaymentDate = updtBody.nextPaymentDate.toDate();
+                }
+            }
+            if(updtBody?.amount && typeof updtBody?.amount === 'string'){
+                updtBody.amount = parseFloat(updtBody.amount);
+                let {data} = await this.findOne(ctx, id);
 
+                if(data){
+                    const previousAmount = data.amount;
+                    const previousPendingAmount = data.pendingAmount;
+                    updtBody.pendingAmount = updtBody.amount-Number(previousAmount) + Number(previousPendingAmount);
+                    if(updtBody.pendingAmount < 0){
+                        return reject({ statusCode: 400, error: { code: 'Error', message: "Amount can't be less than already paid amount. Please check the service payments" } });
+                    }
+                }
+            }
             try {
                 var record = await PackageBooking.updateOne(filter).set(updtBody);
             } catch (error) {

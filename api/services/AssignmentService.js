@@ -179,6 +179,14 @@ module.exports = {
                     data.bookingDate = data.bookingDate.toDate();
                 }
             }
+            if (data?.tourDate && typeof data?.tourDate === 'string') {
+                data.tourDate = sails.dayjs(data.tourDate);
+                if (!data.tourDate.isValid()) {
+                    return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid tourDate is required!' } });
+                } else {
+                    data.tourDate = data.tourDate.toDate();
+                }
+            }
 
             if (avoidRecordFetch) {
                 try {
@@ -213,6 +221,22 @@ module.exports = {
             }
             if (!updtBody.company) {
                 updtBody.company= filter.company;
+            }
+            if (updtBody?.bookingDate && typeof updtBody?.bookingDate === 'string') {
+                updtBody.bookingDate = sails.dayjs(updtBody.bookingDate);
+                if (!updtBody.bookingDate.isValid()) {
+                    return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid bookingDate is required!' } });
+                } else {
+                    updtBody.bookingDate = updtBody.bookingDate.toDate();
+                }
+            }
+            if (updtBody?.tourDate && typeof updtBody?.tourDate === 'string') {
+                updtBody.tourDate = sails.dayjs(updtBody.tourDate);
+                if (!updtBody.tourDate.isValid()) {
+                    return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid tourDate is required!' } });
+                } else {
+                    updtBody.tourDate = updtBody.tourDate.toDate();
+                }
             }
 
             try {

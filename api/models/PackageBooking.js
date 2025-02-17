@@ -42,6 +42,10 @@ module.exports = {
         company: {
             model: 'company'
         },
+        nextPaymentDate: {
+          type: 'ref',
+          columnType: 'datetime'
+        },
         bookedStatus:{
             type: 'string' ,
             allowNull: true,

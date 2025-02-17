@@ -249,7 +249,14 @@ module.exports = {
             if (!updtBody.company) {
                 updtBody.company= filter.company;
             }
-
+            if (updtBody?.tourDate && typeof updtBody?.tourDate === 'string') {
+                updtBody.tourDate = sails.dayjs(updtBody.tourDate);
+                if (!updtBody.tourDate.isValid()) {
+                    return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid tourDate is required!' } });
+                } else {
+                    updtBody.tourDate = updtBody.tourDate.toDate();
+                }
+            }
             updtBody.updatedBy = ctx?.session?.user?.id;
 
 
