@@ -42,11 +42,8 @@ module.exports = {
         finalPackageCost: {
             type: 'string'
         },
-        tokenAmount:{
-            type:'string'
-        },
-        paymentMode: {
-            type: 'string'
+        tokenPayment: {
+            model: 'payments'
         },
         mobile: {
             type: 'string'
@@ -87,11 +84,9 @@ module.exports = {
         textForBookingTeam: {
            type: 'string'
         },
-        stayDate: {
-            type: 'ref', columnType: 'datetime'
-        },
-        stayLocation: {
-            type: 'string'
+    
+        stayInformation:{
+            type : 'json',
         },
         sightSeeing: {
             type: 'string'
@@ -102,8 +97,14 @@ module.exports = {
         pickUpDate: {
               type: 'ref', columnType: 'datetime'
         },
+        pickUpTime: {
+              type: 'ref', columnType: 'time'
+        },
         dropDate: {
             type: 'ref', columnType: 'datetime'
+        },
+        dropTime: {
+            type: 'ref', columnType: 'time'
         },
         dropAddress: {
             type: 'string'
@@ -129,10 +130,9 @@ module.exports = {
         kidsAges: {
             type: 'json'
         },
-
-        // totalCost: {
-        //     type: 'string'
-        // },
+        verify: {
+            type: 'boolean'
+        },
         idProof:{
             type:'json'
         },

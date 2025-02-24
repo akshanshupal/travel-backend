@@ -29,10 +29,10 @@ module.exports = {
             type: 'string',
             isIn: ['paymentToCompany', 'hotel', 'vendor', 'other']
         },
-        mode: {
-            type: 'string',
-            isIn: ['online', 'offline', 'netbanking', 'cash', 'neft', 'rtgs', 'cheque', 'other']
+        paymentStore: {
+            model: 'paymentStore'
         },
+
         paymentType: {
             type: 'string',
             isIn: ['Dr', 'Cr']

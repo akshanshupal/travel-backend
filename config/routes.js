@@ -185,6 +185,12 @@ module.exports.routes = {
   'GET /api/reports/:id': 'ReportsController.findOne',
   'PUT /api/reports/:id': 'ReportsController.updateOne',
   'DELETE /api/reports/:id': 'ReportsController.deleteOne',
+
+  'POST /api/paymentstore': 'PaymentStoreController.create',
+  'GET /api/paymentstore': 'PaymentStoreController.find',
+  'GET /api/paymentstore/:id': 'PaymentStoreController.findOne',
+  'PUT /api/paymentstore/:id': 'PaymentStoreController.updateOne',
+  'DELETE /api/paymentstore/:id': 'PaymentStoreController.deleteOne',
   /***************************************************************************
   *                                                                          *
   * More custom routes here...                                               *

@@ -7,29 +7,6 @@ module.exports = {
             if (!params) {
                 params = {};
             }
-            if(!filter.hasOwnProperty('isDeleted')){
-                filter.isDeleted = { '!=': true };
-            }
-            if (filter.title && filter.title.trim()) filter.title = { contains: filter.title.trim() };
-            if (filter.clientName && filter.clientName.trim()) filter.clientName = { contains: filter.clientName.trim() };
-            if (filter.email && filter.email.trim()) filter.email = { contains: filter.email.trim() };
-            if (filter.mobile && filter.mobile.trim()) filter.mobile = { contains: filter.mobile.trim() };
-            if (filter.tourDate) {
-                let df = sails.dayjs(filter.tourDate).startOf('date').toDate();
-                let dt = sails.dayjs(filter.tourDate).endOf('date').toDate();
-                filter.tourDate = { '>=': df, '<=': dt };
-            }
-            if (filter.bookingDate) {
-                let df = sails.dayjs(filter.bookingDate).startOf('date').toDate();
-                let dt = sails.dayjs(filter.bookingDate).endOf('date').toDate();
-                filter.bookingDate = { '>=': df, '<=': dt };
-            }
-            if(filter.clientDetails){
-                const searchCriteriaOr = [{ clientName: { contains: filter.clientDetails } },{ email: { contains: filter.clientDetails } },{ mobile: { contains: filter.clientDetails } }];
-                filter.or = searchCriteriaOr;
-                delete filter.clientDetails
-            }
-
             let qryObj = {where : filter};
             //sort
             let sortField = 'createdAt';
@@ -55,15 +32,15 @@ module.exports = {
                 qryObj.select = params.select;
             }
             try {
-                var records = await Assignment.find(qryObj);;
+                var records = await PaymentStore.find(qryObj);;
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
             //populate&& populate select
             if (params.populate) {
                 let assosiationModels = {};
-                for (let ami = 0; ami < sails.models.assignment.associations.length; ami++) {
-                    assosiationModels[sails.models.assignment.associations[ami].alias] = sails.models.assignment.associations[ami].model;
+                for (let ami = 0; ami < sails.models.paymentstore.associations.length; ami++) {
+                    assosiationModels[sails.models.paymentstore.associations[ami].alias] = sails.models.paymentstore.associations[ami].model;
                 }
                 for (let i = 0; i < records.length; i++) {
                     for (let populateKey of params.populate) {
@@ -89,7 +66,7 @@ module.exports = {
             //totalCount
             if (params.totalCount) {
                 try {
-                    var totalRecords = await Assignment.count(filter)
+                    var totalRecords = await PaymentStore.count(filter)
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
@@ -124,7 +101,7 @@ module.exports = {
                 qryObj.select = params.select;
             }
             try {
-                var record = await Assignment.findOne(qryObj);;
+                var record = await PaymentStore.findOne(qryObj);;
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -134,8 +111,8 @@ module.exports = {
             //populate&& populate select
             if (params.populate) {
                 let assosiationModels = {};
-                for (let ami = 0; ami < sails.models.assignment.associations.length; ami++) {
-                    assosiationModels[sails.models.assignment.associations[ami].alias] = sails.models.assignment.associations[ami].model;
+                for (let ami = 0; ami < sails.models.paymentstore.associations.length; ami++) {
+                    assosiationModels[sails.models.paymentstore.associations[ami].alias] = sails.models.paymentstore.associations[ami].model;
                 }
                 for (let populateKey of params.populate) {
                     if (!record[populateKey]) {
@@ -168,87 +145,23 @@ module.exports = {
             if (!data.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
-            if (!data.tokenAmount) {
-                return reject({ statusCode: 400, error: { message: 'Token Amount is required!' } });
-            }
-            if (!data.paymentStore) {
-                return reject({ statusCode: 400, error: { message: 'Payment Store is required!' } });
-            }
-            if (!data.bookingDate) {
-                return reject({ statusCode: 400, error: { message: 'Booking Date is required!' } });
-            }
             if(!data.hasOwnProperty('status')){
-                data.status = true
+                data.status  = true;
             }
-            if (data?.bookingDate && typeof data?.bookingDate === 'string') {
-                data.bookingDate = sails.dayjs(data.bookingDate);
-                if (!data.bookingDate.isValid()) {
-                    return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid bookingDate is required!' } });
-                } else {
-                    data.bookingDate = data.bookingDate.toDate();
-                }
-            }
-            if (data?.tourDate && typeof data?.tourDate === 'string') {
-                data.tourDate = sails.dayjs(data.tourDate);
-                if (!data.tourDate.isValid()) {
-                    return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid tourDate is required!' } });
-                } else {
-                    data.tourDate = data.tourDate.toDate();
-                }
-            }
-
-            let paymentData;
-
-            if(data.tokenAmount&&data.paymentStore&&data.bookingDate){
-                paymentData = {
-                    amount: data.tokenAmount,
-                    paymentStore: data.paymentStore,
-                    paymentDate: data.bookingDate,
-                    paymentTo: 'paymentToCompany',
-                    paymentType: 'Cr',
-                    status: true
-                }
-            }
-
-            if(data.tokenAmount){
-                delete data.tokenAmount
-            }
-            if(data.paymentStore){
-                delete data.paymentStore
-            }
-
 
             if (avoidRecordFetch) {
                 try {
-                    var record = await Assignment.create(data);
+                    var record = await PaymentStore.create(data);
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
             } else {
                 try {
-                    var record = await Assignment.create(data).fetch();
+                    var record = await PaymentStore.create(data).fetch();
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
             }
-
-            if(paymentData){
-                try {
-                    const {data:payment} = await PaymentsService.create(ctx,{...paymentData, assignment:record.id});
-                    if(payment){
-                        const {data:updatedAssignment}= await this.updateOne(ctx,record.id,{tokenPayment:payment.id })
-                        if(updatedAssignment){
-                            record = updatedAssignment
-                        }
-                    }
-                } catch (error) {
-                    return reject(error)  
-                }
-
-            }
-
-
-
 
             return resolve({ data: record || { created: true } });
         })
@@ -270,26 +183,9 @@ module.exports = {
             if (!updtBody.company) {
                 updtBody.company= filter.company;
             }
-            if (updtBody?.bookingDate && typeof updtBody?.bookingDate === 'string') {
-                updtBody.bookingDate = sails.dayjs(updtBody.bookingDate);
-                if (!updtBody.bookingDate.isValid()) {
-                    return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid bookingDate is required!' } });
-                } else {
-                    updtBody.bookingDate = updtBody.bookingDate.toDate();
-                }
-            }
-            if (updtBody?.tourDate && typeof updtBody?.tourDate === 'string') {
-                updtBody.tourDate = sails.dayjs(updtBody.tourDate);
-                if (!updtBody.tourDate.isValid()) {
-                    return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid tourDate is required!' } });
-                } else {
-                    updtBody.tourDate = updtBody.tourDate.toDate();
-                }
-            }
-            
 
             try {
-                var record = await Assignment.updateOne(filter).set(updtBody);
+                var record = await PaymentStore.updateOne(filter).set(updtBody);
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -309,17 +205,12 @@ module.exports = {
             if (!filter.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
-            // try {
-            //     await Assignment.destroyOne(filter);
-            // } catch (error) {
-            //     return reject({ statusCode: 500, error: error });
-            // }
-            let deletedData
             try {
-                deletedData =  await this.updateOne(ctx, id, {isDeleted:true, deletedAt: new Date(), deletedBy: ctx?.user?.id})
+                await PaymentStore.destroyOne(filter);
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
+
 
             return resolve({ data: { deleted: true } });
         })
