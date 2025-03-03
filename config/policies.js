@@ -8,6 +8,7 @@
  * https://sailsjs.com/docs/concepts/policies
  */
 
+const PackageController = require("../api/controllers/PackageController");
 const Itinerary = require("../api/models/Itinerary");
 
 
@@ -51,6 +52,10 @@ module.exports.policies = {
   },
   hotelInfoController: {
     'find' : true
+  },
+  PackageController:{
+    'find' : true,
+    'findOne' : true
   },
   PackageTagController: {
     'find' : true,

@@ -42,6 +42,9 @@ module.exports = {
         status: {
             type: 'boolean'
         },
+        url :{
+            type: 'string'
+        },
         // mobile: {
         //     type: 'string',
         // },

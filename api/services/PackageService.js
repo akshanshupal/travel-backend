@@ -2,6 +2,9 @@ module.exports = {
     find: function (ctx, filter, params) {
         return new Promise(async (resolve, reject) => {
             if (!filter.company) {
+                filter.company= ctx?.session?.activeCompany?.id;
+            }
+            if (!filter.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
             if (!params) {
@@ -152,6 +155,19 @@ module.exports = {
             if (!data.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
+            if (!data.url) {
+                return reject({ statusCode: 400, error: { message: 'packageUrl is required!' } });
+            }
+            try {
+                let [existingPackage] = await this.find(ctx,{ url: data.url}, {pagination: {limit:1}});
+                if (existingPackage) {
+                    return reject({ statusCode: 400, error: { message: 'Package already exists with this url!' } });
+                }
+            } catch (error) {
+                return reject(error)
+                
+            }
+
             if(!data.hasOwnProperty('status')){
                 data.status = true
             }
@@ -172,6 +188,7 @@ module.exports = {
                     data.endDate = data.endDate.toDate();
                 }
             }
+
             if (avoidRecordFetch) {
                 try {
                     var record = await Package.create(data);
@@ -213,6 +230,17 @@ module.exports = {
             if (!updtBody.company) {
                 updtBody.company= filter.company;
             }
+            if(updtBody.url){
+                try {
+                    let [existingPackage] = await this.find(ctx,{ url: updtBody.url, id: { '!=': id }}, {pagination: {limit:1}});
+                    if (existingPackage) {
+                        return reject({ statusCode: 400, error: { message: 'Package already exists with this url!' } });
+                    }
+                } catch (error) {
+                    return reject(error)
+                    
+                }
+            }
             if (updtBody?.tourDate && typeof updtBody?.tourDate === 'string') {
                 updtBody.tourDate = sails.dayjs(updtBody.tourDate);
                 if (!updtBody.tourDate.isValid()) {
@@ -249,6 +277,27 @@ module.exports = {
                 return reject({ statusCode: 500, error: error });
             }
             return resolve(deletedArea);
+        })
+    },
+
+    findByUrl: function (ctx, url,params) {
+        return new Promise(async (resolve, reject) => {
+            const filter = {
+                url: url,
+                company: ctx?.session?.activeCompany?.id,
+            };
+            if (!filter.url) {
+                return reject({ statusCode: 400, error: { message: 'url is required!' } });
+            }
+            if (!filter.company) {
+                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+            }
+            try {
+                var record = await this.find(ctx, filter, params);
+            } catch (error) {
+                return reject({ statusCode: 500, error: error });
+            }
+            return resolve({ data: record });
         })
     }
 }

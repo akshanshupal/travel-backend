@@ -119,6 +119,14 @@ module.exports = {
         }
 
         return res.json(record.data);
+    },
+    findByUrl: async function (req, res) {
+        try {
+            var record = await PackageService.findByUrl(req, req.params.url);
+        } catch (error) {
+            return res.serverError(error);
+        }
+        return res.json(record.data);
     }
 
 };
