@@ -270,13 +270,27 @@ module.exports = {
             if (!filter.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
-            let deletedArea
+            let deletedPackage
             try {
-                deletedArea =  await this.updateOne(ctx, id, {isDeleted:true, deletedAt: new Date(), deletedBy: ctx?.user?.id})
+                deletedPackage =  await this.updateOne(ctx, id, {isDeleted:true, deletedAt: new Date(), deletedBy: ctx?.user?.id})
+                if(deletedPackage?.data?.id){
+                    try {
+                        const {data} = await this.findOne(ctx, id, {select: ['itinerary']});
+                        if(data?.itinerary){
+                            await ItineraryService.updateOne(ctx, data.itinerary, { package: null });
+                        }
+                    } catch (error) {
+                        return reject({ statusCode: 500, error: error });
+                    }
+                }
+                // Update the related Itinerary and set package to null
+                // if (ctx.itinerary) {
+                //     await ItineraryService.updateOne(ctx, ctx.itinerary, { package: null });
+                // }
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
-            return resolve(deletedArea);
+            return resolve(deletedPackage);
         })
     },
 
