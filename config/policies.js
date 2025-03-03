@@ -8,6 +8,8 @@
  * https://sailsjs.com/docs/concepts/policies
  */
 
+const Itinerary = require("../api/models/Itinerary");
+
 
 module.exports.policies = {
 
@@ -31,6 +33,10 @@ module.exports.policies = {
 
   CompanyController: {
     '*' : true
+  },
+  ItineraryController: {
+    'find' : true,
+    'findOne' : true
   },
   userController: {
     'create' : true
