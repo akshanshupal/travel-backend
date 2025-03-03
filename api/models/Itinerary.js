@@ -48,6 +48,10 @@ module.exports = {
         type: 'boolean',
         defaultsTo: true,
       },
+      package: {
+        type: 'string',
+        allowNull: true
+      },
       isDeleted: { type: 'boolean'},
       deletedAt: { type: 'ref', columnType: 'datetime' },
       deletedBy: { model: 'user' }

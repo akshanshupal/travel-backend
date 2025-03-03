@@ -1,7 +1,9 @@
 /**
- * PaymentStore Model Schema
+ * PackageTag Model Schema
  *
  */
+
+const PackageType = require("./PackageType");
 
 module.exports = {
 
@@ -12,18 +14,12 @@ module.exports = {
         status: {
             type: 'boolean'
         },
-        isDefault: {
-            type: 'boolean'
-        },
-        description:{
-            type: 'string'
-        },
         company: {
             model: 'company'
-        },   
+        },
         isDeleted: { type: 'boolean'},
         deletedAt: { type: 'ref', columnType: 'datetime' },
-        deletedBy: { model: 'user' }
+        deletedBy: { model: 'user' },
 
     }
 };

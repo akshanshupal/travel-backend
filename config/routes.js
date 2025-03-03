@@ -191,6 +191,24 @@ module.exports.routes = {
   'GET /api/paymentstore/:id': 'PaymentStoreController.findOne',
   'PUT /api/paymentstore/:id': 'PaymentStoreController.updateOne',
   'DELETE /api/paymentstore/:id': 'PaymentStoreController.deleteOne',
+
+  'POST /api/location': 'LocationController.create',
+  'GET /api/location': 'LocationController.find',
+  'GET /api/location/:id': 'LocationController.findOne',
+  'PUT /api/location/:id': 'LocationController.updateOne',
+  'DELETE /api/location/:id': 'LocationController.deleteOne',
+
+  'POST /api/packagetype': 'PackageTypeController.create',
+  'GET /api/packagetype': 'PackageTypeController.find',
+  'GET /api/packagetype/:id': 'PackageTypeController.findOne',
+  'PUT /api/packagetype/:id': 'PackageTypeController.updateOne',
+  'DELETE /api/packagetype/:id': 'PackageTypeController.deleteOne',
+
+  'POST /api/packagetag': 'PackageTagController.create',
+  'GET /api/packagetag': 'PackageTagController.find',
+  'GET /api/packagetag/:id': 'PackageTagController.findOne',
+  'PUT /api/packagetag/:id': 'PackageTagController.updateOne',
+  'DELETE /api/packagetag/:id': 'PackageTagController.deleteOne',
   /***************************************************************************
   *                                                                          *
   * More custom routes here...                                               *

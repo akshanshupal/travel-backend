@@ -10,13 +10,8 @@ module.exports = {
             if(!filter.hasOwnProperty('isDeleted')){
                 filter.isDeleted = { '!=': true };
             }
-            if (filter.tourDate) {
-                let df = sails.dayjs(filter.tourDate).startOf('date').toDate();
-                let dt = sails.dayjs(filter.tourDate).endOf('date').toDate();
-                filter.tourDate = { '>=': df, '<=': dt };
-            }
             let qryObj = {where : filter};
-            //sort
+            //sort 
             let sortField = 'createdAt';
             let sortOrder = 'DESC';
             qryObj.sort = sortField + ' ' + sortOrder;
@@ -40,15 +35,15 @@ module.exports = {
                 qryObj.select = params.select;
             }
             try {
-                var records = await Package.find(qryObj);;
+                var records = await Location.find(qryObj);;
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
             //populate&& populate select
             if (params.populate) {
                 let assosiationModels = {};
-                for (let ami = 0; ami < sails.models.package.associations.length; ami++) {
-                    assosiationModels[sails.models.package.associations[ami].alias] = sails.models.package.associations[ami].model;
+                for (let ami = 0; ami < sails.models.location.associations.length; ami++) {
+                    assosiationModels[sails.models.location.associations[ami].alias] = sails.models.location.associations[ami].model;
                 }
                 for (let i = 0; i < records.length; i++) {
                     for (let populateKey of params.populate) {
@@ -74,7 +69,7 @@ module.exports = {
             //totalCount
             if (params.totalCount) {
                 try {
-                    var totalRecords = await Package.count(filter)
+                    var totalRecords = await Location.count(filter)
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
@@ -84,6 +79,7 @@ module.exports = {
             }
             return resolve(rtrn);
         })
+
     },
     findOne: function (ctx, id, params) {
         return new Promise(async (resolve, reject) => {
@@ -108,7 +104,7 @@ module.exports = {
                 qryObj.select = params.select;
             }
             try {
-                var record = await Package.findOne(qryObj);;
+                var record = await Location.findOne(qryObj);;
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -118,8 +114,8 @@ module.exports = {
             //populate&& populate select
             if (params.populate) {
                 let assosiationModels = {};
-                for (let ami = 0; ami < sails.models.package.associations.length; ami++) {
-                    assosiationModels[sails.models.package.associations[ami].alias] = sails.models.package.associations[ami].model;
+                for (let ami = 0; ami < sails.models.location.associations.length; ami++) {
+                    assosiationModels[sails.models.location.associations[ami].alias] = sails.models.location.associations[ami].model;
                 }
                 for (let populateKey of params.populate) {
                     if (!record[populateKey]) {
@@ -152,42 +148,16 @@ module.exports = {
             if (!data.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
-            if(!data.hasOwnProperty('status')){
-                data.status = true
-            }
 
-            if (data?.startDate && typeof data?.startDate === 'string') {
-                data.startDate = sails.dayjs(data.startDate);
-                if (!data.startDate.isValid()) {
-                    return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid startDate is required!' } });
-                } else {
-                    data.startDate = data.startDate.toDate();
-                }
-            }
-            if (data?.endDate && typeof data?.endDate === 'string') {
-                data.endDate = sails.dayjs(data.endDate);
-                if (!data.endDate.isValid()) {
-                    return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid endDate is required!' } });
-                } else {
-                    data.endDate = data.endDate.toDate();
-                }
-            }
             if (avoidRecordFetch) {
                 try {
-                    var record = await Package.create(data);
+                    var record = await Location.create(data);
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
             } else {
                 try {
-                    var record = await Package.create(data).fetch();
-                } catch (error) {
-                    return reject({ statusCode: 500, error: error });
-                }
-            }
-            if(record?.id){
-                try {
-                    await ItineraryService.updateOne(ctx, record.itinerary, { package: record.id });
+                    var record = await Location.create(data).fetch();
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
@@ -213,16 +183,9 @@ module.exports = {
             if (!updtBody.company) {
                 updtBody.company= filter.company;
             }
-            if (updtBody?.tourDate && typeof updtBody?.tourDate === 'string') {
-                updtBody.tourDate = sails.dayjs(updtBody.tourDate);
-                if (!updtBody.tourDate.isValid()) {
-                    return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid tourDate is required!' } });
-                } else {
-                    updtBody.tourDate = updtBody.tourDate.toDate();
-                }
-            }
+
             try {
-                var record = await Package.updateOne(filter).set(updtBody);
+                var record = await Location.updateOne(filter).set(updtBody);
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -242,13 +205,21 @@ module.exports = {
             if (!filter.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
-            let deletedArea
+            // try {
+            //     await Location.destroyOne(filter);
+            // } catch (error) {
+            //     return reject({ statusCode: 500, error: error });
+            // }
+            let deletedData
             try {
-                deletedArea =  await this.updateOne(ctx, id, {isDeleted:true, deletedAt: new Date(), deletedBy: ctx?.user?.id})
+                deletedData =  await this.updateOne(ctx, id, {isDeleted:true, deletedAt: new Date(), deletedBy: ctx?.user?.id})
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
-            return resolve(deletedArea);
+
+            return resolve({ data: { deleted: true } });
+
+
         })
     }
 }

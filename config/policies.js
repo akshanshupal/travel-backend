@@ -47,9 +47,19 @@ module.exports.policies = {
   HotelController: {
     'findOne' : true
   },
-  
   hotelInfoController: {
     'find' : true
+  },
+  PackageTagController: {
+    'find' : true,
+    'findOne' : true,
+  },
+  PackageTypeController: {
+    'find' : true,
+    'findOne' : true,
+  },
+  LocationController: {
+    'find' : true,
+    'findOne' : true,
   }
-
 };
