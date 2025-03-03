@@ -34,10 +34,6 @@ module.exports.policies = {
   CompanyController: {
     '*' : true
   },
-  ItineraryController: {
-    'find' : true,
-    'findOne' : true
-  },
   userController: {
     'create' : true
   },
