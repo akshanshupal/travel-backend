@@ -120,13 +120,45 @@ module.exports = {
 
         return res.json(record.data);
     },
-    findByUrl: async function (req, res) {
+
+    findByUrl: async (req, res) => {
         try {
-            var record = await PackageService.findByUrl(req, req.params.url);
+            let { sortField, sortOrder, populate, select, totalCount, page, limit, ...filter } = req.query;
+            filter.company = req.session.activeCompany.id;
+            // filter.client = req.session.activeClient.id;
+            if (!req.params.url) return res.badRequest({ code: 'ERROR', message: 'url is required !' });
+            filter.url = req.params.url;
+            const params = { pagination: { limit: 1 } };
+            if (populate) {
+                if (typeof populate === 'string') {
+                    params.populate = populate.split(',');
+                }
+            }
+            if (select) {
+                if (typeof select === 'string') {
+                    params.select = select.split(',');
+                }
+            }
+
+            const populateKeys = Object.keys(filter).filter((key)=> key.startsWith('select_'));
+            if (populateKeys?.length) {
+                params.populate_select = populateKeys.reduce((acc, item) => {
+                    if (params?.populate?.length && item.length && params.populate.includes(item.split('_')[1])) {
+                        acc[item] = filter[item].split(',');
+                    }
+                    delete filter[item];
+                    return acc;
+                }, {});
+            }
+            try {
+                var records = await PackageService.find(req, filter, params);
+            } catch (error) {
+                return res.serverError(error);
+            }
+            return res.json(...records);
         } catch (error) {
             return res.serverError(error);
         }
-        return res.json(record.data);
-    }
+    },
 
 };

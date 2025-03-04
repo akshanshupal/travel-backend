@@ -1,3 +1,4 @@
+
 module.exports = {
     find: function (ctx, filter, params) {
         return new Promise(async (resolve, reject) => {
@@ -6,6 +7,26 @@ module.exports = {
             }
             if (!filter.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+            }
+            let populateSites;
+            let populateHotels;
+            let populatePackageTags;
+            let populatePackageTypes
+            if(filter.populateSites){
+                populateSites = true;
+                delete filter.populateSites
+            }
+            if(filter.populateHotels){
+                populateHotels = true;
+                delete filter.populateHotels
+            }
+            if(filter.populatePackageTags){
+                populatePackageTags = true;
+                delete filter.populatePackageTags
+            }
+            if(filter.populatePackageTypes){
+                populatePackageTypes = true;
+                delete filter.populatePackageTypes
             }
             if (!params) {
                 params = {};
@@ -73,6 +94,93 @@ module.exports = {
                     }
                 }
             }
+            if(records.length&&(populateSites||populateHotels||populatePackageTags||populatePackageTypes)){
+                
+
+                for(let i=0;i<records.length;i++){
+                    if(params.populate.includes('itinerary')){
+                        const itinerary = records[i].itinerary;
+                        if (itinerary.sites?.length) {
+                            for (let i = 0; i < itinerary.sites.length; i++) {
+                                let siteObj = itinerary.sites[i];
+                        
+                                if (populateSites && siteObj.siteId) {
+                                    let site;
+                                    try {
+                                        site = await SiteService.findOne(ctx, siteObj.siteId, { select: ['id', 'title', 'alias', 'description', 'featureImg'] });
+                                    } catch (error) {
+                                        console.log(error)
+                                        return reject({ statusCode: 500, error: error }); 
+                                    }
+                                    if (site) {
+                                        siteObj = { ...site, hotels: siteObj.hotels || [], days: itinerary.sites[i].days || 1 };
+                                    }
+                                }
+                        
+                                if (populateHotels && siteObj.hotels?.length) {
+                                    for (let j = 0; j < siteObj.hotels.length; j++) {
+                                        const hotelId = siteObj.hotels[j];
+                                        let hotel
+                                        try {
+                                            hotel = await HotelService.findOne(ctx, hotelId, { select: ['id', 'name'] });
+                                        } catch (error) {
+                                            console.log(error); 
+                                        }
+                                        if (hotel) {
+                                            siteObj.hotels[j] = hotel;
+                                        }else{
+                                            siteObj.hotels.splice(j, 1);
+                                            j--; 
+                                            
+                                        }
+                                    }
+                                }
+                        
+                                itinerary.sites[i] = siteObj;
+                            }
+                        }
+                        records[i].itinerary = itinerary;
+                    }
+                    if(populatePackageTags&&records[i]?.packageTags?.length){
+                        const packagetags = records[i].packageTags;
+                        let packageTagsObj = [];
+                        for(let y=0;y<packagetags.length;y++){
+                            const packageTagId = packagetags[y];
+                            try {
+                                const {data} = await PackageTagService.findOne(ctx, packageTagId, { select: ['id', 'title'] });
+                                if(data){
+                                    packageTagsObj.push(data)
+                                }
+                            } catch (error) {
+                                console.log(error); 
+                            }
+
+
+                        }
+                        records[i].packageTags = packageTagsObj
+                    }
+                    if(populatePackageTypes&&records[i]?.packageTypes?.length){
+                        const packagetypes = records[i].packageTypes;
+                        let packageTypeObj = [];
+                        for(let y=0;y<packagetypes.length;y++){
+                            const packageTypeId = packagetypes[y];
+                            try {
+                                const {data} = await PackageTypeService.findOne(ctx, packageTypeId, { select: ['id', 'title'] });
+                                if(data){
+                                    packageTypeObj.push(data)
+                                }
+                            } catch (error) {
+                                console.log(error); 
+                            }
+
+
+                        }
+                        records[i].packageTypes = packageTypeObj
+                    }
+                }
+
+            }
+
             const rtrn = { data : records }
             //totalCount
             if (params.totalCount) {
@@ -294,24 +402,4 @@ module.exports = {
         })
     },
 
-    findByUrl: function (ctx, url,params) {
-        return new Promise(async (resolve, reject) => {
-            const filter = {
-                url: url,
-                company: ctx?.session?.activeCompany?.id,
-            };
-            if (!filter.url) {
-                return reject({ statusCode: 400, error: { message: 'url is required!' } });
-            }
-            if (!filter.company) {
-                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
-            }
-            try {
-                var record = await this.find(ctx, filter, params);
-            } catch (error) {
-                return reject({ statusCode: 500, error: error });
-            }
-            return resolve({ data: record });
-        })
-    }
 }
