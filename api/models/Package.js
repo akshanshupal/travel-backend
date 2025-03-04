@@ -45,6 +45,9 @@ module.exports = {
         url :{
             type: 'string'
         },
+        featureImg: {
+            type: 'string'
+        },
         // mobile: {
         //     type: 'string',
         // },
