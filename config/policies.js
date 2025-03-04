@@ -55,7 +55,8 @@ module.exports.policies = {
   },
   PackageController:{
     'find' : true,
-    'findOne' : true
+    'findOne' : true,
+    'findByUrl' : true
   },
   PackageTagController: {
     'find' : true,
@@ -68,5 +69,6 @@ module.exports.policies = {
   LocationController: {
     'find' : true,
     'findOne' : true,
-  }
+  },
+  
 };
