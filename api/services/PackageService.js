@@ -10,6 +10,7 @@ module.exports = {
             }
             let populateSites;
             let populateHotels;
+            let populateArea;
             let populatePackageTags;
             let populatePackageTypes
             if(filter.populateSites){
@@ -19,6 +20,10 @@ module.exports = {
             if(filter.populateHotels){
                 populateHotels = true;
                 delete filter.populateHotels
+            }
+            if(filter.populateArea){
+                populateArea = true;
+                delete filter.populateArea
             }
             if(filter.populatePackageTags){
                 populatePackageTags = true;
@@ -94,7 +99,7 @@ module.exports = {
                     }
                 }
             }
-            if(records.length&&(populateSites||populateHotels||populatePackageTags||populatePackageTypes)){
+            if(records.length&&(populateSites||populateHotels|| populateArea || populatePackageTags||populatePackageTypes)){
                 
 
                 for(let i=0;i<records.length;i++){
@@ -138,6 +143,17 @@ module.exports = {
                         
                                 itinerary.sites[i] = siteObj;
                             }
+                        }
+                        if (itinerary.area&&populateArea) {
+                            let area;
+                                try {
+                                    area = await AreaService.findOne(ctx, itinerary.area, { select: ['id', 'title', 'alias', 'description', 'featureImg'] });
+                                } catch (error) {
+                                    console.log(error)
+                                    return reject({ statusCode: 500, error: error }); 
+                                }
+                                itinerary.area = area
+                             
                         }
                         records[i].itinerary = itinerary;
                     }

@@ -15,7 +15,7 @@ module.exports = {
             }
             delete filter.populate;
         }
-        if(select){
+        if(select){ 
             if(typeof select === 'string'){
                 params.select= select.split(',')
             }
