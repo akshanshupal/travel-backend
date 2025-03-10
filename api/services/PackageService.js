@@ -282,6 +282,9 @@ module.exports = {
             if (!data.url) {
                 return reject({ statusCode: 400, error: { message: 'packageUrl is required!' } });
             }
+            if(!data.hasOwnProperty('status')){
+                data.status=true
+            }
             try {
                 let [existingPackage] = await this.find(ctx,{ url: data.url}, {pagination: {limit:1}});
                 if (existingPackage) {

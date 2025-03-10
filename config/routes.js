@@ -210,6 +210,12 @@ module.exports.routes = {
   'GET /api/packagetag/:id': 'PackageTagController.findOne',
   'PUT /api/packagetag/:id': 'PackageTagController.updateOne',
   'DELETE /api/packagetag/:id': 'PackageTagController.deleteOne',
+
+  'POST /api/packagevoucher': 'PackageVoucherController.create',
+  'GET /api/packagevoucher': 'PackageVoucherController.find',
+  'GET /api/packagevoucher/:id': 'PackageVoucherController.findOne',
+  'PUT /api/packagevoucher/:id': 'PackageVoucherController.updateOne',
+  'DELETE /api/packagevoucher/:id': 'PackageVoucherController.deleteOne',
   /***************************************************************************
   *                                                                          *
   * More custom routes here...                                               *

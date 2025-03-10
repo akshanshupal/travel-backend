@@ -7,9 +7,6 @@ module.exports = {
             if (!params) {
                 params = {};
             }
-            if(!filter.hasOwnProperty('isDeleted')){
-                filter.isDeleted = { '!=': true };
-            }
             let qryObj = {where : filter};
             //sort
             let sortField = 'createdAt';
@@ -35,15 +32,15 @@ module.exports = {
                 qryObj.select = params.select;
             }
             try {
-                var records = await PackageTag.find(qryObj);;
+                var records = await PackageVoucher.find(qryObj);;
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
             //populate&& populate select
             if (params.populate) {
                 let assosiationModels = {};
-                for (let ami = 0; ami < sails.models.packagetag.associations.length; ami++) {
-                    assosiationModels[sails.models.packagetag.associations[ami].alias] = sails.models.packagetag.associations[ami].model;
+                for (let ami = 0; ami < sails.models.packagevoucher.associations.length; ami++) {
+                    assosiationModels[sails.models.packagevoucher.associations[ami].alias] = sails.models.packagevoucher.associations[ami].model;
                 }
                 for (let i = 0; i < records.length; i++) {
                     for (let populateKey of params.populate) {
@@ -69,7 +66,7 @@ module.exports = {
             //totalCount
             if (params.totalCount) {
                 try {
-                    var totalRecords = await PackageTag.count(filter)
+                    var totalRecords = await PackageVoucher.count(filter)
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
@@ -104,7 +101,7 @@ module.exports = {
                 qryObj.select = params.select;
             }
             try {
-                var record = await PackageTag.findOne(qryObj);;
+                var record = await PackageVoucher.findOne(qryObj);;
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -114,8 +111,8 @@ module.exports = {
             //populate&& populate select
             if (params.populate) {
                 let assosiationModels = {};
-                for (let ami = 0; ami < sails.models.packagetag.associations.length; ami++) {
-                    assosiationModels[sails.models.packagetag.associations[ami].alias] = sails.models.packagetag.associations[ami].model;
+                for (let ami = 0; ami < sails.models.packagevoucher.associations.length; ami++) {
+                    assosiationModels[sails.models.packagevoucher.associations[ami].alias] = sails.models.packagevoucher.associations[ami].model;
                 }
                 for (let populateKey of params.populate) {
                     if (!record[populateKey]) {
@@ -151,16 +148,19 @@ module.exports = {
             if(!data.hasOwnProperty('status')){
                 data.status=true
             }
-
+            if(!data.hasOwnProperty('isDefault')){
+                data.isDefault=true
+            }
+   
             if (avoidRecordFetch) {
                 try {
-                    var record = await PackageTag.create(data);
+                    var record = await PackageVoucher.create(data);
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
             } else {
                 try {
-                    var record = await PackageTag.create(data).fetch();
+                    var record = await PackageVoucher.create(data).fetch();
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
@@ -188,9 +188,12 @@ module.exports = {
             }
 
             try {
-                var record = await PackageTag.updateOne(filter).set(updtBody);
+                var record = await PackageVoucher.updateOne(filter).set(updtBody);
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
+            }
+            if(record.isDefault){
+                await PackageVoucher.update({company: ctx?.session?.activeCompany?.id, id: {'!=' : record.id}}).set({isDefault: false});
             }
 
             return resolve({ data: record || { modified: true } });
@@ -208,18 +211,13 @@ module.exports = {
             if (!filter.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
-            // try {
-            //     await PackageTag.destroyOne(filter);
-            // } catch (error) {
-            //     return reject({ statusCode: 500, error: error });
-            // }
-
-            let deletedData
             try {
-                deletedData =  await this.updateOne(ctx, id, {isDeleted:true, deletedAt: new Date(), deletedBy: ctx?.user?.id})
+                await PackageVoucher.destroyOne(filter);
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
+
+
             return resolve({ data: { deleted: true } });
         })
     }

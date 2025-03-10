@@ -16,6 +16,15 @@ module.exports = {
                 filter.isDeleted = { '!=': true };
             }
             if (filter.title && filter.title.trim()) filter.title = { contains: filter.title.trim() };
+            if(filter.createPackage=="true"){
+                filter.package = { '!=' : null};
+                delete filter.createPackage
+            }
+            if(filter.createPackage=="false"){
+                filter.package = null;
+                delete filter.createPackage
+
+            }
 
             let qryObj = {where : filter};
             //sort
