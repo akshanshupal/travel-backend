@@ -24,6 +24,9 @@ module.exports = {
         },
         favicon : {
             type: 'string'
+        },
+        address:{
+            type: 'string'
         }
     }
 };

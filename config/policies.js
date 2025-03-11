@@ -70,5 +70,8 @@ module.exports.policies = {
     'find' : true,
     'findOne' : true,
   },
+  PackageVoucherController :{
+    'find' : true,
+  }
   
 };
