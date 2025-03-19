@@ -640,7 +640,7 @@ module.exports = {
                         if(data){
                             try {
                                 await SendmailService.create(ctx, {
-                                    email: sendMail?.email,
+                                    email: bodyData.email || sendMail?.email,
                                     subject: subject,
                                     html: html,
                                     savedItinerary: id,
@@ -655,7 +655,7 @@ module.exports = {
                     } catch (error) {
                         try {
                             await SendmailService.create(ctx, {
-                                email: sendMail?.email,
+                                email: bodyData.email || sendMail?.email,
                                 subject: subject,
                                 html: html,
                                 savedItinerary: id,

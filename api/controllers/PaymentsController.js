@@ -118,6 +118,29 @@ module.exports = {
         }
 
         return res.json(record.data);
-    }
+    },
+    getReceipt: async function (req, res) {
+        if(!req.params.id)   return res.badRequest('ID is missing');
+
+        try {
+            var record = await PaymentsService.getReceipt(req, req.params.id);
+        } catch (error) {
+            return res.serverError(error);
+        }
+        return res.json(record.data);
+        // return res.json(record.data);    
+
+    },
+    sendPaymentReceiptMail: async function (req, res) {
+        if(!req.body.email)   return res.badRequest('email is missing');
+
+        try {
+            var record = await PaymentsService.sendPaymentReceiptMail(req, req.params.id, req.body);
+        } catch (error) {
+            return res.serverError(error);
+        }
+        return res.json(record.data);
+    },
+        
 
 };

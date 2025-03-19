@@ -178,8 +178,11 @@ module.exports.routes = {
   'POST /api/payments': 'PaymentsController.create',
   'GET /api/payments': 'PaymentsController.find',
   'GET /api/payments/:id': 'PaymentsController.findOne',
+  'GET /api/payments/receipt/:id': 'PaymentsController.getReceipt',
+  'POST /api/payments/receipt-mail/:id': 'PaymentsController.sendPaymentReceiptMail',
   'PUT /api/payments/:id': 'PaymentsController.updateOne',
   'DELETE /api/payments/:id': 'PaymentsController.deleteOne',
+  
 
   'POST /api/reports': 'ReportsController.create',
   'GET /api/reports': 'ReportsController.find',
@@ -214,8 +217,10 @@ module.exports.routes = {
   'POST /api/packagevoucher': 'PackageVoucherController.create',
   'GET /api/packagevoucher': 'PackageVoucherController.find',
   'GET /api/packagevoucher/:id': 'PackageVoucherController.findOne',
+  'POST /api/packagevoucher/send-paymentVoucher/:id': 'PackageVoucherController.sendPaymentVoucherMail',
   'PUT /api/packagevoucher/:id': 'PackageVoucherController.updateOne',
   'DELETE /api/packagevoucher/:id': 'PackageVoucherController.deleteOne',
+
   /***************************************************************************
   *                                                                          *
   * More custom routes here...                                               *

@@ -13,6 +13,9 @@ module.exports = {
             type: 'string',
             required: true,
         },
+        dashboardUrl: {
+            type: 'string',
+        },
         websiteUrls : {
             type: 'json'
         },
@@ -27,6 +30,16 @@ module.exports = {
         },
         address:{
             type: 'string'
+        },
+        paymentReceiptPrefix : {
+            type: 'string'
+        },
+        paymentReceiptLength : {
+            type: 'number'
+        },
+        email: {
+            type: 'string',
+            // isEmail: true
         }
     }
 };

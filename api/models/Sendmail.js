@@ -3,6 +3,8 @@
  *
  */
 
+const { model } = require("mongoose");
+
 module.exports = {
 
     attributes: {
@@ -27,6 +29,9 @@ module.exports = {
         },
         savedItinerary:{
             model: 'savedItinerary'
+        },
+        payments:{
+            model: 'payments'
         },
         sendBy:{
             model: 'user'

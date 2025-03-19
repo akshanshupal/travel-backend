@@ -168,22 +168,26 @@ module.exports = {
                     data.paymentDate = data.paymentDate.toDate();
                 }
             }
+            try {
 
-            if (avoidRecordFetch) {
-                try {
-                    var record = await Payments.create(data);
-                } catch (error) {
-                    return reject({ statusCode: 500, error: error });
+                const [companyConfig] = await CompanyconfigService.find(ctx,{});
+                if (!companyConfig) {
+                    return reject({ statusCode: 404, error: { message: 'Company configuration not found!' } });
                 }
-            } else {
-                try {
-                    var record = await Payments.create(data).fetch();
-                } catch (error) {
-                    return reject({ statusCode: 500, error: error });
+                data.configSettings = companyConfig;
+
+                let redisReceiptNo = await sails.redis.incr('paymentReceipt:' +':' + data.company.toString()+':' + data.paymentStore.toString() + ':' + data.paymentType);
+                data.receiptNo = companyConfig.paymentReceiptPrefix + data.paymentType.toUpperCase()+ redisReceiptNo.toString().padStart(companyConfig.paymentReceiptLength, '0');
+                let record;
+                if (avoidRecordFetch) {
+                    record = await Payments.create(data);
+                } else {
+                    record = await Payments.create(data).fetch();
                 }
+                return resolve({ data: record || { created: true } });
+            } catch (error) {
+                return reject({ statusCode: 500, error: error });
             }
-
-            return resolve({ data: record || { created: true } });
         })
 
 
@@ -250,5 +254,133 @@ module.exports = {
 
             // return resolve({ data: { deleted: true } });
         })
+    },
+    getReceipt: function (ctx, id) {
+        return new Promise(async (resolve, reject) => {
+            const filter = {
+                id: id,
+                company: ctx?.session?.activeCompany?.id,
+            };
+            if (!filter.id) {
+                return reject({ statusCode: 400, error: { message: 'id is required!' } });
+            }
+            if (!filter.company) {
+                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+            }
+            const {data: payment} = await this.findOne(ctx, id, {populate: ['assignment','paymentStore']});
+            if (!payment) {
+                return reject({ statusCode: 404, error: { message: 'Payment not found!' } });
+            }
+
+            const [companyConfig] = await CompanyconfigService.find(ctx, {}, {populate: ['company'],pagination: {limit:1}, select :['company','address','logo','email']});
+
+            return resolve({ data: {payment: payment || {}, companyConfig: companyConfig || {} } });
+        })
+    },
+    sendWelcomeEmail: async function (ctx,data) {
+        return new Promise(async (resolve, reject) => {
+            
+            const email = data.email; // Assume email is sent in the request body
+            const subject = data?.subject || 'Welcome to Our Service';
+            const text = data?.text || 'Thank you for signing up!';
+            const html = data?.html || '<h1>Welcome!</h1><p>Thank you for signing up!</p>';
+    
+            try {
+                await EmailService.sendEmail(ctx,email, subject, text, html);
+                return resolve({data: { message: 'Email sent successfully!' }});
+            } catch (error) {
+                return reject(error);
+            }
+        })
+    },
+    sendPaymentReceiptMail: async function (ctx, id, bodyData) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let payment
+                const {data}= await this.findOne(ctx, id);
+                if(data){
+                    payment = data
+                }
+                const [companyConfig] = await CompanyconfigService.find(ctx, {}, {populate: ['company'],pagination: {limit:1}, select :['company','address','logo','email','dashboardUrl']});
+
+                if(payment){
+                    let html = `<div style="font-family: Arial, sans-serif; background-color: #f9f9f9; text-align: center; padding: 20px;">
+
+                        <div style="max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 10px; 
+                                    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);">
+                            
+                            <img src="${companyConfig?.logo}" alt="Company Logo" style="width: 120px; margin-bottom: 10px;">
+
+                            <img src="https://cdn-icons-png.flaticon.com/512/845/845646.png" alt="Payment Success" 
+                                style="width: 80px; margin-bottom: 10px;">
+
+                            <h1 style="color: #28a745; font-size: 24px; font-weight: bold; margin-bottom: 10px;">Payment Successful!</h1>
+                            <p style="color: #333; font-size: 16px; margin-bottom: 20px;">Thank you for your payment. Your transaction has been successfully completed.</p>
+
+                            <a href="${companyConfig?.dashboardUrl}/payments-receipt/${payment?.id}" 
+                            style="display: inline-block; background-color: #1a73e8; color: #fff; padding: 12px 25px; 
+                                    border-radius: 5px; font-size: 16px; font-weight: bold; text-decoration: none;">
+                                Click here to View Payment Receipt
+                            </a>
+
+                            <h2 style="color: #1a73e8; font-size: 20px; font-weight: bold; margin-top: 20px;">Need Assistance?</h2>
+                            <p style="color: #333; font-size: 16px; margin-bottom: 10px;">If you have any questions, feel free to reach out to your Travel Expert.</p>
+
+                            <!-- Contact Info -->
+                            <p style="color: #555; font-size: 14px; margin-top: 15px;">
+                                <strong>${companyConfig?.company?.name}</strong><br>
+                                Address: ${companyConfig?.address}<br>
+                                Email: <a href="mailto:${companyConfig?.email}" style="color: #1a73e8; text-decoration: none;">
+                                    ${companyConfig?.email}
+                                </a>
+                            </p>
+                        </div>
+
+                    </div>`;
+                   const formattedDate = sails.dayjs(payment?.paymentDate).format("DD-MMM-YY");
+
+                    let subject = `🎉 Payment Successful - Receipt #${payment?.receiptNo} | ${companyConfig?.company?.name} | ${formattedDate} ✅`
+                    try {
+                        const {data} = await this.sendWelcomeEmail(ctx,{email:bodyData.email || sendMail?.email, subject:subject, html:html});
+                        if(data){
+                            try {
+                                await SendmailService.create(ctx, {
+                                    email: bodyData.email,
+                                    subject: subject,
+                                    html: html,
+                                    payments: id,
+                                    sendBy: ctx?.session?.user?.id,
+                                    status: true
+                                });
+                            } catch (error) {
+                                reject(error)
+                            }
+                            resolve({data:data.message});
+                        }
+                    } catch (error) {
+                        try {
+                            await SendmailService.create(ctx, {
+                                email: bodyData.email,
+                                subject: subject,
+                                html: html,
+                                payments: id,
+                                sendBy: ctx?.session?.user?.id,
+                                status: false
+                            });
+                        } catch (error) {
+                            reject(error)
+                        }
+                        reject(error)
+                        
+                    }
+                }
+                
+            } catch (error) {
+                reject(error)  
+            }
+        })
+    
+
     }
+
 }

@@ -119,6 +119,16 @@ module.exports = {
         }
 
         return res.json(record.data);
-    }
+    },
+    sendPaymentVoucherMail: async function (req, res) {
+        if(!req.body.email)   return res.badRequest('email is missing');
+
+        try {
+            var record = await PackageVoucherService.sendPaymentVoucherMail(req, req.params.id, req.body);
+        } catch (error) {
+            return res.serverError(error);
+        }
+        return res.json(record.data);
+    },
 
 };

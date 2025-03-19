@@ -133,6 +133,9 @@ module.exports = {
         verify: {
             type: 'boolean'
         },
+        verifyTime:{
+            type: 'ref', columnType: 'datetime'
+        },
         idProof:{
             type:'json'
         },

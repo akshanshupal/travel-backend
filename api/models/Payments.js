@@ -40,7 +40,9 @@ module.exports = {
         packageBooking: {
             model: 'packageBooking'
         },
-        
+        receiptNo: {
+            type: 'string'
+        },
         isDeleted: { type: 'boolean'},
         deletedAt: { type: 'ref', columnType: 'datetime' },
         deletedBy: { model: 'user' }
