@@ -317,7 +317,7 @@ module.exports = {
                             <h1 style="color: #28a745; font-size: 24px; font-weight: bold; margin-bottom: 10px;">Payment Successful!</h1>
                             <p style="color: #333; font-size: 16px; margin-bottom: 20px;">Thank you for your payment. Your transaction has been successfully completed.</p>
 
-                            <a href="${companyConfig?.dashboardUrl}/payments-receipt/${payment?.id}" 
+                            <a href="https://${ctx?.session?.activeCompany?.host}/payments-receipt/${payment?.id}" 
                             style="display: inline-block; background-color: #1a73e8; color: #fff; padding: 12px 25px; 
                                     border-radius: 5px; font-size: 16px; font-weight: bold; text-decoration: none;">
                                 Click here to View Payment Receipt

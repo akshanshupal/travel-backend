@@ -79,11 +79,11 @@ module.exports.http = {
           const hostname = url.hostname;
           console.log('hostname', hostname);
            var hostCompany
-        //   try {
-        //     hostCompany = await sails.redis.hgetall('host:' + hostname + ':company');
-        //   } catch (error) {
-        //       return res.status(403).send(error);
-        //   }
+          try {
+            hostCompany = await sails.redis.hgetall('host:' + hostname + ':company');
+          } catch (error) {
+              return res.status(403).send(error);
+          }
           let method = req.method;
           if (hostCompany?.reqHost == hostname) {
               if (method == 'GET') {
@@ -102,31 +102,34 @@ module.exports.http = {
           } else {
               let companyConfig;
               try {
-                companyConfig = await CompanyconfigService.find(req, {panelUrl: hostname});
+                [companyConfig] = await CompanyconfigService.find(req, {websiteUrls: hostname}, {pagination: {limit:1}, populate:['company']});
               } catch (error) {
                   return res.status(403).send(error);
               }
-              if (!companyConfig.length) return res.status(404).send('No website found!!');
-              let cacheConf = {
-                  id: companyConfig[0].company.toString(),
-                  reqHost: companyConfig[0].panelUrl,
-              };
-            //   try {
-            //       await sails.redis.hset('host:' + hostname + ':company', cacheConf);
-            //   } catch (error) {
-            //       console.log(error);
-            //       return res.status(403).send(error);
-            //   }
+              if (!companyConfig) return res.status(404).send('No website found!!');
+              let cacheConf = {...companyConfig};
+              delete cacheConf.id
+              cacheConf.id = cacheConf.company.id.toString();
+              cacheConf.name = cacheConf.company.name;
+              delete cacheConf.company
+              cacheConf.host = hostname
+    
+              try {
+                  await sails.redis.hset('host:' + hostname + ':company', cacheConf);
+              } catch (error) {
+                  console.log(error);
+                  return res.status(403).send(error);
+              }
               if(!req.session) {
                 req.session = {};
                 }
               req.session.activeCompany = cacheConf;
               let method = req.method;
               if (method == 'GET') {
-                  req.query = {...req.query,  company: companyConfig[0].company };
+                  req.query = {...req.query,  company: companyConfig.company };
               } else {
                   if (!Array.isArray(req.body)) {
-                      req.body = {...req.body,  company: companyConfig[0].company };
+                      req.body = {...req.body,  company: companyConfig.company };
                   }
               }
               next();

@@ -261,7 +261,7 @@ module.exports = {
                             <h1 style="color: #28a745; font-size: 24px; font-weight: bold; margin-bottom: 10px;">Your Payment Voucher Created Successful!</h1>
                             <p style="color: #333; font-size: 16px; margin-bottom: 20px;">Thank you for your payment voucher. Your transaction has been successfully completed.</p>
 
-                            <a href="${companyConfig?.dashboardUrl}/package-voucher/${paymentVoucher?.id}" 
+                            <a href="${ctx?.session?.activeCompany?.host}/package-voucher/${paymentVoucher?.id}" 
                             style="display: inline-block; background-color: #1a73e8; color: #fff; padding: 12px 25px; 
                                     border-radius: 5px; font-size: 16px; font-weight: bold; text-decoration: none;">
                                 Click here to View Payment Voucher 

@@ -13,9 +13,9 @@ module.exports = {
             type: 'string',
             required: true,
         },
-        dashboardUrl: {
-            type: 'string',
-        },
+        // dashboardUrl: {
+        //     type: 'string',
+        // },
         websiteUrls : {
             type: 'json'
         },
