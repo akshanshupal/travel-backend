@@ -126,10 +126,10 @@ module.exports.http = {
               req.session.activeCompany = cacheConf;
               let method = req.method;
               if (method == 'GET') {
-                  req.query = {...req.query,  company: companyConfig.company };
+                  req.query = {...req.query,  company: companyConfig.company.id };
               } else {
                   if (!Array.isArray(req.body)) {
-                      req.body = {...req.body,  company: companyConfig.company };
+                      req.body = {...req.body,  company: companyConfig.company.id };
                   }
               }
               next();
