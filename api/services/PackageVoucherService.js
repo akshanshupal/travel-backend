@@ -245,7 +245,6 @@ module.exports = {
                 if(data){
                     paymentVoucher = data
                 }
-                const [companyConfig] = await CompanyconfigService.find(ctx, {}, {populate: ['company'],pagination: {limit:1}, select :['company','address','logo','email','dashboardUrl']});
 
                 if(paymentVoucher){
                     let html = `<div style="font-family: Arial, sans-serif; background-color: #f9f9f9; text-align: center; padding: 20px;">
@@ -253,18 +252,17 @@ module.exports = {
                         <div style="max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 10px; 
                                     box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);">
                             
-                            <img src="${companyConfig?.logo}" alt="Company Logo" style="width: 120px; margin-bottom: 10px;">
+                            <img src="${ctx.session?.activeCompany?.logo}" alt="Company Logo" style="width: 120px; margin-bottom: 10px;">
 
-                            <img src="https://cdn-icons-png.flaticon.com/512/845/845646.png" alt="Voucher Created Successful" 
-                                style="width: 80px; margin-bottom: 10px;">
+                         
 
-                            <h1 style="color: #28a745; font-size: 24px; font-weight: bold; margin-bottom: 10px;">Your Payment Voucher Created Successful!</h1>
-                            <p style="color: #333; font-size: 16px; margin-bottom: 20px;">Thank you for your payment voucher. Your transaction has been successfully completed.</p>
+                            <h1 style="color: #28a745; font-size: 24px; font-weight: bold; margin-bottom: 10px;">Your Package Voucher </h1>
+                            <p style="color: #333; font-size: 16px; margin-bottom: 20px;">Thank you for your Package voucher. Your transaction has been successfully completed.</p>
 
                             <a href="${ctx?.session?.activeCompany?.host}/package-voucher/${paymentVoucher?.id}" 
                             style="display: inline-block; background-color: #1a73e8; color: #fff; padding: 12px 25px; 
                                     border-radius: 5px; font-size: 16px; font-weight: bold; text-decoration: none;">
-                                Click here to View Payment Voucher 
+                                Click here to View Package Voucher 
                             </a>
 
                             <h2 style="color: #1a73e8; font-size: 20px; font-weight: bold; margin-top: 20px;">Need Assistance?</h2>
@@ -272,17 +270,17 @@ module.exports = {
 
                             <!-- Contact Info -->
                             <p style="color: #555; font-size: 14px; margin-top: 15px;">
-                                <strong>${companyConfig?.company?.name}</strong><br>
-                                Address: ${companyConfig?.address}<br>
-                                Email: <a href="mailto:${companyConfig?.email}" style="color: #1a73e8; text-decoration: none;">
-                                    ${companyConfig?.email}
+                                <strong>${ctx?.session?.activeCompany?.name}</strong><br>
+                                Address: ${ctx?.session?.activeCompany?.address}<br>
+                                Email: <a href="mailto:${ctx?.session?.activeCompany?.email}" style="color: #1a73e8; text-decoration: none;">
+                                    ${ctx?.session?.activeCompany?.email}
                                 </a>
                             </p>
                         </div>
 
                     </div>`;
 
-                    let subject = `🎉 Booking Voucher - #${paymentVoucher?.id} | ${companyConfig?.company?.name} ✅`
+                    let subject = `🎉 Booking Voucher - #${paymentVoucher?.id} | ${ctx?.session?.activeCompany?.name} ✅`
                     try {
                         const {data} = await this.sendWelcomeEmail(ctx,{email:bodyData.email || sendMail?.email, subject:subject, html:html});
                         if(data){
