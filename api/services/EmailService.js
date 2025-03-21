@@ -47,7 +47,7 @@ module.exports = {
                 to,
                 subject,
                 text,
-                html,
+                html
             };
         }
         if(ctx.session&&ctx.session.activeCompany&&ctx.session.activeCompany.id=='674f3fa327a4eb7981d4df5a'){
