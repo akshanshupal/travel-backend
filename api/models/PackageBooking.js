@@ -29,9 +29,17 @@ module.exports = {
             type: 'ref',
             columnType: 'datetime'
         },
+        hasStartTime: {
+            type: 'boolean',
+            defaultsTo: false
+        },
         endDate:{
             type: 'ref',
             columnType: 'datetime'
+        },
+        hasEndTime: {
+            type: 'boolean',
+            defaultsTo: false
         },
         customParams : {
             type: 'json'

@@ -88,7 +88,7 @@ module.exports = {
         stayInformation:{
             type : 'json',
         },
-        sightSeeing: {
+        siteSeeing: {
             type: 'string'
         },
         pickUpAddress: {

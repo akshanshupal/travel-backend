@@ -152,6 +152,22 @@ module.exports = {
                 data.status = true
             }
 
+            if (data?.startDate && typeof data?.startDate === 'string') {
+                data.startDate = sails.dayjs(data.startDate);
+                if (!data.startDate.isValid()) {
+                    return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid startDate is required!' } });
+                } else {
+                    data.startDate = data.startDate.toDate();
+                }
+            }
+            if (data?.endDate && typeof data?.endDate === 'string') {
+                data.endDate = sails.dayjs(data.endDate);
+                if (!data.endDate.isValid()) {
+                    return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid endDate is required!' } });
+                } else {
+                    data.endDate = data.endDate.toDate();
+                }
+            }
             if (data?.nextPaymentDate && typeof data?.nextPaymentDate === 'string') {
                 data.nextPaymentDate = sails.dayjs(data.nextPaymentDate);
                 if (!data.nextPaymentDate.isValid()) {
@@ -193,6 +209,22 @@ module.exports = {
             }
             if (!updtBody.company) {
                 updtBody.company= filter.company;
+            }
+            if (updtBody?.startDate && typeof updtBody?.startDate === 'string') {
+                updtBody.startDate = sails.dayjs(updtBody.startDate);
+                if (!updtBody.startDate.isValid()) {
+                    return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid startDate is required!' } });
+                } else {
+                    updtBody.startDate = updtBody.startDate.toDate();
+                }
+            }
+            if (updtBody?.endDate && typeof updtBody?.endDate === 'string') {
+                updtBody.endDate = sails.dayjs(updtBody.endDate);
+                if (!updtBody.endDate.isValid()) {
+                    return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid endDate is required!' } });
+                } else {
+                    updtBody.endDate = updtBody.endDate.toDate();
+                }
             }
             if (updtBody?.nextPaymentDate && typeof updtBody?.nextPaymentDate === 'string') {
                 updtBody.nextPaymentDate = sails.dayjs(updtBody.nextPaymentDate);
