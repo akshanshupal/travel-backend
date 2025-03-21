@@ -33,6 +33,9 @@ module.exports = {
         payments:{
             model: 'payments'
         },
+        packageVoucher:{
+            model: 'packageVoucher'
+        },
         sendBy:{
             model: 'user'
         }

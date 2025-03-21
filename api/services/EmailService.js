@@ -8,6 +8,25 @@ module.exports = {
         let transporter;
         let mailOptions
         if(ctx.session&&ctx.session.activeCompany&&ctx.session.activeCompany.id=='65fb18f4566f341facb8d1a9'){
+                        // //tripzipper
+                        // transporter = nodemailer.createTransport({
+                        //     host: 'smtpout.secureserver.net',
+                        //     port: 465,
+                        //     secure: true,
+                        //     auth: {
+                        //         user: 'enquiry@tripzipper.co.in',
+                        //         pass: 'Nokia@5310',
+                        //     },
+                        // });
+                
+                        // // Configure mail options
+                        // mailOptions = {
+                        //     from: 'enquiry@tripzipper.co.in',
+                        //     to,
+                        //     subject,
+                        //     text,
+                        //     html,
+                        // };
 
             transporter = nodemailer.createTransport({
                 host: 'smtpout.secureserver.net',
