@@ -323,5 +323,120 @@ module.exports = {
 
             return resolve({ data: { deleted: true } });
         })
-    }
+    },
+
+    sendAssignmentMail: async function (ctx, id, bodyData) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let assignmentMailData
+                const {data}= await this.findOne(ctx, id);
+                if(data){
+                    assignmentMailData = data
+                }
+
+                if (assignmentMailData) {
+                    let html = `<div style="font-family: Arial, sans-serif; background-color: #f9f9f9; text-align: center; padding: 20px;">
+                    
+                        <div style="max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 10px; 
+                                    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);">
+                            
+                            <img src="${ctx.session?.activeCompany?.logo}" alt="Company Logo" 
+                                 style="width: 120px; margin-bottom: 10px;">
+                    
+                            <h1 style="color: #28a745; font-size: 24px; font-weight: bold; margin-bottom: 10px;">
+                                Your Booking is Confirmed! 🎉
+                            </h1>
+                    
+                            <p style="color: #333; font-size: 16px; margin-bottom: 20px;">
+                                Thank you for choosing <strong>${ctx?.session?.activeCompany?.name}</strong>. <br>
+                                Your booking has been successfully confirmed.
+                            </p>
+                
+                            <!-- Booking Details -->
+                            <p style="color: #555; font-size: 14px; margin-bottom: 20px;">
+                                <strong>Booking ID:</strong> #${assignmentMailData?.id} <br>
+                                <strong>Booking Date:</strong> ${assignmentMailData?.bookingDate 
+                                    ? new Date(assignmentMailData.bookingDate).toLocaleDateString("en-GB") 
+                                    : "Not Provided"}
+                            </p>
+                
+                            <!-- Support Coordinator Introduction -->
+                            <div style="background: #f1f1f1; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                                <h2 style="color: #1a73e8; font-size: 18px; font-weight: bold; margin-bottom: 5px;">
+                                    Meet Your Support Coordinator
+                                </h2>
+                                <p style="color: #333; font-size: 14px; margin-bottom: 10px;">
+                                    Hi Travelers, I'm <strong>Tanya Bisht</strong>, your dedicated Support Coordinator.  
+                                    I'm here to assist you with any queries, changes, or feedback.  
+                                    Feel free to reach out for support!
+                                </p>
+                                <p style="color: #555; font-size: 14px; margin-bottom: 5px;">
+                                    <strong>Contact:</strong> +91-9717615559 <br>
+                                    <strong>Email:</strong> <a href="mailto:support@tripzipper.com" 
+                                                style="color: #1a73e8; text-decoration: none;">support@tripzipper.com</a>
+                                </p>
+                            </div>
+                
+                            <!-- Footer -->
+                            <p style="color: #555; font-size: 14px; margin-top: 15px;">
+                                <strong>${ctx?.session?.activeCompany?.name}</strong><br>
+                                Address: ${ctx?.session?.activeCompany?.address}<br>
+                                Email: <a href="mailto:${ctx?.session?.activeCompany?.email}" 
+                                          style="color: #1a73e8; text-decoration: none;">
+                                    ${ctx?.session?.activeCompany?.email}
+                                </a>
+                            </p>
+                        </div>
+                
+                    </div>`;
+                
+                    let subject = `🎉 Booking Confirmed - #${assignmentMailData?.id} | ${ctx?.session?.activeCompany?.name} ✅`;
+                
+                    try {
+                        const { data } = await EmailService.sendWelcomeEmail(ctx, {
+                            email: bodyData.email || sendMail?.email,
+                            subject: subject,
+                            html: html,
+                            from:'support@hospitalitygroup.in',  password: 'Priyanka@123'
+                        });
+                
+                        if (data) {
+                            try {
+                                await SendmailService.create(ctx, {
+                                    email: bodyData.email,
+                                    subject: subject,
+                                    html: html,
+                                    payments: id,
+                                    sendBy: ctx?.session?.user?.id,
+                                    status: true
+                                });
+                            } catch (error) {
+                                reject(error);
+                            }
+                            resolve({ data: data.message });
+                        }
+                    } catch (error) {
+                        try {
+                            await SendmailService.create(ctx, {
+                                email: bodyData.email,
+                                subject: subject,
+                                html: html,
+                                payments: id,
+                                sendBy: ctx?.session?.user?.id,
+                                status: false
+                            });
+                        } catch (error) {
+                            reject(error);
+                        }
+                        reject(error);
+                    }
+                }
+                
+                
+                
+            } catch (error) {
+                reject(error)  
+            }
+        })
+   }
 }

@@ -3,7 +3,7 @@
 const nodemailer = require('nodemailer');
 
 module.exports = {
-  sendEmail: function (ctx,to, subject, text, html) {
+  sendEmail: function (ctx,to, subject, text, html,from,password) {
     return new Promise(async (resolve, reject) => {
         let transporter;
         let mailOptions
@@ -14,14 +14,17 @@ module.exports = {
                         //     port: 465,
                         //     secure: true,
                         //     auth: {
-                        //         user: 'enquiry@tripzipper.co.in',
-                        //         pass: 'Nokia@5310',
+                        //         user: from,
+                        //         pass: password,
+                        //         // user: 'enquiry@tripzipper.co.in',
+                        //         // pass: 'Nokia@5310',
                         //     },
                         // });
                 
                         // // Configure mail options
                         // mailOptions = {
-                        //     from: 'enquiry@tripzipper.co.in',
+                        //     from: from,
+                        //     // from: 'enquiry@tripzipper.co.in',
                         //     to,
                         //     subject,
                         //     text,
@@ -80,6 +83,30 @@ module.exports = {
             return reject({ statusCode: 500, error });
         }
     });
-}
+},
+sendWelcomeEmail: async function (ctx,data) {
+    return new Promise(async (resolve, reject) => {
+        if (!data.email) {
+            return reject({ statusCode: 400, error: { message: 'email is required!' } });
+        }
+        if (!data.password) {
+            return reject({ statusCode: 400, error: { message: 'password is required!' } });
+        }
+
+        
+        const email = data.email; // Assume email is sent in the request body
+        const password = data.password; // Assume email is sent in the request body
+        const subject = data?.subject || 'Welcome to Our Service';
+        const text = data?.text || 'Thank you for signing up!';
+        const html = data?.html || '<h1>Welcome!</h1><p>Thank you for signing up!</p>';
+
+        try {
+            await this.sendEmail(ctx,email, subject, text, html,from, password);
+            return resolve({data: { message: 'Email sent successfully!' }});
+        } catch (error) {
+            return reject(error);
+        }
+    })
+},
 
 };

@@ -48,7 +48,7 @@ module.exports = {
             );
         }
         try {
-            var records = await AssignmentService.find(req, filter, params);
+            var records = await SettingsService.find(req, filter, params);
         } catch (error) {
             return res.serverError(error);
         }
@@ -78,7 +78,7 @@ module.exports = {
             );
         }
         try {
-            var record = await AssignmentService.findOne(req, req.params.id,params);
+            var record = await SettingsService.findOne(req, req.params.id,params);
         } catch (error) {
             return res.serverError(error);
         }
@@ -87,12 +87,13 @@ module.exports = {
     },
 
     create: async function (req, res) {
+        
         // if (!req.body.title) {
         //     return res.badRequest({ code: 'Error', message: 'Title is missing' });
         // }
 
         try {
-            var record = await AssignmentService.create(req, req.body);
+            var record = await SettingsService.create(req, req.body);
         } catch (error) {
             return res.serverError(error);
         }
@@ -103,7 +104,7 @@ module.exports = {
     updateOne: async function (req, res) {
 
         try {
-            var record = await AssignmentService.updateOne(req, req.params.id, req.body);
+            var record = await SettingsService.updateOne(req, req.params.id, req.body);
         } catch (error) {
             return res.serverError(error);
         }
@@ -113,22 +114,12 @@ module.exports = {
     deleteOne: async function (req, res) {
 
         try {
-            var record = await AssignmentService.deleteOne(req, req.params.id);
-        } catch (error) {
-            return res.status(error?.statusCode).send(error.error); 
-        }
-
-        return res.json(record.data);
-    },
-    sendAssignmentMail: async function (req, res) {
-        if(!req.body.email)   return res.badRequest('email is missing');
-
-        try {
-            var record = await AssignmentService.sendAssignmentMail(req, req.params.id, req.body);
+            var record = await SettingsService.deleteOne(req, req.params.id);
         } catch (error) {
             return res.serverError(error);
         }
+
         return res.json(record.data);
-    },
+    }
 
 };

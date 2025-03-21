@@ -157,6 +157,7 @@ module.exports.routes = {
   'POST /api/assignment': 'AssignmentController.create',
   'GET /api/assignment': 'AssignmentController.find',
   'GET /api/assignment/:id': 'AssignmentController.findOne',
+  'POST /api/assignment/send-assignmentMail/:id': 'AssignmentController.sendAssignmentMail',
   'PUT /api/assignment/:id': 'AssignmentController.updateOne',
   'DELETE /api/assignment/:id': 'AssignmentController.deleteOne',
 
@@ -221,6 +222,21 @@ module.exports.routes = {
   'PUT /api/packagevoucher/:id': 'PackageVoucherController.updateOne',
   'DELETE /api/packagevoucher/:id': 'PackageVoucherController.deleteOne',
 
+  //not in use
+
+  'POST /api/settings': 'SettingsController.create',
+  'GET /api/settings': 'SettingsController.find',
+  'GET /api/settings/:id': 'SettingsController.findOne',
+  'PUT /api/settings/:id': 'SettingsController.updateOne',
+  'DELETE /api/settings/:id': 'SettingsController.deleteOne',
+   
+  //not in use
+
+  'POST /api/mailer': 'MailerController.create',
+  'GET /api/mailer': 'MailerController.find',
+  'GET /api/mailer/:id': 'MailerController.findOne',
+  'PUT /api/mailer/:id': 'MailerController.updateOne',
+  'DELETE /api/mailer/:id': 'MailerController.deleteOne',
   /***************************************************************************
   *                                                                          *
   * More custom routes here...                                               *

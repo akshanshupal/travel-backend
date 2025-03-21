@@ -38,6 +38,9 @@ module.exports = {
         },
         sendBy:{
             model: 'user'
+        },
+        assignmentMail:{
+            model: 'assignment'
         }
 
     }

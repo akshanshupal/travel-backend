@@ -1,3 +1,4 @@
+
 module.exports = {
     find: function (ctx, filter, params) {
         return new Promise(async (resolve, reject) => {
@@ -277,27 +278,12 @@ module.exports = {
             return resolve({ data: {payment: payment || {}, companyConfig: companyConfig || {} } });
         })
     },
-    sendWelcomeEmail: async function (ctx,data) {
-        return new Promise(async (resolve, reject) => {
-            
-            const email = data.email; // Assume email is sent in the request body
-            const subject = data?.subject || 'Welcome to Our Service';
-            const text = data?.text || 'Thank you for signing up!';
-            const html = data?.html || '<h1>Welcome!</h1><p>Thank you for signing up!</p>';
-    
-            try {
-                await EmailService.sendEmail(ctx,email, subject, text, html);
-                return resolve({data: { message: 'Email sent successfully!' }});
-            } catch (error) {
-                return reject(error);
-            }
-        })
-    },
+
     sendPaymentReceiptMail: async function (ctx, id, bodyData) {
         return new Promise(async (resolve, reject) => {
             try {
                 let payment
-                const {data}= await this.findOne(ctx, id);
+                const {data}= await this.findOne(ctx, id, {populate: ['assignment']});
                 if(data){
                     payment = data
                 }
@@ -313,7 +299,11 @@ module.exports = {
                           
 
                             <h1 style="color: #28a745; font-size: 24px; font-weight: bold; margin-bottom: 10px;">Payment Successful!</h1>
-                            <p style="color: #333; font-size: 16px; margin-bottom: 20px;">Thank you for your payment. Your transaction has been successfully completed.</p>
+                            <h1 style="color: #1a73e8; font-size: 24px; font-weight: bold; margin-bottom: 10px;">Dear Mr ${payment?.assignment?.clientName},</h1>
+
+                            <p style="color: #333; font-size: 16px; margin-bottom: 20px;">
+                            Thank you for your payment.<br>
+                            We have received your payment successfully.Please find the payment confirmation attached for your reference.</p>
 
                             <a href="https://${ctx.session?.activeCompany?.host}/payments-receipt/${payment?.id}" 
                             style="display: inline-block; background-color: #1a73e8; color: #fff; padding: 12px 25px; 
@@ -325,7 +315,7 @@ module.exports = {
                             <p style="color: #333; font-size: 16px; margin-bottom: 10px;">If you have any questions, feel free to reach out to your Travel Expert.</p>
 
                             <!-- Contact Info -->
-                            <p style="color: #555; font-size: 14px; margin-top: 15px;">
+                            <p style="color: #555; font-size: 14px; margin-top: 15px; ">
                                 <strong>${ctx.session?.activeCompany?.name}</strong><br>
                                 Address: ${ctx.session?.activeCompany?.address}<br>
                                 Email: <a href="mailto:${ctx.session?.activeCompany?.email}" style="color: #1a73e8; text-decoration: none;">
@@ -339,7 +329,7 @@ module.exports = {
 
                     let subject = `🎉 Payment Successful - Receipt #${payment?.receiptNo} | ${ctx.session?.activeCompany?.name} | ${formattedDate} ✅`
                     try {
-                        const {data} = await this.sendWelcomeEmail(ctx,{email:bodyData.email || sendMail?.email, subject:subject, html:html});
+                        const {data} = await EmailService.sendWelcomeEmail(ctx,{email:bodyData.email || sendMail?.email, subject:subject, html:html, from:'support@hospitalitygroup.in',  password: 'Priyanka@123'});
                         if(data){
                             try {
                                 await SendmailService.create(ctx, {

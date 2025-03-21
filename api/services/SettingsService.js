@@ -32,15 +32,15 @@ module.exports = {
                 qryObj.select = params.select;
             }
             try {
-                var records = await PackageVoucher.find(qryObj);;
+                var records = await Settings.find(qryObj);;
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
             //populate&& populate select
             if (params.populate) {
                 let assosiationModels = {};
-                for (let ami = 0; ami < sails.models.packagevoucher.associations.length; ami++) {
-                    assosiationModels[sails.models.packagevoucher.associations[ami].alias] = sails.models.packagevoucher.associations[ami].model;
+                for (let ami = 0; ami < sails.models.settings.associations.length; ami++) {
+                    assosiationModels[sails.models.settings.associations[ami].alias] = sails.models.settings.associations[ami].model;
                 }
                 for (let i = 0; i < records.length; i++) {
                     for (let populateKey of params.populate) {
@@ -66,7 +66,7 @@ module.exports = {
             //totalCount
             if (params.totalCount) {
                 try {
-                    var totalRecords = await PackageVoucher.count(filter)
+                    var totalRecords = await Settings.count(filter)
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
@@ -101,7 +101,7 @@ module.exports = {
                 qryObj.select = params.select;
             }
             try {
-                var record = await PackageVoucher.findOne(qryObj);;
+                var record = await Settings.findOne(qryObj);;
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -111,8 +111,8 @@ module.exports = {
             //populate&& populate select
             if (params.populate) {
                 let assosiationModels = {};
-                for (let ami = 0; ami < sails.models.packagevoucher.associations.length; ami++) {
-                    assosiationModels[sails.models.packagevoucher.associations[ami].alias] = sails.models.packagevoucher.associations[ami].model;
+                for (let ami = 0; ami < sails.models.settings.associations.length; ami++) {
+                    assosiationModels[sails.models.settings.associations[ami].alias] = sails.models.settings.associations[ami].model;
                 }
                 for (let populateKey of params.populate) {
                     if (!record[populateKey]) {
@@ -145,22 +145,16 @@ module.exports = {
             if (!data.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
-            if(!data.hasOwnProperty('status')){
-                data.status=true
-            }
-            if(!data.hasOwnProperty('isDefault')){
-                data.isDefault=true
-            }
-   
+
             if (avoidRecordFetch) {
                 try {
-                    var record = await PackageVoucher.create(data);
+                    var record = await Settings.create(data);
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
             } else {
                 try {
-                    var record = await PackageVoucher.create(data).fetch();
+                    var record = await Settings.create(data).fetch();
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
@@ -188,12 +182,9 @@ module.exports = {
             }
 
             try {
-                var record = await PackageVoucher.updateOne(filter).set(updtBody);
+                var record = await Settings.updateOne(filter).set(updtBody);
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
-            }
-            if(record.isDefault){
-                await PackageVoucher.update({company: ctx?.session?.activeCompany?.id, id: {'!=' : record.id}}).set({isDefault: false});
             }
 
             return resolve({ data: record || { modified: true } });
@@ -212,7 +203,7 @@ module.exports = {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
             try {
-                await PackageVoucher.destroyOne(filter);
+                await Settings.destroyOne(filter);
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -220,90 +211,5 @@ module.exports = {
 
             return resolve({ data: { deleted: true } });
         })
-    },
- 
-    sendPaymentVoucherMail: async function (ctx, id, bodyData) {
-        return new Promise(async (resolve, reject) => {
-            try {
-                let paymentVoucher
-                const {data}= await this.findOne(ctx, id);
-                if(data){
-                    paymentVoucher = data
-                }
-
-                if(paymentVoucher){
-                    let html = `<div style="font-family: Arial, sans-serif; background-color: #f9f9f9; text-align: center; padding: 20px;">
-
-                        <div style="max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 10px; 
-                                    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);">
-                            
-                            <img src="${ctx.session?.activeCompany?.logo}" alt="Company Logo" style="width: 120px; margin-bottom: 10px;">
-
-                         
-
-                            <h1 style="color: #28a745; font-size: 24px; font-weight: bold; margin-bottom: 10px;">Your Package Voucher </h1>
-                            <p style="color: #333; font-size: 16px; margin-bottom: 20px;">Thank you for your Package voucher. Your transaction has been successfully completed.</p>
-
-                            <a href="${ctx?.session?.activeCompany?.host}/package-voucher/${paymentVoucher?.id}" 
-                            style="display: inline-block; background-color: #1a73e8; color: #fff; padding: 12px 25px; 
-                                    border-radius: 5px; font-size: 16px; font-weight: bold; text-decoration: none;">
-                                Click here to View Package Voucher 
-                            </a>
-
-                            <h2 style="color: #1a73e8; font-size: 20px; font-weight: bold; margin-top: 20px;">Need Assistance?</h2>
-                            <p style="color: #333; font-size: 16px; margin-bottom: 10px;">If you have any questions, feel free to reach out to your Travel Expert.</p>
-
-                            <!-- Contact Info -->
-                            <p style="color: #555; font-size: 14px; margin-top: 15px;">
-                                <strong>${ctx?.session?.activeCompany?.name}</strong><br>
-                                Address: ${ctx?.session?.activeCompany?.address}<br>
-                                Email: <a href="mailto:${ctx?.session?.activeCompany?.email}" style="color: #1a73e8; text-decoration: none;">
-                                    ${ctx?.session?.activeCompany?.email}
-                                </a>
-                            </p>
-                        </div>
-
-                    </div>`;
-
-                    let subject = `🎉 Booking Voucher - #${paymentVoucher?.id} | ${ctx?.session?.activeCompany?.name} ✅`
-                    try {
-                        const {data} = await EmailService.sendWelcomeEmail(ctx,{email:bodyData.email || sendMail?.email, subject:subject, html:html, from:'support@hospitalitygroup.in',  password: 'Priyanka@123'});
-                        if(data){
-                            try {
-                                await SendmailService.create(ctx, {
-                                    email: bodyData.email,
-                                    subject: subject,
-                                    html: html,
-                                    payments: id,
-                                    sendBy: ctx?.session?.user?.id,
-                                    status: true
-                                });
-                            } catch (error) {
-                                reject(error)
-                            }
-                            resolve({data:data.message});
-                        }
-                    } catch (error) {
-                        try {
-                            await SendmailService.create(ctx, {
-                                email: bodyData.email,
-                                subject: subject,
-                                html: html,
-                                payments: id,
-                                sendBy: ctx?.session?.user?.id,
-                                status: false
-                            });
-                        } catch (error) {
-                            reject(error)
-                        }
-                        reject(error)
-                        
-                    }
-                }
-                
-            } catch (error) {
-                reject(error)  
-            }
-        })
-   }
+    }
 }
