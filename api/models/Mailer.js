@@ -18,10 +18,13 @@ module.exports = {
         host: {
             type: 'string'
         },
+        html : {
+            type: 'string'
+        },
         email: {
             type: 'string'
         },
-        password: {
+        pass: {
             type: 'string'
         },
         emailCompany: {
