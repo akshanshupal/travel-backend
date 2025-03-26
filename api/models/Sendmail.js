@@ -27,21 +27,20 @@ module.exports = {
         html:{
             type: 'string',
         },
-        savedItinerary:{
-            model: 'savedItinerary'
+        emailFunction: {
+            type: 'string'
         },
-        payments:{
-            model: 'payments'
+        primaryModel: {
+            type : 'string'
         },
-        packageVoucher:{
-            model: 'packageVoucher'
+        modelId : {
+            type: 'string'
         },
         sendBy:{
             model: 'user'
         },
-        assignmentMail:{
-            model: 'assignment'
-        }
+
+
 
     }
 };

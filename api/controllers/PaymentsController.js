@@ -141,6 +141,16 @@ module.exports = {
         }
         return res.json(record.data);
     },
+    sendPaymentReminderMail: async function (req, res) {
+        if(!req.body.email)   return res.badRequest('email is missing');
+
+        try {
+            var record = await PaymentsService.sendPaymentReminderMail(req, req.params.id, req.body);
+        } catch (error) {
+            return res.serverError(error);
+        }
+        return res.json(record.data);
+    },
         
 
 };

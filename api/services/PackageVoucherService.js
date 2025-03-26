@@ -227,54 +227,53 @@ module.exports = {
             try {
                 let paymentVoucher
                 const {data}= await this.findOne(ctx, id);
+                const [mailerData] = await MailerService.find(ctx, {emailFunction: 'sendVoucherMail', status:true, })
+                function replaceSquareBrackets(html, data) {
+                    return html.replace(/\[\[(.*?)\]\]/g, (match, key) => {
+                      // Handle tourDate specifically
+                      if (key === "tourDate") {
+                        const rawDate = data.tourDate; // Get the raw date from the data object
+                        if (rawDate && !isNaN(new Date(rawDate))) {
+                          // Extract YYYY-MM-DD from the ISO date string
+                          return new Date(rawDate).toISOString().split("T")[0];
+                        } else {
+                          return "N/A"; // Fallback if the date is invalid
+                        }
+                      }
+                      // Handle other keys dynamically
+                      const keys = key.split(".");
+                      let value = data;
+                      for (const k of keys) {
+                        if (value && k in value) {
+                          value = value[k];
+                        } else {
+                          value = "N/A"; // Fallback if the key is not found
+                          break;
+                        }
+                      }
+                      return value;
+                    });
+                  }
+
                 if(data){
                     paymentVoucher = data
-                }
+                    let html 
+                    html = replaceSquareBrackets(mailerData.html, data);
 
-                if(paymentVoucher){
-                    let html = `<div style="font-family: Arial, sans-serif; background-color: #f9f9f9; text-align: center; padding: 20px;">
-
-                        <div style="max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 10px; 
-                                    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);">
-                            
-                            <img src="${ctx.session?.activeCompany?.logo}" alt="Company Logo" style="width: 120px; margin-bottom: 10px;">
-
-                         
-
-                            <h1 style="color: #28a745; font-size: 24px; font-weight: bold; margin-bottom: 10px;">Your Package Voucher </h1>
-                            <p style="color: #333; font-size: 16px; margin-bottom: 20px;">Thank you for your Package voucher. Your transaction has been successfully completed.</p>
-
-                            <a href="${ctx?.session?.activeCompany?.host}/package-voucher/${paymentVoucher?.id}" 
-                            style="display: inline-block; background-color: #1a73e8; color: #fff; padding: 12px 25px; 
-                                    border-radius: 5px; font-size: 16px; font-weight: bold; text-decoration: none;">
-                                Click here to View Package Voucher 
-                            </a>
-
-                            <h2 style="color: #1a73e8; font-size: 20px; font-weight: bold; margin-top: 20px;">Need Assistance?</h2>
-                            <p style="color: #333; font-size: 16px; margin-bottom: 10px;">If you have any questions, feel free to reach out to your Travel Expert.</p>
-
-                            <!-- Contact Info -->
-                            <p style="color: #555; font-size: 14px; margin-top: 15px;">
-                                <strong>${ctx?.session?.activeCompany?.name}</strong><br>
-                                Address: ${ctx?.session?.activeCompany?.address}<br>
-                                Email: <a href="mailto:${ctx?.session?.activeCompany?.email}" style="color: #1a73e8; text-decoration: none;">
-                                    ${ctx?.session?.activeCompany?.email}
-                                </a>
-                            </p>
-                        </div>
-
-                    </div>`;
-
-                    let subject = `🎉 Booking Voucher - #${paymentVoucher?.id} | ${ctx?.session?.activeCompany?.name} ✅`
+                    // const formattedDate = sails.dayjs(sendMail?.tourDate).format("DD-MMM-YY");
+                    let subject = mailerData.subject
+                    // let subject = `🎉 Booking Voucher - #${paymentVoucher?.id} | ${ctx?.session?.activeCompany?.name} ✅`
                     try {
-                        const {data} = await EmailService.sendWelcomeEmail(ctx,{email:bodyData.email || sendMail?.email, subject:subject, html:html, from:'support@hospitalitygroup.in',  password: 'Priyanka@123'});
+                        const {data} = await EmailService.sendWelcomeEmail(ctx,{email:bodyData.email || sendMail?.email, subject:subject, html:html, from: mailerData.email ,  password : mailerData.password});
                         if(data){
                             try {
                                 await SendmailService.create(ctx, {
                                     email: bodyData.email,
                                     subject: subject,
                                     html: html,
-                                    payments: id,
+                                    emailFunction: 'sendPaymentVoucerMail',
+                                    primaryModel: 'PaymentVoucher',
+                                    modelId: id,
                                     sendBy: ctx?.session?.user?.id,
                                     status: true
                                 });
@@ -289,7 +288,9 @@ module.exports = {
                                 email: bodyData.email,
                                 subject: subject,
                                 html: html,
-                                payments: id,
+                                emailFunction: 'sendPaymentVoucerMail',
+                                primaryModel: 'PaymentVoucher',
+                                modelId: id,
                                 sendBy: ctx?.session?.user?.id,
                                 status: false
                             });
@@ -299,7 +300,9 @@ module.exports = {
                         reject(error)
                         
                     }
+                    
                 }
+
                 
             } catch (error) {
                 reject(error)  

@@ -9,6 +9,7 @@ module.exports = {
             if (filter.company) {
                 delete filter.company
             }
+
             if (!params) {
                 params = {};
             }
@@ -91,8 +92,10 @@ module.exports = {
                 }
                 rtrn.totalCount = totalRecords;
             }else{
+
                 return resolve(rtrn.data);
             }
+ 
             return resolve(rtrn);
         })
 
@@ -225,6 +228,7 @@ module.exports = {
                     return reject({ statusCode: 500, error: error });
                 }
             }
+   
 
             return resolve({ data: record || { created: true } });
         })

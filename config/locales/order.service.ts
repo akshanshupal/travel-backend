@@ -174,7 +174,7 @@ export class OrderService {
         return this.http.get(EdukitConfig.BASICS.API_URL + "/cmn/order/refresh/srn");
     }
 
-    sendPaymentReminder(orderId): Observable<any> {
+    sendPaymentReminderMail(orderId): Observable<any> {
         return this.http.post(EdukitConfig.BASICS.API_URL + "/sales/order/" + orderId + "/payment-reminder", {});
     }
     importBulkStudentProduct(data?: any): Observable<any> {

@@ -47,6 +47,7 @@ module.exports = {
                 },{}
             );
         }
+        filter.json = false
         try {
             var records = await MailerService.find(req, filter, params);
         } catch (error) {

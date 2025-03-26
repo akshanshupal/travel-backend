@@ -284,91 +284,165 @@ module.exports = {
             try {
                 let payment
                 const {data}= await this.findOne(ctx, id, {populate: ['assignment']});
+                const [mailerData] = await MailerService.find(ctx, {emailFunction: 'sendPaymentMail', status:true, })
+                function replaceSquareBrackets(html, data) {
+                    return html.replace(/\[\[(.*?)\]\]/g, (match, key) => {
+                      // Handle tourDate specifically
+                      if (key === "tourDate") {
+                        const rawDate = data.tourDate; // Get the raw date from the data object
+                        if (rawDate && !isNaN(new Date(rawDate))) {
+                          // Extract YYYY-MM-DD from the ISO date string
+                          return new Date(rawDate).toISOString().split("T")[0];
+                        } else {
+                          return "N/A"; // Fallback if the date is invalid
+                        }
+                      }
+                      // Handle other keys dynamically
+                      const keys = key.split(".");
+                      let value = data;
+                      for (const k of keys) {
+                        if (value && k in value) {
+                          value = value[k];
+                        } else {
+                          value = "N/A"; // Fallback if the key is not found
+                          break;
+                        }
+                      }
+                      return value;
+                    });
+                  }
                 if(data){
                     payment = data
-                }
-
-                if(payment){
-                    let html = `<div style="font-family: Arial, sans-serif; background-color: #f9f9f9; text-align: center; padding: 20px;">
-
-                        <div style="max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 10px; 
-                                    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);">
-                            
-                            <img src="${ctx.session?.activeCompany?.logo}" alt="Company Logo" style="width: 120px; margin-bottom: 10px;">
-
-                          
-
-                            <h1 style="color: #28a745; font-size: 24px; font-weight: bold; margin-bottom: 10px;">Payment Successful!</h1>
-                            <h1 style="color: #1a73e8; font-size: 24px; font-weight: bold; margin-bottom: 10px;">Dear Mr ${payment?.assignment?.clientName},</h1>
-
-                            <p style="color: #333; font-size: 16px; margin-bottom: 20px;">
-                            Thank you for your payment.<br>
-                            We have received your payment successfully.Please find the payment confirmation attached for your reference.</p>
-
-                            <a href="https://${ctx.session?.activeCompany?.host}/payments-receipt/${payment?.id}" 
-                            style="display: inline-block; background-color: #1a73e8; color: #fff; padding: 12px 25px; 
-                                    border-radius: 5px; font-size: 16px; font-weight: bold; text-decoration: none;">
-                                Click here to View Payment Receipt
-                            </a>
-
-                            <h2 style="color: #1a73e8; font-size: 20px; font-weight: bold; margin-top: 20px;">Need Assistance?</h2>
-                            <p style="color: #333; font-size: 16px; margin-bottom: 10px;">If you have any questions, feel free to reach out to your Travel Expert.</p>
-
-                            <!-- Contact Info -->
-                            <p style="color: #555; font-size: 14px; margin-top: 15px; ">
-                                <strong>${ctx.session?.activeCompany?.name}</strong><br>
-                                Address: ${ctx.session?.activeCompany?.address}<br>
-                                Email: <a href="mailto:${ctx.session?.activeCompany?.email}" style="color: #1a73e8; text-decoration: none;">
-                                    ${ctx.session?.activeCompany?.email}
-                                </a>
-                            </p>
-                        </div>
-
-                    </div>`;
-                   const formattedDate = sails.dayjs(payment?.paymentDate).format("DD-MMM-YY");
-
-                    let subject = `🎉 Payment Successful - Receipt #${payment?.receiptNo} | ${ctx.session?.activeCompany?.name} | ${formattedDate} ✅`
-                    try {
-                        const {data} = await EmailService.sendWelcomeEmail(ctx,{email:bodyData.email || sendMail?.email, subject:subject, html:html, from:'support@hospitalitygroup.in',  password: 'Priyanka@123'});
-                        if(data){
-                            try {
-                                await SendmailService.create(ctx, {
-                                    email: bodyData.email,
-                                    subject: subject,
-                                    html: html,
-                                    payments: id,
-                                    sendBy: ctx?.session?.user?.id,
-                                    status: true
-                                });
-                            } catch (error) {
-                                reject(error)
-                            }
-                            resolve({data:data.message});
-                        }
-                    } catch (error) {
-                        try {
-                            await SendmailService.create(ctx, {
-                                email: bodyData.email,
-                                subject: subject,
-                                html: html,
-                                payments: id,
-                                sendBy: ctx?.session?.user?.id,
-                                status: false
-                            });
-                        } catch (error) {
-                            reject(error)
-                        }
-                        reject(error)
-                        
-                    }
-                }
-                
+                    let html 
+                    html = replaceSquareBrackets(mailerData.html, data);
+                    const formattedDate = sails.dayjs(payment?.paymentDate).format("DD-MMM-YY");
+                    let subject = mailerData.subject;
+                     try {
+                         const {data} = await EmailService.sendWelcomeEmail(ctx,{email:bodyData.email || sendMail?.email, subject:subject, html:html, user:mailerData.email, password:mailerData.password,});
+                         if(data){
+                             try {
+                                 await SendmailService.create(ctx, {
+                                     email: bodyData.email,
+                                     subject: subject,
+                                     html: html,
+                                     emailFunction: 'sendPaymenReceiptMail',
+                                     primaryModel: 'Payments',
+                                     modelId: id,
+                                     sendBy: ctx?.session?.user?.id,
+                                     status: true
+                                 });
+                             } catch (error) {
+                                 reject(error)
+                             }
+                             resolve({data:data.message});
+                         }
+                     } catch (error) {
+                         try {
+                             await SendmailService.create(ctx, {
+                                 email: bodyData.email,
+                                 subject: subject,
+                                 html: html,
+                                 emailFunction: 'sendPaymenReceiptMail',
+                                 primaryModel: 'Payments',
+                                 modelId: id,
+                                 sendBy: ctx?.session?.user?.id,
+                                 status: false
+                             });
+                         } catch (error) {
+                             reject(error)
+                         }
+                         reject(error)
+                         
+                     }
+                } 
             } catch (error) {
                 reject(error)  
             }
         })
     
 
+    },
+    sendPaymentReminderMail: async function (ctx, id ,bodyData ){
+        return new Promise(async (resolve, reject) => {
+            try {
+                let paymentReminder
+                const {data}= await AssignmentService.findOne(ctx, id);
+                const [mailerData] = await MailerService.find(ctx, {emailFunction: 'sendPaymentReminderMail', status:true, })
+                function replaceSquareBrackets(html, data) {
+                    return html.replace(/\[\[(.*?)\]\]/g, (match, key) => {
+                      // Handle tourDate specifically
+                      if (key === "tourDate") {
+                        const rawDate = data.tourDate; // Get the raw date from the data object
+                        if (rawDate && !isNaN(new Date(rawDate))) {
+                          // Extract YYYY-MM-DD from the ISO date string
+                          return new Date(rawDate).toISOString().split("T")[0];
+                        } else {
+                          return "N/A"; // Fallback if the date is invalid
+                        }
+                      }
+                      // Handle other keys dynamically
+                      const keys = key.split(".");
+                      let value = data;
+                      for (const k of keys) {
+                        if (value && k in value) {
+                          value = value[k];
+                        } else {
+                          value = "N/A"; // Fallback if the key is not found
+                          break;
+                        }
+                      }
+                      return value;
+                    });
+                  }
+                if(data){
+                    paymentReminder = data
+                    let html 
+                    html = replaceSquareBrackets(mailerData.html, data);
+                    const formattedDate = sails.dayjs(paymentReminder?.paymentDate).format("DD-MMM-YY");
+                    let subject = mailerData.subject;
+                     try {
+                         const {data} = await EmailService.sendWelcomeEmail(ctx,{email:bodyData.email || sendMail?.email, subject:subject, html:html, host:mailerData.host, user:mailerData.email, password:mailerData.password,});
+                         if(data){
+                             try {
+                                 await SendmailService.create(ctx, {
+                                     email: bodyData.email,
+                                     subject: subject,
+                                     html: html,
+                                     emailFunction: 'sendPaymentReminderMail',
+                                     primaryModel: 'Assignment',
+                                     modelId: id,
+                                     sendBy: ctx?.session?.user?.id,
+                                     status: true
+                                 });
+                             } catch (error) {
+                                 reject(error)
+                             }
+                             resolve({data:data.message});
+                         }
+                     } catch (error) {
+                         try {
+                             await SendmailService.create(ctx, {
+                                 email: bodyData.email,
+                                 subject: subject,
+                                 html: html,
+                                 emailFunction: 'sendPaymentReminderMail',
+                                 primaryModel: 'Assignment',
+                                 modelId: id,                                 
+                                 sendBy: ctx?.session?.user?.id,
+                                 status: false
+                             });
+                         } catch (error) {
+                             reject(error)
+                         }
+                         reject(error)
+                         
+                     }
+                } 
+            } catch (error) {
+                reject(error)  
+            }
+        })
     }
+
 
 }

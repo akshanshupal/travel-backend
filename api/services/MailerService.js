@@ -2,7 +2,15 @@ module.exports = {
     find: function (ctx, filter, params) {
         return new Promise(async (resolve, reject) => {
             if (!filter.company) {
+                filter.company =  ctx?.session?.activeCompany?.id;
+            }
+            if (!filter.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+            }
+            let json = true;
+            if(filter.json==false){
+                json = false;
+                delete filter.json
             }
             if (!params) {
                 params = {};
@@ -72,9 +80,17 @@ module.exports = {
                 }
                 rtrn.totalCount = totalRecords;
             }else{
-                return resolve(rtrn.data);
+                let dt = rtrn.data;
+                if(json){
+                    dt = JSON.parse(JSON.stringify(rtrn.data))
+                }
+                return resolve(dt);
             }
-            return resolve(rtrn);
+            let dt = rtrn;
+            if(json){
+                dt = JSON.parse(JSON.stringify(rtrn))
+            }
+            return resolve(dt);
         })
 
     },

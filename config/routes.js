@@ -181,6 +181,7 @@ module.exports.routes = {
   'GET /api/payments/:id': 'PaymentsController.findOne',
   'GET /api/payments/receipt/:id': 'PaymentsController.getReceipt',
   'POST /api/payments/receipt-mail/:id': 'PaymentsController.sendPaymentReceiptMail',
+  'POST /api/payments-reminder/:id': 'PaymentsController.sendPaymentReminderMail',
   'PUT /api/payments/:id': 'PaymentsController.updateOne',
   'DELETE /api/payments/:id': 'PaymentsController.deleteOne',
   

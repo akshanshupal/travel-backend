@@ -529,9 +529,12 @@ module.exports = {
             const subject = data?.subject || 'Welcome to Our Service';
             const text = data?.text || 'Thank you for signing up!';
             const html = data?.html || '<h1>Welcome!</h1><p>Thank you for signing up!</p>';
+            const host = data?.host
+            const user = data?.user
+            const password = data?.password
     
             try {
-                await EmailService.sendEmail(ctx,email, subject, text, html);
+                await EmailService.sendEmail(ctx,email, subject, text, html,host,user,password);
                 return resolve({data: { message: 'Email sent successfully!' }});
             } catch (error) {
                 return reject(error);
@@ -542,108 +545,52 @@ module.exports = {
         return new Promise(async (resolve, reject) => {
             let sendMail;
             try {
-                const {data}= await this.findOne(ctx, id, { populate: ['salesExecutive','company'] });
+                const {data}= await this.findOne(ctx, id, { populate: ['salesExecutive','company','clientItinerary'] });
+                const [mailerData] = await MailerService.find(ctx, {emailFunction: 'sendItineraryMail', status:true, })
+                function replaceSquareBrackets(html, data) {
+                    return html.replace(/\[\[(.*?)\]\]/g, (match, key) => {
+                      // Handle tourDate specifically
+                      if (key === "tourDate") {
+                        const rawDate = data.tourDate; // Get the raw date from the data object
+                        if (rawDate && !isNaN(new Date(rawDate))) {
+                          // Extract YYYY-MM-DD from the ISO date string
+                          return new Date(rawDate).toISOString().split("T")[0];
+                        } else {
+                          return "N/A"; // Fallback if the date is invalid
+                        }
+                      }
+                      // Handle other keys dynamically
+                      const keys = key.split(".");
+                      let value = data;
+                      for (const k of keys) {
+                        if (value && k in value) {
+                          value = value[k];
+                        } else {
+                          value = "N/A"; // Fallback if the key is not found
+                          break;
+                        }
+                      }
+                      return value;
+                    });
+                  }
+                
                 if(data){
                     sendMail = data
                     let html 
-                    if(ctx.session&&ctx.session.activeCompany&&ctx.session.activeCompany.id=='65fb18f4566f341facb8d1a9'){  
-                         html = `<div style="max-width: 600px; margin: 0 auto; text-align: center; border: 1px solid #ccc; padding: 20px;">
-                        <h1 style="color: #555; font-size: 24px; font-weight: bold;">
-                            Here is the quotation you requested from us!!
-                        </h1>
-                    
-                        <div style="margin: 20px 0;">
-                            <button style="background-color: #1a73e8; color: #fff; padding: 15px 30px; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer;">
-                               <a href="https://admin.thetripbliss.com/package-mail/${sendMail?.id}" style="color: #fff; text-decoration: none;">
-                                 <span>Click here to View Package!!</span>
-                               </a> 
-                            </button>
-                        </div>
-                    
-                        <p style="color: #1a73e8; font-size: 14px; margin-top: 0;">
-                            This package is valid for 24 Hrs. Freeze your Package by Paying immediately INR 5000/-
-                        </p>
-                    
-                        <h2 style="color: #1a73e8; font-size: 20px; font-weight: bold;">
-                            Seal the deal now!
-                        </h2>
-                    
-                        <p style="color: #333; font-size: 14px;">
-                            Make the payment today to get the best deal possible
-                        </p>
-                    
-                        <div style="margin: 20px 0;">
-                            <button style="background-color: #1a73e8; color: #fff; padding: 10px 20px; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer;">
-                               <a href="https://thetripbliss.com/payment" style="color: #fff; text-decoration: none;">Pay Now</a>
-                            </button>
-                        </div>
-                    
-                        <p style="color: #555; font-size: 14px; margin-top: 20px;">
-                            For any queries please contact your Travel Expert.
-                        </p>
-                    
-                        <p style="color: #333; font-size: 14px;">
-                            <strong>${sendMail?.salesExecutive?.name}</strong><br>
-                            Phone Number: +91 ${sendMail?.salesExecutive?.mobile}<br>
-                            Email: <a href="mailto:sales@thetripbliss" style="color: #1a73e8;">sales@thetripbliss</a>
-                        </p>
-                       </div>`
-                    }
-                    if(ctx.session&&ctx.session.activeCompany&&ctx.session.activeCompany.id=='674f3fa327a4eb7981d4df5a'){  
-                         html = `<div style="max-width: 600px; margin: 0 auto; text-align: center; border: 1px solid #ccc; padding: 20px;">
-                        <h1 style="color: #555; font-size: 24px; font-weight: bold;">
-                            Here is the quotation you requested from us!!
-                        </h1>
-                    
-                        <div style="margin: 20px 0;">
-                            <button style="background-color: #1a73e8; color: #fff; padding: 15px 30px; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer;">
-                               <a href="https://admin.tripzipper.co.in/package-mail/${sendMail?.id}" style="color: #fff; text-decoration: none;">
-                                 <span>Click here to View Package!!</span>
-                               </a> 
-                            </button>
-                        </div>
-                    
-                        <p style="color: #1a73e8; font-size: 14px; margin-top: 0;">
-                            This package is valid for 24 Hrs. Freeze your Package by Paying immediately INR 5000/-
-                        </p>
-                    
-                        <h2 style="color: #1a73e8; font-size: 20px; font-weight: bold;">
-                            Seal the deal now!
-                        </h2>
-                    
-                        <p style="color: #333; font-size: 14px;">
-                            Make the payment today to get the best deal possible
-                        </p>
-                    
-                        <div style="margin: 20px 0;">
-                            <button style="background-color: #1a73e8; color: #fff; padding: 10px 20px; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer;">
-                               <a href="https://tripzipper.co.in/payment" style="color: #fff; text-decoration: none;">Pay Now</a>
-                            </button>
-                        </div>
-                    
-                        <p style="color: #555; font-size: 14px; margin-top: 20px;">
-                            For any queries please contact your Travel Expert.
-                        </p>
-                    
-                        <p style="color: #333; font-size: 14px;">
-                            <strong>${sendMail?.salesExecutive?.name}</strong><br>
-                            Phone Number: +91 ${sendMail?.salesExecutive?.mobile}<br>
-                            Email: <a href="mailto:enquiry@tripzipper.co.in" style="color: #1a73e8;">enquiry@tripzipper.co.in</a>
-                        </p>
-                       </div>`
-                    }
+                    html = replaceSquareBrackets(mailerData.html, data);
                    const formattedDate = sails.dayjs(sendMail?.tourDate).format("DD-MMM-YY");
-
-                    let subject = `${sendMail?.company?.name} Itinerary for Domestic Package -Ms ${sendMail?.salesExecutive?.name}-${sendMail?.salesExecutive?.mobile}-${formattedDate}`
+                    let subject = mailerData.subject;
                     try {
-                        const {data} = await this.sendWelcomeEmail(ctx,{email:bodyData.email || sendMail?.email, subject:subject, html:html});
+                        const {data} = await this.sendWelcomeEmail(ctx,{email:bodyData.email || sendMail?.email, subject:subject, html:html, host:mailerData.host, user:mailerData.email, password:mailerData.password});
                         if(data){
                             try {
                                 await SendmailService.create(ctx, {
                                     email: bodyData.email || sendMail?.email,
                                     subject: subject,
                                     html: html,
-                                    savedItinerary: id,
+                                    emailFunction: 'sendItineraryMail',
+                                    primaryModel: 'SavedItinerary',
+                                    modelId: id,
                                     sendBy: ctx?.session?.user?.id,
                                     status: true
                                 });
@@ -658,7 +605,9 @@ module.exports = {
                                 email: bodyData.email || sendMail?.email,
                                 subject: subject,
                                 html: html,
-                                savedItinerary: id,
+                                emailFunction: 'sendItineraryMail',
+                                primaryModel: 'SavedItinerary',
+                                modelId: id,                                
                                 sendBy: ctx?.session?.user?.id,
                                 status: false
                             });
