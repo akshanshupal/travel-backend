@@ -367,16 +367,22 @@ module.exports = {
             try {
                 let paymentReminder
                 const {data}= await AssignmentService.findOne(ctx, id);
+                data.assignmentId = data.id,
+                data.dueDate = bodyData.dueDate;
+                data.amount = bodyData.amount;
                 const [mailerData] = await MailerService.find(ctx, {emailFunction: 'sendPaymentReminderMail', status:true, })
                 function replaceSquareBrackets(html, data) {
                     return html.replace(/\[\[(.*?)\]\]/g, (match, key) => {
-                      // Handle tourDate specifically
-                      if (key === "tourDate") {
-                        const rawDate = data.tourDate; // Get the raw date from the data object
+                      if (key === "dueDate") {
+                        const rawDate = data.dueDate; 
                         if (rawDate && !isNaN(new Date(rawDate))) {
-                          // Extract YYYY-MM-DD from the ISO date string
-                          return new Date(rawDate).toISOString().split("T")[0];
-                        } else {
+                            const dateObj = new Date(rawDate);
+                            const formattedDate = dateObj.toISOString().split("T")[0]; // YYYY-MM-DD
+                            const hours = dateObj.getHours().toString().padStart(2, '0');
+                            const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+                            const formattedTime = `${hours}:${minutes}`; // HH:MM format
+                            return `${formattedDate} , ${formattedTime}`; // Combine date and time
+                          } else {
                           return "N/A"; // Fallback if the date is invalid
                         }
                       }

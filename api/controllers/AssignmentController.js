@@ -130,5 +130,15 @@ module.exports = {
         }
         return res.json(record.data);
     },
+    sendWelcomeMail: async function (req, res) {
+        if(!req.body.email)   return res.badRequest('email is missing');
+
+        try {
+            var record = await AssignmentService.sendWelcomeMail(req, req.params.id, req.body);
+        } catch (error) {
+            return res.serverError(error);
+        }
+        return res.json(record.data);
+    },
 
 };

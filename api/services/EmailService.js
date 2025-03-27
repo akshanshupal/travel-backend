@@ -15,6 +15,7 @@ module.exports = {
                 user: user,
                 pass: password,
             },
+         
         });
     
             // Configure mail options
@@ -38,7 +39,7 @@ module.exports = {
         }
     });
 },
-sendWelcomeEmail: async function (ctx,data) {
+  sendWelcomeEmail: async function (ctx,data) {
     return new Promise(async (resolve, reject) => {
         if (!data.email) {
             return reject({ statusCode: 400, error: { message: 'email is required!' } });

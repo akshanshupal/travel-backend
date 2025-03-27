@@ -438,5 +438,94 @@ module.exports = {
                 reject(error)  
             }
         })
+    },
+    sendWelcomeMail: async function (ctx, id, bodyData) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let assignmentMailData
+                const {data}= await this.findOne(ctx, id,{ populate: ['agentName'] });
+                data.assignmentId = data.id
+                const [mailerData] = await MailerService.find(ctx, {emailFunction: 'sendWelcomeMail', status:true, })
+                function replaceSquareBrackets(html, data) {
+                    return html.replace(/\[\[(.*?)\]\]/g, (match, key) => {
+                      // Handle tourDate specifically
+                      if (key === "tourDate" || key === "bookingDate") {
+                        const rawDate = data.tourDate; // Get the raw date from the data object
+                        if (rawDate && !isNaN(new Date(rawDate))) {
+                          // Extract YYYY-MM-DD from the ISO date string
+                          return new Date(rawDate).toISOString().split("T")[0];
+                        } else {
+                          return "N/A"; // Fallback if the date is invalid
+                        }
+                      }
+                      // Handle other keys dynamically
+                      const keys = key.split(".");
+                      let value = data;
+                      for (const k of keys) {
+                        if (value && k in value) {
+                          value = value[k];
+                        } else {
+                          value = "N/A"; // Fallback if the key is not found
+                          break;
+                        }
+                      }
+                      return value;
+                    });
+                  }
+                if(data){
+                    assignmentMailData = data
+                    let html
+                    html = replaceSquareBrackets(mailerData.html, data);    
+                    let subject = mailerData.subject
+                
+                    try {
+                        const { data } = await EmailService.sendWelcomeEmail(ctx, {
+                            email: bodyData.email || sendMail?.email,
+                            subject: subject,
+                            html: html,
+                            user: mailerData.email,  password: mailerData.password,
+                            host:mailerData.host,
+                        });
+                
+                        if (data) {
+                            try {
+                                await SendmailService.create(ctx, {
+                                    email: bodyData.email,
+                                    subject: subject,
+                                    html: html,
+                                    emailFunction: 'sendWelcomeMail',
+                                    primaryModel: 'Assignment',
+                                    modelId: id,
+                                    sendBy: ctx?.session?.user?.id,
+                                    status: true
+                                });
+                            } catch (error) {
+                                reject(error);
+                            }
+                            resolve({ data: data.message });
+                        }
+                    } catch (error) {
+                        try {
+                            await SendmailService.create(ctx, {
+                                email: bodyData.email,
+                                subject: subject,
+                                html: html,
+                                payments: id,
+                                sendBy: ctx?.session?.user?.id,
+                                status: false
+                            });
+                        } catch (error) {
+                            reject(error);
+                        }
+                        reject(error);
+                    }
+                }
+
+               
+            } catch (error) {
+                reject(error)  
+            }
+        })
    }
+
 }
