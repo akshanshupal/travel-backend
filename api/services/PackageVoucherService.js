@@ -227,6 +227,7 @@ module.exports = {
             try {
                 let paymentVoucher
                 const {data}= await this.findOne(ctx, id);
+                data.packageLink = `https://${ctx?.session?.activeCompany?.host}/package-mail/${id}`;
                 const [mailerData] = await MailerService.find(ctx, {emailFunction: 'sendVoucherMail', status:true, })
                 function replaceSquareBrackets(html, data) {
                     return html.replace(/\[\[(.*?)\]\]/g, (match, key) => {
@@ -262,9 +263,8 @@ module.exports = {
 
                     // const formattedDate = sails.dayjs(sendMail?.tourDate).format("DD-MMM-YY");
                     let subject = mailerData.subject
-                    // let subject = `🎉 Booking Voucher - #${paymentVoucher?.id} | ${ctx?.session?.activeCompany?.name} ✅`
                     try {
-                        const {data} = await EmailService.sendWelcomeEmail(ctx,{email:bodyData.email || sendMail?.email, subject:subject, html:html, from: mailerData.email ,  password : mailerData.password});
+                        const {data} = await EmailService.sendWelcomeEmail(ctx,{email:bodyData.email || sendMail?.email, subject:subject, html:html,  host:mailerData.host, user: mailerData.email ,  password : mailerData.password});
                         if(data){
                             try {
                                 await SendmailService.create(ctx, {

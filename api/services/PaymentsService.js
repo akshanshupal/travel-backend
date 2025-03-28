@@ -284,6 +284,7 @@ module.exports = {
             try {
                 let payment
                 const {data}= await this.findOne(ctx, id, {populate: ['assignment']});
+                data.paymentReceipt = `https://${ctx?.session?.activeCompany?.host}/payments-receipt/${id}`;
                 const [mailerData] = await MailerService.find(ctx, {emailFunction: 'sendPaymentMail', status:true, })
                 function replaceSquareBrackets(html, data) {
                     return html.replace(/\[\[(.*?)\]\]/g, (match, key) => {
@@ -318,7 +319,7 @@ module.exports = {
                     const formattedDate = sails.dayjs(payment?.paymentDate).format("DD-MMM-YY");
                     let subject = mailerData.subject;
                      try {
-                         const {data} = await EmailService.sendWelcomeEmail(ctx,{email:bodyData.email || sendMail?.email, subject:subject, html:html, user:mailerData.email, password:mailerData.password,});
+                         const {data} = await EmailService.sendWelcomeEmail(ctx,{email:bodyData.email || sendMail?.email, subject:subject, html:html, host :mailerData.host, user:mailerData.email, password:mailerData.password,});
                          if(data){
                              try {
                                  await SendmailService.create(ctx, {

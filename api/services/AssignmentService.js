@@ -445,6 +445,7 @@ module.exports = {
                 let assignmentMailData
                 const {data}= await this.findOne(ctx, id,{ populate: ['agentName'] });
                 data.assignmentId = data.id
+                data.packageLink = `https://${ctx?.session?.activeCompany?.host}/package-mail/${id}`;
                 const [mailerData] = await MailerService.find(ctx, {emailFunction: 'sendWelcomeMail', status:true, })
                 function replaceSquareBrackets(html, data) {
                     return html.replace(/\[\[(.*?)\]\]/g, (match, key) => {

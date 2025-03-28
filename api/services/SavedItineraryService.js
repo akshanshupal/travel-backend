@@ -546,11 +546,13 @@ module.exports = {
             let sendMail;
             try {
                 const {data}= await this.findOne(ctx, id, { populate: ['salesExecutive','company','clientItinerary'] });
+                // data.packageLink = `https://thetripbliss.com/package-mail/${data?.id}`;
+                data.packageLink = `https://${ctx?.session?.activeCompany?.host}/package-mail/${id}`;
                 const [mailerData] = await MailerService.find(ctx, {emailFunction: 'sendItineraryMail', status:true, })
                 function replaceSquareBrackets(html, data) {
                     return html.replace(/\[\[(.*?)\]\]/g, (match, key) => {
                       // Handle tourDate specifically
-                      if (key === "tourDate") {
+                      if (key === "tourDate" || key === "bookingDate") {
                         const rawDate = data.tourDate; // Get the raw date from the data object
                         if (rawDate && !isNaN(new Date(rawDate))) {
                           // Extract YYYY-MM-DD from the ISO date string
@@ -573,19 +575,25 @@ module.exports = {
                       return value;
                     });
                   }
+                  if(data){
+                    assignmentMailData = data
+                    let html
+                    html = replaceSquareBrackets(mailerData.html, data);    
+                    let subject = mailerData.subject
                 
-                if(data){
-                    sendMail = data
-                    let html 
-                    html = replaceSquareBrackets(mailerData.html, data);
-                   const formattedDate = sails.dayjs(sendMail?.tourDate).format("DD-MMM-YY");
-                    let subject = mailerData.subject;
                     try {
-                        const {data} = await this.sendWelcomeEmail(ctx,{email:bodyData.email || sendMail?.email, subject:subject, html:html, host:mailerData.host, user:mailerData.email, password:mailerData.password});
-                        if(data){
+                        const { data } = await EmailService.sendWelcomeEmail(ctx, {
+                            email: bodyData.email || sendMail?.email,
+                            subject: subject,
+                            html: html,
+                            user: mailerData.email,  password: mailerData.password,
+                            host:mailerData.host,
+                        });
+                
+                        if (data) {
                             try {
                                 await SendmailService.create(ctx, {
-                                    email: bodyData.email || sendMail?.email,
+                                    email: bodyData.email,
                                     subject: subject,
                                     html: html,
                                     emailFunction: 'sendItineraryMail',
@@ -595,29 +603,76 @@ module.exports = {
                                     status: true
                                 });
                             } catch (error) {
-                                reject(error)
+                                reject(error);
                             }
-                            resolve({data:data.message});
+                            resolve({ data: data.message });
                         }
                     } catch (error) {
                         try {
                             await SendmailService.create(ctx, {
-                                email: bodyData.email || sendMail?.email,
+                                email: bodyData.email,
                                 subject: subject,
                                 html: html,
-                                emailFunction: 'sendItineraryMail',
-                                primaryModel: 'SavedItinerary',
-                                modelId: id,                                
+                                payments: id,
                                 sendBy: ctx?.session?.user?.id,
                                 status: false
                             });
                         } catch (error) {
-                            reject(error)
+                            reject(error);
                         }
-                        reject(error)
-                        
+                        reject(error);
                     }
                 }
+                
+                // if(data){
+                //     sendMail = data
+                //     let html 
+                //     html = replaceSquareBrackets(mailerData.html, data);
+                //    const formattedDate = sails.dayjs(sendMail?.tourDate).format("DD-MMM-YY");
+                //     let subject = mailerData.subject;
+                //     try {
+                //         const {data} = await this.sendWelcomeEmail(ctx,{
+                //            email:bodyData.email || sendMail?.email, 
+                //            subject:subject, html:html, 
+                //            host:mailerData.host, 
+                //            user:mailerData.email, 
+                //            password:mailerData.password});
+                //         if(data){
+                //             try {
+                //                 await SendmailService.create(ctx, {
+                //                     email: bodyData.email || sendMail?.email,
+                //                     subject: subject,
+                //                     html: html,
+                //                     emailFunction: 'sendItineraryMail',
+                //                     primaryModel: 'SavedItinerary',
+                //                     modelId: id,
+                //                     sendBy: ctx?.session?.user?.id,
+                //                     status: true
+                //                 });
+                //             } catch (error) {
+                //                 reject(error)
+                //             }
+                //             resolve({data:data.message});
+                //         }
+                //     } catch (error) {
+                //         try {
+                //             await SendmailService.create(ctx, {
+                //                 email: bodyData.email || sendMail?.email,
+                //                 subject: subject,
+                //                 html: html,
+                //                 emailFunction: 'sendItineraryMail',
+                //                 primaryModel: 'SavedItinerary',
+                //                 modelId: id,                                
+                //                 sendBy: ctx?.session?.user?.id,
+                //                 status: false
+                //             });
+                //         } catch (error) {
+                //             reject(error)
+                //         }
+                //         reject(error)
+                        
+                //     }
+                // }
                 
             } catch (error) {
                 reject(error)  
