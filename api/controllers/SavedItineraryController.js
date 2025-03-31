@@ -117,6 +117,7 @@ module.exports = {
     },
     sendItineraryMail: async function (req, res) {
         if(!req.body.email)   return res.badRequest('email is missing');
+        
 
         try {
             var record = await SavedItineraryService.sendItineraryMail(req, req.params.id, req.body);

@@ -475,10 +475,17 @@ module.exports = {
                   }
                 if(data){
                     assignmentMailData = data
-                    let html
-                    html = replaceSquareBrackets(mailerData.html, data);    
-                    let subject = mailerData.subject
-                
+                    let html, subject
+                    if(!bodyData.showPreview&&bodyData.html&&bodyData.subject){
+                         html = bodyData.html;    
+                         subject = bodyData.subject; 
+                    }else{
+                        html = replaceSquareBrackets(mailerData.html, data);    
+                        subject = replaceSquareBrackets(mailerData.subject, data); 
+                    }
+                    if(bodyData.showPreview){
+                        resolve({data: {html: html, subject: subject}})
+                    }else{
                     try {
                         const { data } = await EmailService.sendWelcomeEmail(ctx, {
                             email: bodyData.email || sendMail?.email,
@@ -520,6 +527,7 @@ module.exports = {
                         }
                         reject(error);
                     }
+                  }
                 }
 
                

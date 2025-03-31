@@ -314,10 +314,21 @@ module.exports = {
                   }
                 if(data){
                     payment = data
-                    let html 
-                    html = replaceSquareBrackets(mailerData.html, data);
-                    const formattedDate = sails.dayjs(payment?.paymentDate).format("DD-MMM-YY");
-                    let subject = mailerData.subject;
+                    // let html 
+                    // html = replaceSquareBrackets(mailerData.html, data);
+                    // const formattedDate = sails.dayjs(payment?.paymentDate).format("DD-MMM-YY");
+                    // let subject = mailerData.subject;
+                    let html, subject
+                    if(!bodyData.showPreview&&bodyData.html&&bodyData.subject){
+                         html = bodyData.html;    
+                         subject = bodyData.subject; 
+                    }else{
+                        html = replaceSquareBrackets(mailerData.html, data);    
+                        subject = replaceSquareBrackets(mailerData.subject, data); 
+                    }
+                    if(bodyData.showPreview){
+                        resolve({data: {html: html, subject: subject}})
+                    }else{
                      try {
                          const {data} = await EmailService.sendWelcomeEmail(ctx,{email:bodyData.email || sendMail?.email, subject:subject, html:html, host :mailerData.host, user:mailerData.email, password:mailerData.password,});
                          if(data){
@@ -355,6 +366,7 @@ module.exports = {
                          reject(error)
                          
                      }
+                 }
                 } 
             } catch (error) {
                 reject(error)  
@@ -403,10 +415,21 @@ module.exports = {
                   }
                 if(data){
                     paymentReminder = data
-                    let html 
-                    html = replaceSquareBrackets(mailerData.html, data);
-                    const formattedDate = sails.dayjs(paymentReminder?.paymentDate).format("DD-MMM-YY");
-                    let subject = mailerData.subject;
+                    // let html 
+                    // html = replaceSquareBrackets(mailerData.html, data);
+                    // const formattedDate = sails.dayjs(paymentReminder?.paymentDate).format("DD-MMM-YY");
+                    // let subject = mailerData.subject;
+                    let html, subject
+                    if(!bodyData.showPreview&&bodyData.html&&bodyData.subject){
+                         html = bodyData.html;    
+                         subject = bodyData.subject; 
+                    }else{
+                        html = replaceSquareBrackets(mailerData.html, data);    
+                        subject = replaceSquareBrackets(mailerData.subject, data); 
+                    }
+                    if(bodyData.showPreview){
+                        resolve({data: {html: html, subject: subject}})
+                    }else{
                      try {
                          const {data} = await EmailService.sendWelcomeEmail(ctx,{email:bodyData.email || sendMail?.email, subject:subject, html:html, host:mailerData.host, user:mailerData.email, password:mailerData.password,});
                          if(data){
@@ -444,6 +467,7 @@ module.exports = {
                          reject(error)
                          
                      }
+                  }
                 } 
             } catch (error) {
                 reject(error)  

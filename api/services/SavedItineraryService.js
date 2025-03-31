@@ -575,53 +575,64 @@ module.exports = {
                       return value;
                     });
                   }
-                  if(data){
-                    assignmentMailData = data
-                    let html
-                    html = replaceSquareBrackets(mailerData.html, data);    
-                    let subject = mailerData.subject
-                
-                    try {
-                        const { data } = await EmailService.sendWelcomeEmail(ctx, {
-                            email: bodyData.email || sendMail?.email,
-                            subject: subject,
-                            html: html,
-                            user: mailerData.email,  password: mailerData.password,
-                            host:mailerData.host,
-                        });
-                
-                        if (data) {
+                if(data){
+                    assignmentMailData = data;
+                    let html, subject
+                    if(!bodyData.showPreview&&bodyData.html&&bodyData.subject){
+                         html = bodyData.html;    
+                         subject = bodyData.subject; 
+                    }else{
+                        html = replaceSquareBrackets(mailerData.html, data);    
+                        subject = replaceSquareBrackets(mailerData.subject, data); 
+                    }
+
+
+                    if(bodyData.showPreview){
+                        resolve({data: {html: html, subject: subject}})
+                    }else{
+                        try {
+                            const { data } = await EmailService.sendWelcomeEmail(ctx, {
+                                email: bodyData.email || sendMail?.email,
+                                subject: subject,
+                                html: html,
+                                user: mailerData.email,  password: mailerData.password,
+                                host:mailerData.host,
+                            });
+                    
+                            if (data) {
+                                try {
+                                    await SendmailService.create(ctx, {
+                                        email: bodyData.email,
+                                        subject: subject,
+                                        html: html,
+                                        emailFunction: 'sendItineraryMail',
+                                        primaryModel: 'SavedItinerary',
+                                        modelId: id,
+                                        sendBy: ctx?.session?.user?.id,
+                                        status: true
+                                    });
+                                } catch (error) {
+                                    reject(error);
+                                }
+                                resolve({ data: data.message });
+                            }
+                        } catch (error) {
                             try {
                                 await SendmailService.create(ctx, {
                                     email: bodyData.email,
                                     subject: subject,
                                     html: html,
-                                    emailFunction: 'sendItineraryMail',
-                                    primaryModel: 'SavedItinerary',
-                                    modelId: id,
+                                    payments: id,
                                     sendBy: ctx?.session?.user?.id,
-                                    status: true
+                                    status: false
                                 });
                             } catch (error) {
                                 reject(error);
                             }
-                            resolve({ data: data.message });
-                        }
-                    } catch (error) {
-                        try {
-                            await SendmailService.create(ctx, {
-                                email: bodyData.email,
-                                subject: subject,
-                                html: html,
-                                payments: id,
-                                sendBy: ctx?.session?.user?.id,
-                                status: false
-                            });
-                        } catch (error) {
                             reject(error);
                         }
-                        reject(error);
                     }
+                
                 }
                 
                 // if(data){

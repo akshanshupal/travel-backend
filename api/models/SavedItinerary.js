@@ -39,6 +39,7 @@ module.exports = {
         tourDate: {
             type: 'ref', columnType: 'datetime'
         },
+      
         isDeleted: { type: 'boolean'},
         deletedAt: { type: 'ref', columnType: 'datetime' },
         deletedBy: { model: 'user' }
