@@ -447,6 +447,9 @@ module.exports = {
                 data.assignmentId = data.id
                 data.packageLink = `https://${ctx?.session?.activeCompany?.host}/package-mail/${id}`;
                 const [mailerData] = await MailerService.find(ctx, {emailFunction: 'sendWelcomeMail', status:true, })
+                if(!mailerData){
+                    return reject({ statusCode: 400, error: { message: 'sendWelcomeMail mailer not configured' } });
+                }
                 function replaceSquareBrackets(html, data) {
                     return html.replace(/\[\[(.*?)\]\]/g, (match, key) => {
                       // Handle tourDate specifically
