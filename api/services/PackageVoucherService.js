@@ -229,6 +229,9 @@ module.exports = {
                 const {data}= await this.findOne(ctx, id);
                 data.packageLink = `https://${ctx?.session?.activeCompany?.host}/package-mail/${id}`;
                 const [mailerData] = await MailerService.find(ctx, {emailFunction: 'sendVoucherMail', status:true, })
+                if(!mailerData){
+                    return reject({ statusCode: 400, error: { message: 'sendPaymentVoucherMail mailer not configured' } });
+                }
                 function replaceSquareBrackets(html, data) {
                     return html.replace(/\[\[(.*?)\]\]/g, (match, key) => {
                       // Handle tourDate specifically

@@ -286,6 +286,9 @@ module.exports = {
                 const {data}= await this.findOne(ctx, id, {populate: ['assignment']});
                 data.paymentReceipt = `https://${ctx?.session?.activeCompany?.host}/payments-receipt/${id}`;
                 const [mailerData] = await MailerService.find(ctx, {emailFunction: 'sendPaymentMail', status:true, })
+                if(!mailerData){
+                    return reject({ statusCode: 400, error: { message: 'sendPaymentReceiptMail mailer not configured' } });
+                }
                 function replaceSquareBrackets(html, data) {
                     return html.replace(/\[\[(.*?)\]\]/g, (match, key) => {
                       // Handle tourDate specifically

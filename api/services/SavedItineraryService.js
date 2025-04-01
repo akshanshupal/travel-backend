@@ -549,6 +549,9 @@ module.exports = {
                 // data.packageLink = `https://thetripbliss.com/package-mail/${data?.id}`;
                 data.packageLink = `https://${ctx?.session?.activeCompany?.host}/package-mail/${id}`;
                 const [mailerData] = await MailerService.find(ctx, {emailFunction: 'sendItineraryMail', status:true, })
+                if(!mailerData){
+                    return reject({ statusCode: 400, error: { message: 'sendItineraryMail mailer not configured' } });
+                }
                 function replaceSquareBrackets(html, data) {
                     return html.replace(/\[\[(.*?)\]\]/g, (match, key) => {
                       // Handle tourDate specifically
