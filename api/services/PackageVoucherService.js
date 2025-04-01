@@ -227,7 +227,11 @@ module.exports = {
             try {
                 let paymentVoucher
                 const {data}= await this.findOne(ctx, id);
+                data.paymentVoucherId = data.id
                 data.packageLink = `https://${ctx?.session?.activeCompany?.host}/package-mail/${id}`;
+                if(!data){
+                    return reject({ statusCode: 400, error: { message: 'Package voucher is not found!' } });
+                }
                 const [mailerData] = await MailerService.find(ctx, {emailFunction: 'sendVoucherMail', status:true, })
                 if(!mailerData){
                     return reject({ statusCode: 400, error: { message: 'sendPaymentVoucherMail mailer not configured' } });
