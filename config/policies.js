@@ -72,11 +72,10 @@ module.exports.policies = {
   },
   PackageVoucherController :{
     'find' : true,
-    "getReceipt" : true
+    // "getReceipt" : true
   },
   PaymentsController:{
     "getReceipt" : true,
-    "sendPaymentReceiptMail" : true
   },
   
  
