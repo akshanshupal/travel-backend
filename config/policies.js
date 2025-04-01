@@ -75,8 +75,10 @@ module.exports.policies = {
     "getReceipt" : true
   },
   PaymentsController:{
-    "getReceipt" : true
-  }
+    "getReceipt" : true,
+    "sendPaymentReceiptMail" : true
+  },
+  
  
   
 };
