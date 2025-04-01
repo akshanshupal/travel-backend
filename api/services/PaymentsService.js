@@ -292,8 +292,8 @@ module.exports = {
                 function replaceSquareBrackets(html, data) {
                     return html.replace(/\[\[(.*?)\]\]/g, (match, key) => {
                       // Handle tourDate specifically
-                      if (key === "tourDate") {
-                        const rawDate = data.tourDate; // Get the raw date from the data object
+                      if (key === "paymentDate") {
+                        const rawDate = data.paymentDate; // Get the raw date from the data object
                         if (rawDate && !isNaN(new Date(rawDate))) {
                           // Extract YYYY-MM-DD from the ISO date string
                           return new Date(rawDate).toISOString().split("T")[0];
