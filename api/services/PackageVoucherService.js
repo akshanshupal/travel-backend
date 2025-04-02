@@ -282,7 +282,7 @@ module.exports = {
                         resolve({data: {html: html, subject: subject}})
                     }else{
                     try {
-                        const {data} = await EmailService.sendWelcomeEmail(ctx,{email:bodyData.email || sendMail?.email, subject:subject, html:html,  host:mailerData.host, user: mailerData.email ,  password : mailerData.password});
+                        const {data} = await EmailService.sendMail(ctx,{email:bodyData.email || sendMail?.email, subject:subject, html:html,  host:mailerData.host, user: mailerData.email ,  password : mailerData.password});
                         if(data){
                             try {
                                 await SendmailService.create(ctx, {

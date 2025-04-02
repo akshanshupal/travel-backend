@@ -393,11 +393,12 @@ module.exports = {
                     let subject = `🎉 Booking Confirmed - #${assignmentMailData?.id} | ${ctx?.session?.activeCompany?.name} ✅`;
                 
                     try {
-                        const { data } = await EmailService.sendWelcomeEmail(ctx, {
+                        const { data } = await EmailService.sendMail(ctx, {
                             email: bodyData.email || sendMail?.email,
                             subject: subject,
                             html: html,
-                            from:'support@hospitalitygroup.in',  password: 'Priyanka@123'
+                            from:'support@hospitalitygroup.in',  
+                            password: 'Priyanka@123'
                         });
                 
                         if (data) {
@@ -490,7 +491,7 @@ module.exports = {
                         resolve({data: {html: html, subject: subject}})
                     }else{
                     try {
-                        const { data } = await EmailService.sendWelcomeEmail(ctx, {
+                        const { data } = await EmailService.sendEmail(ctx, {
                             email: bodyData.email || sendMail?.email,
                             subject: subject,
                             html: html,
@@ -538,6 +539,6 @@ module.exports = {
                 reject(error)  
             }
         })
-   }
+    }
 
 }

@@ -158,7 +158,7 @@ module.exports.routes = {
   'GET /api/assignment': 'AssignmentController.find',
   'GET /api/assignment/:id': 'AssignmentController.findOne',
   'POST /api/assignment/send-assignmentMail/:id': 'AssignmentController.sendAssignmentMail',
-  'POST /api/mail/send-welcomeMail/:id': 'AssignmentController.sendWelcomeMail',
+  'POST /api/mail/send-welcome-mail/:id': 'AssignmentController.sendWelcomeMail',
   'PUT /api/assignment/:id': 'AssignmentController.updateOne',
   'DELETE /api/assignment/:id': 'AssignmentController.deleteOne',
 

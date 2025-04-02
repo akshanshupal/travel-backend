@@ -594,7 +594,7 @@ module.exports = {
                         resolve({data: {html: html, subject: subject}})
                     }else{
                         try {
-                            const { data } = await EmailService.sendWelcomeEmail(ctx, {
+                            const { data } = await EmailService.sendMail(ctx, {
                                 email: bodyData.email || sendMail?.email,
                                 subject: subject,
                                 html: html,
