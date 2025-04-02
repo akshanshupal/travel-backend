@@ -393,7 +393,7 @@ module.exports = {
                     let subject = `🎉 Booking Confirmed - #${assignmentMailData?.id} | ${ctx?.session?.activeCompany?.name} ✅`;
                 
                     try {
-                        const { data } = await EmailService.sendMail(ctx, {
+                        const { data } = await EmailService.sendEmail(ctx, {
                             email: bodyData.email || sendMail?.email,
                             subject: subject,
                             html: html,

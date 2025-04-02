@@ -282,14 +282,14 @@ module.exports = {
                         resolve({data: {html: html, subject: subject}})
                     }else{
                     try {
-                        const {data} = await EmailService.sendMail(ctx,{email:bodyData.email || sendMail?.email, subject:subject, html:html,  host:mailerData.host, user: mailerData.email ,  password : mailerData.password});
+                        const {data} = await EmailService.sendEmail(ctx,{email:bodyData.email || sendMail?.email, subject:subject, html:html,  host:mailerData.host, user: mailerData.email ,  password : mailerData.password});
                         if(data){
                             try {
                                 await SendmailService.create(ctx, {
                                     email: bodyData.email,
                                     subject: subject,
                                     html: html,
-                                    emailFunction: 'sendPaymentVoucerMail',
+                                    emailFunction: 'sendVoucherMail',
                                     primaryModel: 'PaymentVoucher',
                                     modelId: id,
                                     sendBy: ctx?.session?.user?.id,
@@ -306,7 +306,7 @@ module.exports = {
                                 email: bodyData.email,
                                 subject: subject,
                                 html: html,
-                                emailFunction: 'sendPaymentVoucerMail',
+                                emailFunction: 'sendVoucherMail',
                                 primaryModel: 'PaymentVoucher',
                                 modelId: id,
                                 sendBy: ctx?.session?.user?.id,
