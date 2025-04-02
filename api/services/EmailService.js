@@ -4,6 +4,7 @@ const nodemailer = require('nodemailer');
 
 module.exports = {
     sendEmail: function (ctx, { email, subject, html, host, user, password }) {
+        console.log(1)
         return new Promise(async (resolve, reject) => {
             try {
                 // Validate required fields
