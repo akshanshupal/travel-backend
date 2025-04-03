@@ -7,6 +7,14 @@ module.exports = {
             if (!params) {
                 params = {};
             }
+            if (filter.from && filter.to) {
+                let df = sails.dayjs(filter.from).startOf('date').toDate();
+                let dt = sails.dayjs(filter.to).endOf('date').toDate();
+                filter.createdAt = { '>=': df, '<=': dt };
+            }
+            delete filter.from
+            delete filter.to
+
             let qryObj = {where : filter};
             //sort
             let sortField = 'createdAt';
@@ -25,6 +33,8 @@ module.exports = {
                     limit = +params.pagination.limit
                 }
             }
+
+
             qryObj.skip= (page-1)*limit;
             qryObj.limit= limit;
             //select
