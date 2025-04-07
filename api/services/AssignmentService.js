@@ -219,7 +219,7 @@ module.exports = {
             if(data?.clientName){
                 packageId = packageId + getInitials(data?.clientName)
             }
-            let key = 'packageNo:' +':' + ctx.session.activeCompany.id.toString() + ':' + ctx?.session?.activeCompany?.packagePrefix || '';
+            let key = 'packageNo' +':' + ctx.session.activeCompany.id.toString() + ':' + ctx?.session?.activeCompany?.packagePrefix || '';
 
             let redisPackagePrefix = await sails.redis.incr(key);
               
