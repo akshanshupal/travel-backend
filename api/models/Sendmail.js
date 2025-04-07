@@ -36,6 +36,10 @@ module.exports = {
         modelId : {
             type: 'string'
         },
+        packageId: {
+            type: 'string',
+            allowNull: true
+        },
         sendBy:{
             model: 'user'
         },

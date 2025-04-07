@@ -225,11 +225,11 @@ module.exports = {
     sendPaymentVoucherMail: async function (ctx, id, bodyData) {
         return new Promise(async (resolve, reject) => {
             try {
-                let paymentVoucher
-                const {data}= await this.findOne(ctx, id);
-                data.paymentVoucherId = data.id
-                data.packageLink = `https://${ctx?.session?.activeCompany?.host}/package-mail/${id}`;
-                if(!data){
+                let {data:paymentVoucher}= await this.findOne(ctx, id, {populate: ['assignmentId']});
+                paymentVoucher.packageId = paymentVoucher.assignmentId.packageId
+                paymentVoucher.paymentVoucherId = paymentVoucher.id
+                paymentVoucher.packageLink = `https://${ctx?.session?.activeCompany?.host}/package-mail/${id}`;
+                if(!paymentVoucher){
                     return reject({ statusCode: 400, error: { message: 'Package voucher is not found!' } });
                 }
                 const [mailerData] = await MailerService.find(ctx, {emailFunction: 'sendVoucherMail', status:true, })
@@ -263,20 +263,15 @@ module.exports = {
                     });
                   }
 
-                if(data){
-                    paymentVoucher = data
-                    // let html 
-                    // html = replaceSquareBrackets(mailerData.html, data);
+                if(paymentVoucher){
 
-                    // // const formattedDate = sails.dayjs(sendMail?.tourDate).format("DD-MMM-YY");
-                    // let subject = mailerData.subject
                     let html, subject
                     if(!bodyData.showPreview&&bodyData.html&&bodyData.subject){
                          html = bodyData.html;    
                          subject = bodyData.subject; 
                     }else{
-                        html = replaceSquareBrackets(mailerData.html, data);    
-                        subject = replaceSquareBrackets(mailerData.subject, data); 
+                        html = replaceSquareBrackets(mailerData.html, paymentVoucher);    
+                        subject = replaceSquareBrackets(mailerData.subject, paymentVoucher); 
                     }
                     if(bodyData.showPreview){
                         resolve({data: {html: html, subject: subject}})
@@ -292,6 +287,7 @@ module.exports = {
                                     emailFunction: 'sendVoucherMail',
                                     primaryModel: 'PaymentVoucher',
                                     modelId: id,
+                                    packageId: paymentVoucher.assignmentId.packageId,
                                     sendBy: ctx?.session?.user?.id,
                                     status: true
                                 });
@@ -309,6 +305,7 @@ module.exports = {
                                 emailFunction: 'sendVoucherMail',
                                 primaryModel: 'PaymentVoucher',
                                 modelId: id,
+                                packageId: paymentVoucher.assignmentId.packageId,
                                 sendBy: ctx?.session?.user?.id,
                                 status: false
                             });

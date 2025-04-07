@@ -547,6 +547,7 @@ module.exports = {
             try {
                 const {data}= await this.findOne(ctx, id, { populate: ['salesExecutive','company','clientItinerary'] });
                 // data.packageLink = `https://thetripbliss.com/package-mail/${data?.id}`;
+                // data.packageId = data?.packageId
                 data.packageLink = `https://${ctx?.session?.activeCompany?.host}/package-mail/${id}`;
                 const [mailerData] = await MailerService.find(ctx, {emailFunction: 'sendItineraryMail', status:true, })
                 if(!mailerData){

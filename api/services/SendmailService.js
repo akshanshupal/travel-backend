@@ -13,7 +13,15 @@ module.exports = {
                 filter.createdAt = { '>=': df, '<=': dt };
             }
             delete filter.from
-            delete filter.to
+            delete filter.to;
+
+            if(filter?.emailFunction?.trim()){
+                filter.emailFunction =  filter.emailFunction.split(',');
+            }
+
+            if(filter.hasOwnProperty('packageId')&&filter.packageId){
+                filter.packageId = { contains: filter.packageId.trim() };
+            }
 
             let qryObj = {where : filter};
             //sort
@@ -42,7 +50,7 @@ module.exports = {
                 qryObj.select = params.select;
             }
             try {
-                var records = await Sendmail.find(qryObj);;
+                var records = await Sendmail.find(qryObj).meta({makeLikeModifierCaseInsensitive: true});;
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -76,7 +84,7 @@ module.exports = {
             //totalCount
             if (params.totalCount) {
                 try {
-                    var totalRecords = await Sendmail.count(filter)
+                    var totalRecords = await Sendmail.count(filter).meta({makeLikeModifierCaseInsensitive: true})
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }

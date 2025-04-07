@@ -11,7 +11,7 @@ module.exports = {
             type: 'string'
         },
         assignmentId:{
-            type: 'string'
+            model: 'assignment'
         },
         isDefault:{
           type: 'boolean'

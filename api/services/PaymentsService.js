@@ -16,10 +16,7 @@ module.exports = {
                 let dt = sails.dayjs(filter.paymentDate).endOf('date').toDate();
                 filter.paymentDate = { '>=': df, '<=': dt };
             }
-            // if(filter.paymentType){
-
-            // }
-
+         
             let qryObj = {where : filter};
             //sort 
             let sortField = 'createdAt';
@@ -44,8 +41,13 @@ module.exports = {
             if (params.select) {
                 qryObj.select = params.select;
             }
+            // try {
+            //     var records = await Payments.find(qryObj);;
+            // } catch (error) {
+            //     return reject({ statusCode: 500, error: error });
+            // }
             try {
-                var records = await Payments.find(qryObj);;
+                var records = await Payments.find(qryObj).meta({makeLikeModifierCaseInsensitive: true});;
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -284,6 +286,7 @@ module.exports = {
             try {
                 let payment
                 const {data}= await this.findOne(ctx, id, {populate: ['assignment']});
+                data.pacakgeId = data?.packageId
                 data.paymentReceipt = `https://${ctx?.session?.activeCompany?.host}/payments-receipt/${id}`;
                 const [mailerData] = await MailerService.find(ctx, {emailFunction: 'sendPaymentMail', status:true, })
                 if(!mailerData){
@@ -343,6 +346,7 @@ module.exports = {
                                      emailFunction: 'sendPaymentMail',
                                      primaryModel: 'Payments',
                                      modelId: id,
+                                     packageId: data?.packageId,
                                      sendBy: ctx?.session?.user?.id,
                                      status: true
                                  });
@@ -384,6 +388,7 @@ module.exports = {
             try {
                 let paymentReminder
                 const {data}= await AssignmentService.findOne(ctx, id);
+                data.packageId = data.packageId,
                 data.assignmentId = data.id,
                 data.dueDate = bodyData.dueDate;
                 data.amount = bodyData.amount;
@@ -445,6 +450,7 @@ module.exports = {
                                      emailFunction: 'sendPaymentReminderMail',
                                      primaryModel: 'Assignment',
                                      modelId: id,
+                                     packageId: data?.packageId,
                                      sendBy: ctx?.session?.user?.id,
                                      status: true
                                  });

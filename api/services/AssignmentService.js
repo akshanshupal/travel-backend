@@ -175,7 +175,7 @@ module.exports = {
                 return reject({ statusCode: 400, error: { message: 'Payment Store is required!' } });
             }
             if (!data.bookingDate) {
-                return reject({ statusCode: 400, error: { message: 'Booking Date is required!' } });
+             return reject({ statusCode: 400, error: { message: 'Booking Date is required!' } });
             }
             if(!data.hasOwnProperty('status')){
                 data.status = true
@@ -196,6 +196,37 @@ module.exports = {
                     data.tourDate = data.tourDate.toDate();
                 }
             }
+            // const [companyConfig] = await CompanyconfigService.find(ctx,{});
+            // if (!companyConfig) {
+            //     return reject({ statusCode: 404, error: { message: 'Company configuration not found!' } });
+            // }
+            // data.configSettings = companyConfig;
+            let packageId;
+            if(ctx?.session?.activeCompany?.packagePrefix){
+                packageId = ctx.session.activeCompany.packagePrefix
+            }
+            const getInitials = (name) => {
+                if (!name || typeof name !== "string") return "";
+                
+                const nameParts = name.trim().split(/\s+/); // Split by spaces and remove extra spaces
+                if (nameParts.length === 1) return nameParts[0].charAt(0).toUpperCase(); // Single-word name case
+                
+                // Get first, middle (if any), and last initials
+                const initials = nameParts.map((part) => part.charAt(0).toUpperCase());
+                
+                return initials.join(""); // Combine all initials
+            };
+            if(data?.clientName){
+                packageId = packageId + getInitials(data?.clientName)
+            }
+            let key = 'packageNo:' +':' + ctx.session.activeCompany.id.toString() + ':' + ctx?.session?.activeCompany?.packagePrefix || '';
+
+            let redisPackagePrefix = await sails.redis.incr(key);
+              
+            data.packageId = packageId + redisPackagePrefix.toString().padStart((ctx?.session?.activeCompany?.packageLength-packageId.length), '0');
+
+
+
 
             let paymentData;
 
@@ -205,6 +236,7 @@ module.exports = {
                     paymentStore: data.paymentStore,
                     paymentDate: data.bookingDate,
                     paymentTo: 'paymentToCompany',
+                    packageId: data.packageId,
                     paymentType: 'Cr',
                     status: true
                 }
@@ -246,10 +278,6 @@ module.exports = {
                 }
 
             }
-
-
-
-
             return resolve({ data: record || { created: true } });
         })
 
@@ -445,6 +473,7 @@ module.exports = {
             try {
                 let assignmentMailData
                 const {data}= await this.findOne(ctx, id,{ populate: ['agentName'] });
+                data.packageId = data?.packageId
                 data.assignmentId = data.id
                 data.packageLink = `https://${ctx?.session?.activeCompany?.host}/package-mail/${id}`;
                 const [mailerData] = await MailerService.find(ctx, {emailFunction: 'sendWelcomeMail', status:true, })
@@ -508,6 +537,7 @@ module.exports = {
                                     emailFunction: 'sendWelcomeMail',
                                     primaryModel: 'Assignment',
                                     modelId: id,
+                                    packageId: data?.packageId,
                                     sendBy: ctx?.session?.user?.id,
                                     status: true
                                 });

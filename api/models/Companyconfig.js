@@ -38,6 +38,12 @@ module.exports = {
         email: {
             type: 'string',
             // isEmail: true
+        },
+        packagePrefix : {
+            type: 'string'
+        },
+        packageLength : {
+            type: 'string'
         }
     }
 };

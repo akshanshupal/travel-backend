@@ -3,6 +3,8 @@
  *
  */
 
+const { type } = require("os");
+
 module.exports = {
 
     attributes: {
@@ -138,6 +140,9 @@ module.exports = {
         },
         idProof:{
             type:'json'
+        },
+        packageId:{
+           type : 'string'
         },
         isDeleted: { type: 'boolean'},
         deletedAt: { type: 'ref', columnType: 'datetime' },

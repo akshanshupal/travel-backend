@@ -21,6 +21,10 @@ module.exports = {
         remarks: {
             type: 'string'
         },
+        packageId: {
+            type: 'string',
+            allowNull: true
+        },
         paymentDate: {
             type: 'ref',
             columnType: 'date'
