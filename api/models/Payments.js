@@ -7,7 +7,7 @@ module.exports = {
 
     attributes: {
         amount: {
-            type: 'string'
+            type: 'number'
         },
         status: {
             type: 'boolean'

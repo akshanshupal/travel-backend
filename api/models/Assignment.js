@@ -144,6 +144,9 @@ module.exports = {
         packageId:{
            type : 'string'
         },
+        paymentReceived: {
+            type: 'number'
+        },
         isDeleted: { type: 'boolean'},
         deletedAt: { type: 'ref', columnType: 'datetime' },
         deletedBy: { model: 'user' },

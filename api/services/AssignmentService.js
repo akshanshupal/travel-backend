@@ -1,3 +1,4 @@
+const ObjectId = require('mongodb').ObjectId;
 module.exports = {
     find: function (ctx, filter, params) {
         return new Promise(async (resolve, reject) => {
@@ -569,6 +570,17 @@ module.exports = {
                 reject(error)  
             }
         })
-    }
+    },
+    adjustAssignmentPayment: async function (assignmentId, newAmount, oldAmount = 0) {
+        const diff = newAmount - oldAmount;
+    
+        if (!assignmentId || isNaN(diff)) {
+          throw new Error('Invalid assignmentId or amounts');
+        }
+    
+        await Assignment.getDatastore().manager.collection('assignment').updateOne({ _id: new ObjectId(assignmentId) }, { $inc: { paymentReceived: diff } });
+    
+        return { success: true, diff };
+      }
 
 }

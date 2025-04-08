@@ -187,6 +187,7 @@ module.exports = {
                 } else {
                     record = await Payments.create(data).fetch();
                 }
+                await AssignmentService.adjustAssignmentPayment(record.assignment, record.amount);
                 return resolve({ data: record || { created: true } });
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
@@ -218,11 +219,21 @@ module.exports = {
                     updtBody.paymentDate = updtBody.paymentDate.toDate();
                 }
             }
+            const {data: oldData} = await this.findOne(ctx, id, {select: ['amount']});
+
             try {
                 var record = await Payments.updateOne(filter).set(updtBody);
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
+            if(record.isDeleted){
+                await AssignmentService.adjustAssignmentPayment(record.assignment, 0, record.amount);
+            }else{
+                await AssignmentService.adjustAssignmentPayment(record.assignment, record.amount, oldData.amount);
+            }
+
+
+
 
             return resolve({ data: record || { modified: true } });
         })
@@ -243,6 +254,7 @@ module.exports = {
             let deletedData
             try {
                 deletedData =  await this.updateOne(ctx, id, {isDeleted:true, deletedAt: new Date(), deletedBy: ctx?.user?.id})
+
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
