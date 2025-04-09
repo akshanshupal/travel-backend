@@ -140,5 +140,14 @@ module.exports = {
         }
         return res.json(record.data);
     },
+    verifyAssignment: async function (req, res) {
+        const {verify} = req.body;
 
+        try {
+            var record = await AssignmentService.verifyAssignment(req, req.params.id, {verify:verify});
+        } catch (error) {
+            return res.serverError(error);
+        }
+        return res.json(record.data);
+    },
 };

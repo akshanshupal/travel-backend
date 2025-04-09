@@ -1,3 +1,5 @@
+const { verifyAssignment } = require('../controllers/AssignmentController');
+
 const ObjectId = require('mongodb').ObjectId;
 module.exports = {
     find: function (ctx, filter, params) {
@@ -316,6 +318,7 @@ module.exports = {
                 }
             }
             
+            
 
             try {
                 var record = await Assignment.updateOne(filter).set(updtBody);
@@ -581,6 +584,19 @@ module.exports = {
         await Assignment.getDatastore().manager.collection('assignment').updateOne({ _id: new ObjectId(assignmentId) }, { $inc: { paymentReceived: diff } });
     
         return { success: true, diff };
-      }
+    },
+    verifyAssignment : async function (ctx, id, verifyData){
+        return new Promise(async (resolve, reject) => {
+            try {
+                const {data} = await this.updateOne(ctx, id, {...verifyData ,verifyTime: new Date()});
+                await PaymentsService.updateOne(ctx, data.tokenPayment, {packageId: data.packageId});
+                resolve({data:data})
+            } catch (error) {
+                reject(error)
+                
+            }
 
+            
+        })
+    }
 }

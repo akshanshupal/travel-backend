@@ -12,9 +12,7 @@ module.exports = {
         status: {
             type: 'boolean'
         },
-        package: {
-            model: 'package'
-        },
+      
         bookingsType:{
             model: 'bookingsType'
           },
@@ -63,8 +61,19 @@ module.exports = {
             type: 'string',
             isIn : ['pending', 'booked']
         },
+           // package: {
+        //     model: 'package'
+        // },
         pendingAmount: {
             type: 'string',
+        },
+       
+        assignment: {
+            model: 'assignment'
+        },
+        packageId: {
+            type: 'string',
+            allowNull: true
         },
         isDeleted: { type: 'boolean'},
         deletedAt: { type: 'ref', columnType: 'datetime' },
