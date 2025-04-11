@@ -12,6 +12,12 @@
 
 const IORedis = require('ioredis');
 const dayjs = require('dayjs')
+const isoWeek = require('dayjs/plugin/isoWeek');
+const weekOfYear = require('dayjs/plugin/weekOfYear');
+
+// Extend Day.js with actual plugins
+dayjs.extend(isoWeek);
+dayjs.extend(weekOfYear);
 module.exports.bootstrap = async function () {
   sails.dayjs =dayjs;
   // Create a Redis client

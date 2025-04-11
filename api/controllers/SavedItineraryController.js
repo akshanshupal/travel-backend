@@ -126,5 +126,52 @@ module.exports = {
         }
         return res.json(record.data);
     },
+    agentWiseSavedItineraries: async function (req, res) {
+        const {to,from,salesExecutive} = req.allParams();
+        const filter = {};
+        if(to){
+            filter.to = to
+        }
+        if(from){
+            filter.from = from
+        }
+        if(salesExecutive){
+            filter.salesExecutive = salesExecutive
+        }
+
+        try {
+            var record = await SendmailService.agentWiseSavedItineraries(req, filter);
+        } catch (error) {
+            return res.serverError(error);
+        }
+
+        return res.json(record.data);
+    },
+    agentDurationWiseSavedItineraries: async function (req, res) {
+        let { to, from, salesExecutive, grouping = 'day' } = req.allParams();
+      
+        // If no to and from are provided, set current month start and today as default
+        if (!to && !from) {
+            const today = sails.dayjs();
+            const startOfMonth = today.startOf('month');
+            from = startOfMonth.format('YYYY-MM-DD');
+            to = today.format('YYYY-MM-DD');
+        }
+    
+        const filter = {
+            ...(salesExecutive && { salesExecutive }),
+            ...(grouping && { grouping }),
+            ...(to && { to }),
+            ...(from && { from }),
+            
+        };
+    
+        try {
+            const record = await SendmailService.agentDurationWiseSavedItineraries(req, filter);
+            return res.json(record.data);
+        } catch (error) {
+            return res.serverError(error);
+        }
+    },
 
 };

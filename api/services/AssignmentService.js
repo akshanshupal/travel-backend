@@ -1,6 +1,5 @@
-const { verifyAssignment } = require('../controllers/AssignmentController');
 
-const ObjectId = require('mongodb').ObjectId;
+const {ObjectId} = require('mongodb');
 module.exports = {
     find: function (ctx, filter, params) {
         return new Promise(async (resolve, reject) => {

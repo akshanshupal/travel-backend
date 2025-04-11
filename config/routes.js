@@ -144,6 +144,8 @@ module.exports.routes = {
   'POST /api/saved-itinerary/send-itinerary/:id': 'SavedItineraryController.sendItineraryMail',
   'GET /api/saved-itinerary': 'SavedItineraryController.find',
   'GET /api/saved-itinerary/:id': 'SavedItineraryController.findOne',
+  'GET /api/saved-itinerary/agent-wise-saved-itinerary': 'SavedItineraryController.agentWiseSavedItineraries',
+  'GET /api/saved-itinerary/agent-duration-wise-saved-itinerary': 'SavedItineraryController.agentDurationWiseSavedItineraries',
   'PUT /api/saved-itinerary/:id': 'SavedItineraryController.updateOne',
   'DELETE /api/saved-itinerary/:id': 'SavedItineraryController.deleteOne',
 
@@ -167,6 +169,8 @@ module.exports.routes = {
   'POST /api/sendmail': 'SendmailController.create',
   'GET /api/sendmail': 'SendmailController.find',
   'GET /api/sendmail/:id': 'SendmailController.findOne',
+  'GET /api/sendmail/agent-wise-send-mails': 'SendmailController.agentWiseSendMails',
+  'GET /api/sendmail/agent-duration-wise-send-mails': 'SendmailController.agentDurationWiseSendMails',
   'PUT /api/sendmail/:id': 'SendmailController.updateOne',
   'DELETE /api/sendmail/:id': 'SendmailController.deleteOne',
 

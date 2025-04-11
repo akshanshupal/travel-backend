@@ -119,6 +119,54 @@ module.exports = {
         }
 
         return res.json(record.data);
-    }
+    },
+    agentWiseSendMails: async function (req, res) {
+        const {to,from,emailFunction} = req.allParams();
+        const filter = {};
+        if(to){
+            filter.to = to
+        }
+        if(from){
+            filter.from = from
+        }
+        if(emailFunction){
+            filter.emailFunction = emailFunction
+        }
+        try {
+            var record = await SendmailService.agentWiseSendMails(req, filter);
+        } catch (error) {
+            return res.serverError(error);
+        }
+
+        return res.json(record.data);
+    },
+    agentDurationWiseSendMails: async function (req, res) {
+        let { to, from, sendBy, grouping = 'day', emailFunction } = req.allParams();
+      
+        // If no to and from are provided, set current month start and today as default
+        if (!to && !from) {
+            const today = sails.dayjs();
+            const startOfMonth = today.startOf('month');
+            from = startOfMonth.format('YYYY-MM-DD');
+            to = today.format('YYYY-MM-DD');
+        }
+    
+        const filter = {
+            ...(sendBy && { sendBy }),
+            ...(grouping && { grouping }),
+            ...(to && { to }),
+            ...(from && { from }),
+            ...(emailFunction && { emailFunction })
+        };
+    
+        try {
+            const record = await SendmailService.agentDurationWiseSendMails(req, filter);
+            return res.json(record.data);
+        } catch (error) {
+            return res.serverError(error);
+        }
+    },
+    
+    
 
 };

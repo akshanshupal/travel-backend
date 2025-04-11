@@ -24,6 +24,10 @@ module.exports = {
         subject:{
             type: 'string',
         },
+        error: {
+            type: 'string',
+            allowNull: true
+        },
         html:{
             type: 'string',
         },
