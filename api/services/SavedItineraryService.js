@@ -1,3 +1,4 @@
+const {ObjectId} = require('mongodb');
 module.exports = {
     // find: function (ctx, filter, params) {
     //     return new Promise(async (resolve, reject) => {
@@ -783,6 +784,7 @@ module.exports = {
         if (filter.salesExecutive) {
             matchQuery.salesExecutive = new ObjectId(filter.salesExecutive);
         }
+        if (filter.emailFunction) matchQuery.emailFunction = filter.emailFunction;
 
         const aggregationPipeline = [];
         aggregationPipeline.push({ $match: matchQuery });

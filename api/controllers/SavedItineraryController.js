@@ -140,7 +140,7 @@ module.exports = {
         }
 
         try {
-            var record = await SendmailService.agentWiseSavedItineraries(req, filter);
+            var record = await SavedItineraryService.agentWiseSavedItineraries(req, filter);
         } catch (error) {
             return res.serverError(error);
         }
@@ -167,7 +167,7 @@ module.exports = {
         };
     
         try {
-            const record = await SendmailService.agentDurationWiseSavedItineraries(req, filter);
+            const record = await SavedItineraryService.agentDurationWiseSavedItineraries(req, filter);
             return res.json(record.data);
         } catch (error) {
             return res.serverError(error);
