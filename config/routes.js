@@ -131,6 +131,8 @@ module.exports.routes = {
   'POST /api/clientitinerary': 'ClientItineraryController.create',
   'GET /api/clientitinerary': 'ClientItineraryController.find',
   'GET /api/clientitinerary/:id': 'ClientItineraryController.findOne',
+  'GET /api/client-itinerary/agent-wise-summary': 'ClientItineraryController.agentWiseClientItineraries',
+  'GET /api/client-itinerary/agent-duration-wise-summary': 'ClientItineraryController.agentDurationWiseClientItineraries',
   'PUT /api/clientitinerary/:id': 'ClientItineraryController.updateOne',
   'DELETE /api/clientitinerary/:id': 'ClientItineraryController.deleteOne',
 
@@ -257,3 +259,5 @@ module.exports.routes = {
 
 
 };
+
+

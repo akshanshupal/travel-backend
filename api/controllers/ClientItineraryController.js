@@ -117,8 +117,46 @@ module.exports = {
         } catch (error) {
             return res.serverError(error);
         }
-
         return res.json(record.data);
-    }
+    },
 
+    agentWiseClientItineraries: async function (req, res) {
+        const {to, from} = req.allParams();
+        const filter = {};
+        
+        if(to) filter.to = to;
+        if(from) filter.from = from;
+        
+        try {
+            const record = await ClientItineraryService.agentWiseClientItineraries(req, filter);
+            return res.json(record.data);
+        } catch (error) {
+            return res.serverError(error);
+        }
+    },
+
+    agentDurationWiseClientItineraries: async function (req, res) {
+        let { to, from, salesExecutive, grouping = 'day' } = req.allParams();
+      
+        if (!to && !from) {
+            const today = sails.dayjs();
+            const startOfMonth = today.startOf('month');
+            from = startOfMonth.format('YYYY-MM-DD');
+            to = today.format('YYYY-MM-DD');
+        }
+    
+        const filter = {
+            ...(salesExecutive && { salesExecutive }),
+            ...(grouping && { grouping }),
+            ...(to && { to }),
+            ...(from && { from })
+        };
+    
+        try {
+            const record = await ClientItineraryService.agentDurationWiseClientItineraries(req, filter);
+            return res.json(record.data);
+        } catch (error) {
+            return res.serverError(error);
+        }
+    }
 };
