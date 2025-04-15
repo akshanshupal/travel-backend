@@ -34,8 +34,17 @@ module.exports = {
 
             let qryObj = {where : filter};
             //sort
-            let sortField = 'createdAt';
+            let sortField = 'bookingDate';
             let sortOrder = 'DESC';
+            if(filter.sortField){
+                sortField = filter.sortField;
+                delete filter.sortField;
+            }
+            if(filter.sortOrder){
+                sortOrder = filter.sortOrder;
+                delete filter.sortOrder;
+            }
+            
             qryObj.sort = sortField + ' ' + sortOrder;
             //pagination
             let page = 1;

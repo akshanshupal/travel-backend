@@ -275,31 +275,28 @@ module.exports = {
                   from: 'user',
                   localField: '_id',
                   foreignField: '_id',
-                  as: 'sendBy',
+                  as: 'abc',
                 },
               },
-              {
-                $unwind: '$sendBy',
-              },
-              {
-                $project: {
-                  _id: 0,
-                  user: '$sendBy.name', // change if needed
-                  totalMails: 1,
-                },
-              },
-              {$sort: {
-                totalMails: -1
-              }}
+            //   {
+            //     $unwind: '$sendBy',
+            //   },
+            //   {
+            //     $project: {
+            //       _id: 0,
+            //       user: '$sendBy.name', // change if needed
+            //       totalMails: 1,
+            //     },
+            //   },
+            //   {$sort: {
+            //     totalMails: -1
+            //   }}
             ];
-      
             const result = await Sendmail.getDatastore()
             .manager
             .collection('sendmail')
             .aggregate(aggregateArr)
             .toArray()
-          
-      
             resolve({data:result});
           } catch (err) {
             reject(err);

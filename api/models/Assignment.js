@@ -147,6 +147,18 @@ module.exports = {
         paymentReceived: {
             type: 'number'
         },
+        finished:{
+            type: 'boolean',
+            defaultsTo:false
+        },
+        bookingStatus:{
+          type: 'boolean',
+          defaultsTo:false
+        },
+        paymentStatus:{
+            type:'boolean',
+            defaultsTo: false
+        },
         isDeleted: { type: 'boolean'},
         deletedAt: { type: 'ref', columnType: 'datetime' },
         deletedBy: { model: 'user' },
