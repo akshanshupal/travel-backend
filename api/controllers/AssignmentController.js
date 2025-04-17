@@ -150,4 +150,36 @@ module.exports = {
         }
         return res.json(record.data);
     },
+    finishedAssignment: async function (req, res) {
+        const {finished} = req.body;
+
+        try {
+            var record = await AssignmentService.finishedAssignment(req, req.params.id, {finished:finished});
+        } catch (error) {
+            return res.serverError(error);
+        }
+        return res.json(record.data);
+    },
+    bookingStatus: async function (req, res) {
+        const {bookingStatus} = req.body;
+
+        try {
+            var record = await AssignmentService.bookingStatus(req, req.params.id, {bookingStatus:bookingStatus});
+        } catch (error) {
+            return res.serverError(error);
+        }
+        return res.json(record.data);
+    },
+    paymentStatus: async function (req, res) {
+        const {paymentStatus} = req.body;
+
+        try {
+            var record = await AssignmentService.paymentStatus(req, req.params.id, {paymentStatus:paymentStatus});
+        } catch (error) {
+            return res.serverError(error);
+        }
+        return res.json(record.data);
+    },
+
+      
 };

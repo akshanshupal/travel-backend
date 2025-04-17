@@ -44,7 +44,7 @@ module.exports = {
                 sortOrder = filter.sortOrder;
                 delete filter.sortOrder;
             }
-            
+
             qryObj.sort = sortField + ' ' + sortOrder;
             //pagination
             let page = 1;
@@ -471,9 +471,7 @@ module.exports = {
                         }
                         reject(error);
                     }
-                }
-                
-                
+                }    
                 
             } catch (error) {
                 reject(error)  
@@ -606,5 +604,55 @@ module.exports = {
 
             
         })
-    }
+    },
+   
+    bookingStatus : async function (ctx, id, bookingStatusData){
+        return new Promise(async (resolve, reject) => {
+            try {
+                const {data} = await this.updateOne(ctx, id, {...bookingStatusData });
+                await PaymentsService.updateOne(ctx, data.tokenPayment, {packageId: data.packageId});
+                resolve({data:data})
+            } catch (error) {
+                reject(error)
+                
+            }
+
+            
+        })
+    },
+    paymentStatus : async function (ctx, id, paymentStatusData){
+        return new Promise(async (resolve, reject) => {
+            try {
+                const {data:assignment} = await this.findOne(ctx, id );
+                if ((assignment.finalPackageCost - assignment.paymentReceived) == 0) {      
+                    const {data} = await this.updateOne(ctx, id, {...paymentStatusData });
+                    await PaymentsService.updateOne(ctx, data.tokenPayment, {packageId: data.packageId});
+                    resolve({data:data})
+                }
+                else{
+                    return reject({ statusCode: 400, error: { message: 'Pending amount should be 0!' } });
+                }
+            } catch (error) {
+                reject(error)
+                
+            }
+
+            
+        })
+    },
+  
+    finishedAssignment : async function (ctx, id, finishedData){
+        return new Promise(async (resolve, reject) => {
+            try {
+                const {data} = await this.updateOne(ctx, id, {...finishedData });
+                await PaymentsService.updateOne(ctx, data.tokenPayment, {packageId: data.packageId});
+                resolve({data:data})
+            } catch (error) {
+                reject(error)
+                
+            }
+
+            
+        })
+    },
 }

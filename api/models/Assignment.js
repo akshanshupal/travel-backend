@@ -36,13 +36,13 @@ module.exports = {
             type: 'string'
         },
         packageCost: {
-            type: 'string'
+            type: 'number'
         },
         taxes:{
             type:'string'
         },
         finalPackageCost: {
-            type: 'string'
+            type: 'number'
         },
         tokenPayment: {
             model: 'payments'
