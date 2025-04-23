@@ -349,11 +349,25 @@ module.exports = {
             if (!filter.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
-            // try {
-            //     await Assignment.destroyOne(filter);
-            // } catch (error) {
-            //     return reject({ statusCode: 500, error: error });
-            // }
+
+            try {
+                const {data: assignment} = await this.findOne(ctx,id);
+                if(assignment.verify){
+                    const [payemnt] = await PaymentsService.find(ctx, {assignment:id}, {pagination: {limit:1}, select: ['amount']});
+                    if(payemnt){
+                        return reject({ statusCode: 400, error: { message: 'Please Delete all payments from this assignment!' } })
+                    }
+                    const [bopackageBooking] = await PackageBookingService.find(ctx, {assignment:id}, {pagination: {limit:1}, select: ['title']});
+                    if(bopackageBooking){
+                        return reject({ statusCode: 400, error: { message: 'Please Delete all bookings from this assignment!' } })
+                    } 
+                } 
+                
+            } catch (error) {
+                return reject({ statusCode: 500, error: error });
+
+            }
+
             let deletedData
             try {
                 deletedData =  await this.updateOne(ctx, id, {isDeleted:true, deletedAt: new Date(), deletedBy: ctx?.user?.id})
@@ -580,17 +594,43 @@ module.exports = {
             }
         })
     },
-    adjustAssignmentPayment: async function (assignmentId, newAmount, oldAmount = 0) {
+    adjustAssignmentPayment: async function (assignmentId,type='paymentReceived', newAmount, oldAmount = 0) {
         const diff = newAmount - oldAmount;
     
         if (!assignmentId || isNaN(diff)) {
           throw new Error('Invalid assignmentId or amounts');
         }
+        try {
+            let result;
+
+            if(type=='paymentReceived'){
+
+                result = await Assignment.getDatastore().manager.collection('assignment').updateOne(
+                   { _id: new ObjectId(assignmentId) }, // Query to find the document
+                   { $inc: { paymentReceived: diff } }, // Increment paymentReceived by diff
+               );
+            }else if (type=='serviceReceived'){
+                let x = typeof diff
+
+                result = await Assignment.getDatastore().manager.collection('assignment').updateOne(
+                    { _id: new ObjectId(assignmentId) }, // Query to find the document
+                    {$inc: { serviceAmount : diff }}
+                );
+                
+            }
     
-        await Assignment.getDatastore().manager.collection('assignment').updateOne({ _id: new ObjectId(assignmentId) }, { $inc: { paymentReceived: diff } });
-    
+            return { success: true, diff };
+        } catch (error) {
+            // Log the error and rethrow it for the caller to handle
+            console.error('Error updating paymentReceived:', error.message);
+            throw new Error('Failed to update paymentReceived');
+        }
+       
+    //    await Assignment.getDatastore().manager.collection('assignment').updateOne({ _id: new ObjectId(assignmentId) }, { $inc: { paymentReceived: diff }});
+     
         return { success: true, diff };
     },
+   
     verifyAssignment : async function (ctx, id, verifyData){
         return new Promise(async (resolve, reject) => {
             try {

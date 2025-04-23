@@ -147,6 +147,10 @@ module.exports = {
         paymentReceived: {
             type: 'number'
         },
+        serviceAmount:{
+           type : 'number',
+           defaultsTo: 0
+        },
         finished:{
             type: 'boolean',
             defaultsTo:false

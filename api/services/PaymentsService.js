@@ -3,6 +3,9 @@ module.exports = {
     find: function (ctx, filter, params) {
         return new Promise(async (resolve, reject) => {
             if (!filter.company) {
+                filter.company = ctx.session.activeCompany.id
+            }
+            if (!filter.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
             if (!params) {
@@ -182,12 +185,22 @@ module.exports = {
                 let redisReceiptNo = await sails.redis.incr('paymentReceipt:' +':' + data.company.toString()+':' + data.paymentStore.toString() + ':' + data.paymentType);
                 data.receiptNo = companyConfig.paymentReceiptPrefix + data.paymentType.toUpperCase()+ redisReceiptNo.toString().padStart(companyConfig.paymentReceiptLength, '0');
                 let record;
+                let type;
+
+                if(data.packageBooking){
+                    type='serviceReceived'; 
+                }else{
+                    type='paymentReceived';
+                }
+
+ 
                 if (avoidRecordFetch) {
                     record = await Payments.create(data);
                 } else {
                     record = await Payments.create(data).fetch();
                 }
-                await AssignmentService.adjustAssignmentPayment(record.assignment, record.amount);
+ 
+                await AssignmentService.adjustAssignmentPayment(record.assignment,type, record.amount);
                 return resolve({ data: record || { created: true } });
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
@@ -219,7 +232,12 @@ module.exports = {
                     updtBody.paymentDate = updtBody.paymentDate.toDate();
                 }
             }
-            const {data: oldData} = await this.findOne(ctx, id, {select: ['amount']});
+            const {data: oldData} = await this.findOne(ctx, id, {select: ['amount','packageBooking']});
+             if(oldData.packageBooking){
+                    type='serviceReceived'; 
+                }else{
+                    type='paymentReceived';
+                }
 
             try {
                 var record = await Payments.updateOne(filter).set(updtBody);
@@ -227,9 +245,9 @@ module.exports = {
                 return reject({ statusCode: 500, error: error });
             }
             if(record.isDeleted){
-                await AssignmentService.adjustAssignmentPayment(record.assignment, 0, record.amount);
+                await AssignmentService.adjustAssignmentPayment(record.assignment,type, 0, record.amount);
             }else{
-                await AssignmentService.adjustAssignmentPayment(record.assignment, record.amount, oldData.amount);
+                await AssignmentService.adjustAssignmentPayment(record.assignment,type, record.amount, oldData.amount);
             }
 
 
