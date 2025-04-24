@@ -61,9 +61,9 @@ module.exports = {
             type: 'string',
             isIn : ['pending', 'booked']
         },
-           // package: {
-        //     model: 'package'
-        // },
+        package: {
+            model: 'package'
+        },
         pendingAmount: {
             type: 'string',
         },

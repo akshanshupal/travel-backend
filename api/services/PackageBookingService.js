@@ -271,6 +271,19 @@ module.exports = {
             if (!filter.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
+            try {
+            const {data: packageBooking} = await this.findOne(ctx,id);{
+              if(packageBooking){
+                const [payemnt] = await PaymentsService.find(ctx, {packageBooking:id}, {pagination: {limit:1}, select: ['amount']});
+                if(payemnt){
+                    return reject({ statusCode: 400, error: { message: 'Please Delete all payments from this PackageBooking!' } })
+                }
+              }
+            } 
+            } catch (error) {
+                return reject({ statusCode: 500, error: error });
+
+            }
             let deletedArea
             try {
                 deletedArea =  await this.updateOne(ctx, id, {isDeleted:true, deletedAt: new Date(), deletedBy: ctx?.user?.id})
