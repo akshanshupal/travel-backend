@@ -199,6 +199,14 @@ module.exports = {
                     data.bookingDate = data.bookingDate.toDate();
                 }
             }
+            if (data?.leadDate && typeof data?.leadDate === 'string') {
+                data.leadDate = sails.dayjs(data.leadDate);
+                if (!data.leadDate.isValid()) {
+                    return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid leadDate is required!' } });
+                } else {
+                    data.leadDate = data.leadDate.toDate();
+                }
+            }
             if (data?.tourDate && typeof data?.tourDate === 'string') {
                 data.tourDate = sails.dayjs(data.tourDate);
                 if (!data.tourDate.isValid()) {
@@ -315,6 +323,14 @@ module.exports = {
                     return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid bookingDate is required!' } });
                 } else {
                     updtBody.bookingDate = updtBody.bookingDate.toDate();
+                }
+            }
+            if (updtBody?.leadDate && typeof updtBody?.leadDate === 'string') {
+                updtBody.leadDate = sails.dayjs(updtBody.leadDate);
+                if (!updtBody.leadDate.isValid()) {
+                    return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid leadDate is required!' } });
+                } else {
+                    updtBody.leadDate = updtBody.leadDate.toDate();
                 }
             }
             if (updtBody?.tourDate && typeof updtBody?.tourDate === 'string') {

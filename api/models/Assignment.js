@@ -114,9 +114,7 @@ module.exports = {
         whatsappSent: {
             type: "boolean"
         },
-        itineraryLink:{
-            type:'string'
-        },
+     
         emailSent: {
             type: "boolean"
         },
@@ -162,6 +160,32 @@ module.exports = {
         paymentStatus:{
             type:'boolean',
             defaultsTo: false
+        },
+
+        // new
+        leadCode:{
+          type : 'string'
+        },
+        leadDate: {
+            type: 'ref', columnType: 'datetime'
+        },
+        altContactNumber: {
+            type: 'string'
+        },
+        callDone: {
+            type: 'boolean'
+        },
+        agentCallRecordingChecked: {
+            type: 'boolean'
+        },
+        // itineraryLink:{
+        //     type:'string'
+        // },
+        remark: {
+            type: 'string'
+        },
+        siteSeeingNew:{
+           type:'json'
         },
         isDeleted: { type: 'boolean'},
         deletedAt: { type: 'ref', columnType: 'datetime' },
