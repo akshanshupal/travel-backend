@@ -27,8 +27,9 @@ module.exports = {
         },
         paymentDate: {
             type: 'ref',
-            columnType: 'date'
+            columnType: 'datetime'
         },
+      
         paymentTo :{
             type: 'string',
             isIn: ['paymentToCompany', 'hotel', 'vendor', 'other']
@@ -45,6 +46,9 @@ module.exports = {
             model: 'packageBooking'
         },
         receiptNo: {
+            type: 'string'
+        },  
+        paymentImg: {
             type: 'string'
         },
         isDeleted: { type: 'boolean'},

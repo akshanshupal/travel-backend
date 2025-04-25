@@ -249,6 +249,8 @@ module.exports = {
 
             let paymentData;
 
+
+
             if(data.tokenAmount&&data.paymentStore&&data.bookingDate){
                 paymentData = {
                     amount: data.tokenAmount,
@@ -259,7 +261,19 @@ module.exports = {
                     paymentType: 'Cr',
                     status: true
                 }
+                if(data.tokenImg){
+                    paymentData.paymentImg = data.tokenImg;
+                }
+                if (data?.paymentDate && typeof data?.paymentDate === 'string') {
+                    data.paymentDate = sails.dayjs(data.paymentDate);
+                    if (!data.paymentDate.isValid()) {
+                        return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid paymentDate is required!' } });
+                    } else {
+                        data.paymentDate = data.paymentDate.toDate();
+                    }
+                }
             }
+
 
             if(data.tokenAmount){
                 delete data.tokenAmount
@@ -268,7 +282,8 @@ module.exports = {
                 delete data.paymentStore
             }
 
-
+            delete data.tokenImg
+            delete data.paymentDate
             if (avoidRecordFetch) {
                 try {
                     var record = await Assignment.create(data);
