@@ -57,6 +57,7 @@ module.exports = {
             if (params.select) {
                 qryObj.select = params.select;
             }
+            console.log(qryObj);
             try {
                 var records = await Site.find(qryObj).meta({makeLikeModifierCaseInsensitive: true});
             } catch (error) {
@@ -191,7 +192,6 @@ module.exports = {
                 if (data.alias && data.area) {
                     try {
                         const [duplicateSite] = await this.find(ctx, { alias: data.alias,  exactMatch: true, area: data.area }, {limit:1});
-                        console.log(duplicateSite);
                         if (duplicateSite) {
                             return reject({ statusCode: 400, error: { message: 'A site with the same title already exists on this area!' } });
                         }
@@ -289,6 +289,9 @@ module.exports = {
             if (updtBody.alias && updtBody.area) {
                 try {
                     const [duplicateSite] = await this.find(ctx, { alias: updtBody.alias, exactMatch: true, area: updtBody.area }, {limit:1});
+
+                    console.log(duplicateSite);
+                    console.log(id);
                     
                     if (duplicateSite?.id != id) {
                         return reject({ statusCode: 400, error: { message: 'A site with the same title already exists on this area!' } });
