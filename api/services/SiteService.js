@@ -191,6 +191,7 @@ module.exports = {
                 if (data.alias && data.area) {
                     try {
                         const [duplicateSite] = await this.find(ctx, { alias: data.alias,  exactMatch: true, area: data.area }, {limit:1});
+                        console.log(duplicateSite);
                         if (duplicateSite) {
                             return reject({ statusCode: 400, error: { message: 'A site with the same title already exists on this area!' } });
                         }
