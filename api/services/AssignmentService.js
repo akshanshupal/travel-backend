@@ -243,19 +243,13 @@ module.exports = {
             let redisPackagePrefix = await sails.redis.incr(key);
               
             data.packageId = packageId + redisPackagePrefix.toString().padStart((ctx?.session?.activeCompany?.packageLength-packageId.length), '0');
-
-
-
-
             let paymentData;
-
-
-
-            if(data.tokenAmount&&data.paymentStore&&data.bookingDate){
+            if(data.tokenAmount&&data.paymentStore&&data.paymentDate){
+                
                 paymentData = {
                     amount: data.tokenAmount,
                     paymentStore: data.paymentStore,
-                    paymentDate: data.bookingDate,
+                    paymentDate: data.paymentDate,
                     paymentTo: 'paymentToCompany',
                     packageId: data.packageId,
                     paymentType: 'Cr',
