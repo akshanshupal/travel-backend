@@ -32,7 +32,7 @@ module.exports = {
       
         paymentTo :{
             type: 'string',
-            isIn: ['paymentToCompany', 'hotel', 'vendor', 'other']
+            isIn: ['paymentToCompany', 'paymentForService']
         },
         paymentStore: {
             model: 'paymentStore'

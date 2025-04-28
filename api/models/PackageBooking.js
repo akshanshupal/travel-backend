@@ -21,7 +21,7 @@ module.exports = {
             columnType: 'date'
         },
         amount:{
-            type: 'string'
+            type: 'number'
         },
         startDate:{
             type: 'ref',
@@ -65,7 +65,7 @@ module.exports = {
             model: 'package'
         },
         pendingAmount: {
-            type: 'string',
+            type: 'number',
         },
        
         assignment: {

@@ -660,7 +660,9 @@ module.exports = {
         return new Promise(async (resolve, reject) => {
             try {
                 const {data} = await this.updateOne(ctx, id, {...verifyData ,verifyTime: new Date()});
-                await PaymentsService.updateOne(ctx, data.tokenPayment, {packageId: data.packageId});
+                if(data.tokenPayment){
+                    await PaymentsService.updateOne(ctx, data.tokenPayment, {packageId: data.packageId});
+                }
                 resolve({data:data})
             } catch (error) {
                 reject(error)
