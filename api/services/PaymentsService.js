@@ -182,7 +182,6 @@ module.exports = {
                     // company,status,receiptNo
             }
             try {
-
                 const [companyConfig] = await CompanyconfigService.find(ctx,{});
                 if (!companyConfig) {
                     return reject({ statusCode: 404, error: { message: 'Company configuration not found!' } });
@@ -206,30 +205,38 @@ module.exports = {
                 } else {
                     record = await Payments.create(data).fetch();
                 }
-                if(packageServices.length>0){
-                    packageServices.forEach(async (ps)=>{
-                        if(ps.id){
-                            const paymentData = {
-                                paymentDate: record.paymentDate,
-                                amount: ps.amount,
-                                paymentStore: record.paymentStore,
-                                paymentTo: record.paymentTo,
-                                assignment: record.assignment,
-                                paymentType: "Dr",
-                                packageBooking: ps.id,
-                                packageId: record.packageId,
-                                company: record.company,
-                                status: record.status,
-                            }
-                            await this.create(ctx, paymentData, true)
-                                        
+                if(packageServices?.length>0){
+                    for(let i=0;i<packageServices.length;i++){
+                        const ps = packageServices[i];
+                        if(!ps.id){
+                            return reject({ statusCode: 400, error: { code: 'Error', message: 'packageId Missing!' } });
                         }
-                    })
+                        if(!ps.amount){
+                            return reject({ statusCode: 400, error: { code: 'Error', message: 'amount Missing!' } });
+                        }
+                        const paymentData = {
+                            paymentDate: record.paymentDate,
+                            amount: ps.amount,
+                            paymentStore: record.paymentStore,
+                            paymentTo: record.paymentTo,
+                            assignment: record.assignment,
+                            paymentType: "Dr",
+                            packageBooking: ps.id,
+                            packageId: record.packageId,
+                            company: record.company,
+                            status: record.status,
+                        }
+
+                        await this.create(ctx, paymentData, false)
+                    }
                 }
  
                 await AssignmentService.adjustAssignmentPayment(record.assignment,type, record.amount);
-                if(record.paymentType=='Dr'){
-                    await PackageBookingService.decreasePendingAmount(ctx, record.packageBooking, {pendingAmount: record.amount})
+                if(record.packageBooking){   
+                    await PackageBookingService.adjustPaymentBookingAmount(record.packageBooking, 0, record.amount);
+                }
+                if(record.paymentType=='Dr'&& record.packageBooking){
+                    await PackageBookingService.decreasePendingAmount(ctx, record.packageBooking, record.amount, record.paymentDate);
                 }
                 return resolve({ data: record || { created: true } });
             } catch (error) {
@@ -276,8 +283,14 @@ module.exports = {
             }
             if(record.isDeleted){
                 await AssignmentService.adjustAssignmentPayment(record.assignment,type, 0, record.amount);
+                if(record.packageBooking){
+                    await PackageBookingService.adjustPaymentBookingAmount(record.packageBooking, 0, record.amount);
+                }
             }else{
                 await AssignmentService.adjustAssignmentPayment(record.assignment,type, record.amount, oldData.amount);
+                if(record.packageBooking){
+                    await PackageBookingService.adjustPaymentBookingAmount(record.packageBooking, record.amount, oldData.amount);
+                }
             }
 
 

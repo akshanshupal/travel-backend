@@ -1,3 +1,5 @@
+const {ObjectId} = require('mongodb');
+
 module.exports = {
     find: function (ctx, filter, params) {
         return new Promise(async (resolve, reject) => {
@@ -333,5 +335,33 @@ module.exports = {
                 return reject({ statusCode: 500, error: error });
             }
         })
-    }
+    },
+    adjustPaymentBookingAmount: async function (packageBookingId, newAmount, oldAmount = 0) {
+            const diff = newAmount - oldAmount;
+        
+            if (!packageBookingId || isNaN(diff)) {
+              throw new Error('Invalid packageBookingId or amounts');
+            }
+            try {
+                const updateFields = {
+                    $inc: { pendingAmount: -diff }
+                  };
+              
+                //   if (nextPaymentDate) {
+                //     updateFields.$set = { nextPaymentDate: new Date(nextPaymentDate) };
+                //   }else{
+                //     updateFields.$set = { nextPaymentDate: null };
+                //   }
+              
+                  const result = await PackageBooking.getDatastore().manager.collection('packagebooking').updateOne(
+                    { _id: new ObjectId(packageBookingId) },
+                    updateFields
+                  );
+                return { success: true, diff };
+            } catch (error) {
+                console.error('Error updating paymentReceived:', error.message);
+                throw new Error('Failed to update paymentReceived');
+            }
+         
+        },
 }

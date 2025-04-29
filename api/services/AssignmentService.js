@@ -640,8 +640,7 @@ module.exports = {
                 result = await Assignment.getDatastore().manager.collection('assignment').updateOne(
                     { _id: new ObjectId(assignmentId) }, // Query to find the document
                     {$inc: { serviceAmount : diff }}
-                );
-                
+                );                
             }
     
             return { success: true, diff };
