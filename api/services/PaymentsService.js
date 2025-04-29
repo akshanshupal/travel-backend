@@ -175,7 +175,7 @@ module.exports = {
                 }
             }
             let packageServices = [];
-            if(data.packageServices.length>0){
+            if(data?.packageServices?.length>0){
                 packageServices = data.packageServices;
                 delete data.packageServices
                     // _id,paymentDate,amount,paymentStore, paymentTo,remarks,assignment,paymentImg,paymentType"Dr",packageBooking,packageId
