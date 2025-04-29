@@ -174,6 +174,13 @@ module.exports = {
                     data.paymentDate = data.paymentDate.toDate();
                 }
             }
+            let packageServices = [];
+            if(data.packageServices.length>0){
+                packageServices = data.packageServices;
+                delete data.packageServices
+                    // _id,paymentDate,amount,paymentStore, paymentTo,remarks,assignment,paymentImg,paymentType"Dr",packageBooking,packageId
+                    // company,status,receiptNo
+            }
             try {
 
                 const [companyConfig] = await CompanyconfigService.find(ctx,{});
@@ -199,8 +206,31 @@ module.exports = {
                 } else {
                     record = await Payments.create(data).fetch();
                 }
+                if(packageServices.length>0){
+                    packageServices.forEach(async (ps)=>{
+                        if(ps.id){
+                            const paymentData = {
+                                paymentDate: record.paymentDate,
+                                amount: ps.amount,
+                                paymentStore: record.paymentStore,
+                                paymentTo: record.paymentTo,
+                                assignment: record.assignment,
+                                paymentType: "Dr",
+                                packageBooking: ps.id,
+                                packageId: record.packageId,
+                                company: record.company,
+                                status: record.status,
+                            }
+                            await this.create(ctx, paymentData, true)
+                                        
+                        }
+                    })
+                }
  
                 await AssignmentService.adjustAssignmentPayment(record.assignment,type, record.amount);
+                if(record.paymentType=='Dr'){
+                    await PackageBookingService.decreasePendingAmount(ctx, record.packageBooking, {pendingAmount: record.amount})
+                }
                 return resolve({ data: record || { created: true } });
             } catch (error) {
                 return reject({ statusCode: 500, error: error });

@@ -292,5 +292,46 @@ module.exports = {
             }
             return resolve(deletedArea);
         })
+    },
+
+    decreasePendingAmount: function (ctx, id, amount, nextPaymentDate) {
+        return new Promise(async (resolve, reject) => {
+            const filter = { id: id, company: ctx?.session?.activeCompany?.id };
+            if (!filter.id) {
+                return reject({ statusCode: 400, error: { message: 'id is required!' } });
+            }
+            if (!filter.company) {
+                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+            }
+            if (amount === undefined) {
+                return reject({ statusCode: 400, error: { message: 'amount is required!' } });
+            }
+            if (typeof amount !== 'number') {
+                return reject({ statusCode: 400, error: { message: 'Invalid amount. Number is required!' } });
+            }
+            try {
+                const {data:record} = await this.findOne(ctx, id, {select: ['pendingAmount']});
+                if (!record) {
+                    return reject({ statusCode: 404, error: { code: 'Not Found', message: 'Data not found!' } });
+                }
+                const previousPending = Number(record.pendingAmount) || 0;
+                // Check pending amount sufficiency
+                if (amount > previousPending) {
+                    return reject({ statusCode: 400, error: { message: 'Amount exceeds pending amount!' } });
+                }
+                const newPending = previousPending - amount;
+                const updateData = {pendingAmount: newPending};
+                if(nextPaymentDate){
+                    updateData.nextPaymentDate = nextPaymentDate;
+                }
+                if(newPending==0){
+                    updateData.nextPaymentDate = null;
+                }
+                const {data: updatedRecord} = await this.updateOne(ctx, id,updateData);
+                return resolve({ data: updatedRecord });
+            } catch (error) {
+                return reject({ statusCode: 500, error: error });
+            }
+        })
     }
 }
