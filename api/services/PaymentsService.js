@@ -178,18 +178,13 @@ module.exports = {
             if(data?.packageServices?.length>0){
                 packageServices = data.packageServices;
                 delete data.packageServices
-                    // _id,paymentDate,amount,paymentStore, paymentTo,remarks,assignment,paymentImg,paymentType"Dr",packageBooking,packageId
-                    // company,status,receiptNo
             }
             try {
-                const [companyConfig] = await CompanyconfigService.find(ctx,{});
-                if (!companyConfig) {
-                    return reject({ statusCode: 404, error: { message: 'Company configuration not found!' } });
-                }
-                data.configSettings = companyConfig;
+ 
+                data.configSettings = ctx?.session?.activeCompany;
 
                 let redisReceiptNo = await sails.redis.incr('paymentReceipt:' +':' + data.company.toString()+':' + data.paymentStore.toString() + ':' + data.paymentType);
-                data.receiptNo = companyConfig.paymentReceiptPrefix + data.paymentType.toUpperCase()+ redisReceiptNo.toString().padStart(companyConfig.paymentReceiptLength, '0');
+                data.receiptNo = ctx?.session?.activeCompany.paymentReceiptPrefix + data.paymentType.toUpperCase()+ redisReceiptNo.toString().padStart(ctx?.session?.activeCompany.paymentReceiptLength, '0');
                 let record;
                 let type;
 
@@ -197,6 +192,19 @@ module.exports = {
                     type='serviceReceived'; 
                 }else{
                     type='paymentReceived';
+                }
+                if(data.amount&&typeof data.amount === 'string'){
+                    data.amount = parseFloat(data.amount)
+                }
+                let nextPaymentDate;
+                if(data.nextPaymentDate&&typeof data.nextPaymentDate === 'string'){
+                    nextPaymentDate= sails.dayjs(data.nextPaymentDate);
+                    delete data.nextPaymentDate;
+                    if (!nextPaymentDate.isValid()) {
+                        return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid nextPaymentDate is required!' } });
+                    } else {
+                        nextPaymentDate = nextPaymentDate.toDate();
+                    }
                 }
 
  
@@ -206,37 +214,36 @@ module.exports = {
                     record = await Payments.create(data).fetch();
                 }
                 if(packageServices?.length>0){
-                    for(let i=0;i<packageServices.length;i++){
-                        const ps = packageServices[i];
-                        if(!ps.id){
-                            return reject({ statusCode: 400, error: { code: 'Error', message: 'packageId Missing!' } });
+                    (async () => {
+                        for (const ps of packageServices) {
+                            if (!ps.id) continue;
+                            const paymentData = {
+                                paymentDate: record.paymentDate,
+                                amount: ps.amount,
+                                paymentStore: record.paymentStore,
+                                paymentTo: record.paymentTo,
+                                assignment: record.assignment,
+                                paymentType: "Dr",
+                                packageBooking: ps.id,
+                                packageId: record.packageId,
+                                company: record.company,
+                                linkedPayment: record.id,
+                                status: record.status,
+                            };
+                            try {
+                                await this.create(ctx, paymentData, true);
+                            } catch (err) {
+                                sails.log.error('Error creating package service payment:', err);
+                            }
                         }
-                        if(!ps.amount){
-                            return reject({ statusCode: 400, error: { code: 'Error', message: 'amount Missing!' } });
-                        }
-                        const paymentData = {
-                            paymentDate: record.paymentDate,
-                            amount: ps.amount,
-                            paymentStore: record.paymentStore,
-                            paymentTo: record.paymentTo,
-                            assignment: record.assignment,
-                            paymentType: "Dr",
-                            packageBooking: ps.id,
-                            packageId: record.packageId,
-                            company: record.company,
-                            status: record.status,
-                        }
-
-                        await this.create(ctx, paymentData, false)
-                    }
+                    })();
                 }
  
-                await AssignmentService.adjustAssignmentPayment(record.assignment,type, record.amount);
-                if(record.packageBooking){   
-                    await PackageBookingService.adjustPaymentBookingAmount(record.packageBooking, 0, record.amount);
-                }
-                if(record.paymentType=='Dr'&& record.packageBooking){
-                    await PackageBookingService.decreasePendingAmount(ctx, record.packageBooking, record.amount, record.paymentDate);
+                if(record.assignment){   
+                    await AssignmentService.adjustAssignmentPayment(record.assignment,type, record.amount);
+                    if(record.packageBooking){
+                        await PackageBookingService.decreasePendingAmount(ctx, record.packageBooking, record.amount );
+                    }
                 }
                 return resolve({ data: record || { created: true } });
             } catch (error) {

@@ -317,16 +317,13 @@ module.exports = {
                     return reject({ statusCode: 404, error: { code: 'Not Found', message: 'Data not found!' } });
                 }
                 const previousPending = Number(record.pendingAmount) || 0;
-                // Check pending amount sufficiency
-                if (amount > previousPending) {
-                    return reject({ statusCode: 400, error: { message: 'Amount exceeds pending amount!' } });
-                }
+  
                 const newPending = previousPending - amount;
                 const updateData = {pendingAmount: newPending};
                 if(nextPaymentDate){
                     updateData.nextPaymentDate = nextPaymentDate;
                 }
-                if(newPending==0){
+                if(newPending<=0){
                     updateData.nextPaymentDate = null;
                 }
                 const {data: updatedRecord} = await this.updateOne(ctx, id,updateData);

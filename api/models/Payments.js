@@ -53,7 +53,8 @@ module.exports = {
         },
         isDeleted: { type: 'boolean'},
         deletedAt: { type: 'ref', columnType: 'datetime' },
-        deletedBy: { model: 'user' }
+        deletedBy: { model: 'user' },
+        linkedPayment: { model: 'payments' }
 
 
     }
