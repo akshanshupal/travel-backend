@@ -1,4 +1,3 @@
-
 module.exports = {
     find: function (ctx, filter, params) {
         return new Promise(async (resolve, reject) => {
@@ -213,39 +212,62 @@ module.exports = {
                 } else {
                     record = await Payments.create(data).fetch();
                 }
-                if(packageServices?.length>0){
-                    (async () => {
-                        for (const ps of packageServices) {
-                            if (!ps.id) continue;
-                            const paymentData = {
-                                paymentDate: record.paymentDate,
-                                amount: ps.amount,
-                                paymentStore: record.paymentStore,
-                                paymentTo: record.paymentTo,
-                                assignment: record.assignment,
-                                paymentType: "Dr",
-                                packageBooking: ps.id,
-                                packageId: record.packageId,
-                                company: record.company,
-                                linkedPayment: record.id,
-                                status: record.status,
-                            };
-                            try {
-                                await this.create(ctx, paymentData, true);
-                            } catch (err) {
-                                sails.log.error('Error creating package service payment:', err);
-                            }
+                
+                console.log("Initial record created:", record);
+                
+                // Process the main record first
+                if(record && record.assignment){   
+                    try {
+                        await AssignmentService.adjustAssignmentPayment(record.assignment, type, record.amount);
+                        if(record.packageBooking){
+                            await PackageBookingService.decreasePendingAmount(ctx, record.packageBooking, record.amount);
                         }
-                    })();
-                }
- 
-                if(record.assignment){   
-                    await AssignmentService.adjustAssignmentPayment(record.assignment,type, record.amount);
-                    if(record.packageBooking){
-                        await PackageBookingService.decreasePendingAmount(ctx, record.packageBooking, record.amount );
+                    } catch (err) {
+                        sails.log.error('Error adjusting assignment payment:', err);
                     }
                 }
-                return resolve({ data: record || { created: true } });
+                
+                // If no package services to process, return immediately
+                if(!packageServices || packageServices.length === 0) {
+                    return resolve({ data: record || { created: true } });
+                }
+                
+                const self = this;
+                const drPayments = [];
+                
+                try {
+                    for (const ps of packageServices) {
+                        if (!ps.id) continue;
+                        const paymentData = {
+                            paymentDate: record.paymentDate,
+                            amount: ps.amount,
+                            paymentStore: record.paymentStore,
+                            paymentTo: record.paymentTo,
+                            assignment: record.assignment || null,
+                            paymentType: "Dr",
+                            packageBooking: ps.id,
+                            packageId: record.packageId || null,
+                            company: record.company,
+                            linkedPayment: record.id,
+                            status: record.status,
+                        };
+                        try {
+                            const {data} = await self.create(ctx, paymentData);
+                            console.log("Dr payment created:", data);
+                            drPayments.push(data);
+                        } catch (err) {
+                            sails.log.error('Error creating package service payment:', err);
+                        }
+                    }
+                } catch (err) {
+                    sails.log.error('Error processing package services:', err);
+                }
+                
+                // Return the main record along with Dr payments
+                return resolve({ 
+                    data: record || { created: true },
+                    drPayments: drPayments
+                });
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -288,15 +310,27 @@ module.exports = {
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
-            if(record.isDeleted){
-                await AssignmentService.adjustAssignmentPayment(record.assignment,type, 0, record.amount);
-                if(record.packageBooking){
-                    await PackageBookingService.adjustPaymentBookingAmount(record.packageBooking, 0, record.amount);
+            if(record && record.isDeleted){
+                try {
+                    if (record.assignment) {
+                        await AssignmentService.adjustAssignmentPayment(record.assignment, type, 0, record.amount);
+                    }
+                    if(record.packageBooking){
+                        await PackageBookingService.adjustPaymentBookingAmount(record.packageBooking, 0, record.amount);
+                    }
+                } catch (err) {
+                    sails.log.error('Error adjusting assignment payment on delete:', err);
                 }
-            }else{
-                await AssignmentService.adjustAssignmentPayment(record.assignment,type, record.amount, oldData.amount);
-                if(record.packageBooking){
-                    await PackageBookingService.adjustPaymentBookingAmount(record.packageBooking, record.amount, oldData.amount);
+            } else if (record) {
+                try {
+                    if (record.assignment) {
+                        await AssignmentService.adjustAssignmentPayment(record.assignment, type, record.amount, oldData.amount);
+                    }
+                    if(record.packageBooking){
+                        await PackageBookingService.adjustPaymentBookingAmount(record.packageBooking, record.amount, oldData.amount);
+                    }
+                } catch (err) {
+                    sails.log.error('Error adjusting assignment payment on update:', err);
                 }
             }
 
