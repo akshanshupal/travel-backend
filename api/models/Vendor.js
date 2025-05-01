@@ -24,6 +24,9 @@ module.exports = {
         idProof:{
             type:'json'
         },
+        bookingtype:{
+            model:'bookingstype'
+        },
         isDeleted: { type: 'boolean'},
         deletedAt: { type: 'ref', columnType: 'datetime' },
         deletedBy: { model: 'user' }
