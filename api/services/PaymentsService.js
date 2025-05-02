@@ -162,6 +162,9 @@ module.exports = {
             if (!data.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
+            if (!data.paymentStore) {
+                return reject({ statusCode: 400, error: { message: 'paymentStore is required!' } });
+            }
             if(!data.hasOwnProperty('status')){
                 data.status = true
             }
@@ -237,7 +240,7 @@ module.exports = {
                 
                 try {
                     for (const ps of packageServices) {
-                        if (!ps.id) continue;
+                        if (!ps.packageBookingId) continue;
                         const paymentData = {
                             paymentDate: record.paymentDate,
                             amount: ps.amount,
@@ -245,7 +248,7 @@ module.exports = {
                             paymentTo: record.paymentTo,
                             assignment: record.assignment || null,
                             paymentType: "Dr",
-                            packageBooking: ps.id,
+                            packageBooking: ps.packageBookingId,
                             packageId: record.packageId || null,
                             company: record.company,
                             linkedPayment: record.id,
@@ -304,6 +307,11 @@ module.exports = {
                 }else{
                     type='paymentReceived';
                 }
+                let packageServices = [];
+                if(updtBody?.packageServices?.length>0){
+                    packageServices = updtBody.packageServices;
+                    delete updtBody.packageServices
+                }
 
             try {
                 var record = await Payments.updateOne(filter).set(updtBody);
@@ -332,6 +340,60 @@ module.exports = {
                 } catch (err) {
                     sails.log.error('Error adjusting assignment payment on update:', err);
                 }
+            }
+            // If no package services to process, return immediately
+            if(!packageServices || packageServices.length === 0) {
+                return resolve({ data: record || { modified: true } });
+            }
+                            
+            const self = this;
+            const drPayments = [];
+            
+            try {
+                for (const ps of packageServices) {
+                    if (!ps.packageBookingId) continue;
+                    if(ps.id){
+                        const updatedPaymentData = {
+                            paymentDate: record.paymentDate,
+                            amount: ps.amount,
+                            paymentStore: record.paymentStore,
+                            paymentTo: record.paymentTo,
+                            assignment: record.assignment || null,
+                            paymentType: "Dr",
+                        }
+                        try {
+                            const {data} = await self.updateOne(ctx, ps.id, updatedPaymentData);
+                            console.log("Dr payment updated:", data);
+                            drPayments.push(data);
+                        } catch (err) {
+                            sails.log.error('Error creating package service payment:', err);
+                        }
+                    }else{
+
+                        const paymentData = {
+                            paymentDate: record.paymentDate,
+                            amount: ps.amount,
+                            paymentStore: record.paymentStore,
+                            paymentTo: record.paymentTo,
+                            assignment: record.assignment || null,
+                            paymentType: "Dr",
+                            packageBooking: ps.packageBookingId,
+                            packageId: record.packageId || null,
+                            company: record.company,
+                            linkedPayment: record.id,
+                            status: record.status,
+                        };
+                        try {
+                            const {data} = await self.create(ctx, paymentData);
+                            console.log("Dr payment created:", data);
+                            drPayments.push(data);
+                        } catch (err) {
+                            sails.log.error('Error creating package service payment:', err);
+                        }
+                    }
+                }
+            } catch (err) {
+                sails.log.error('Error processing package services:', err);
             }
 
 
