@@ -43,10 +43,12 @@ module.exports = {
             if (params.select) {
                 qryObj.select = params.select;
             }
+            // var linkedPaymentData
             // try {
-            //     var records = await Payments.find(qryObj);;
+            //      linkedPaymentData = await Payments.find({paymentType: ctx.paymentType, linkedPayment: ctx.id });
             // } catch (error) {
             //     return reject({ statusCode: 500, error: error });
+
             // }
             try {
                 var records = await Payments.find(qryObj).meta({makeLikeModifierCaseInsensitive: true});;
@@ -391,7 +393,9 @@ module.exports = {
                             sails.log.error('Error creating package service payment:', err);
                         }
                     }
+                   
                 }
+
             } catch (err) {
                 sails.log.error('Error processing package services:', err);
             }
@@ -415,7 +419,14 @@ module.exports = {
             if (!filter.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
-            let deletedData
+            // const crPayments = [];
+            // try {
+            //     crPayments = await this.find({paymentType: "Cr", id},filter);
+            // } catch (error) {
+            //     return reject({ statusCode: 500, error: error });
+                
+            // }
+            // let deletedData
             try {
                 deletedData =  await this.updateOne(ctx, id, {isDeleted:true, deletedAt: new Date(), deletedBy: ctx?.user?.id})
 

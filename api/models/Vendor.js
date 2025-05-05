@@ -25,7 +25,7 @@ module.exports = {
             type:'json'
         },
         bookingsType:{
-            type:'json'
+            type:'json'   
         },
         isDeleted: { type: 'boolean'},
         deletedAt: { type: 'ref', columnType: 'datetime' },

@@ -10,6 +10,9 @@ module.exports = {
             if(!filter.hasOwnProperty('isDeleted')){
                 filter.isDeleted = { '!=': true };
             }
+            // if(filter.bookingsType){
+            //     filter.bookingsType = { contains: filter.bookingsType };
+            // }
             if (filter.title && filter.title.trim()) filter.title = { contains: filter.title.trim() };
             let qryObj = {where : filter};
             //sort
@@ -145,6 +148,13 @@ module.exports = {
             if (!data.company) {
                 data.company= ctx?.session?.activeCompany?.id;
             }
+              // Validate bookingsType
+        if (data.bookingsType && typeof data.bookingsType === 'string') {
+            return reject({
+                statusCode: 400,
+                error: { message: 'Invalid bookingsType. Expected a valid ID, an array of IDs, or null.' },
+            });
+        }
 
             if (!data.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
