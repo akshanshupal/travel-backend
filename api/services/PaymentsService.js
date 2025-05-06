@@ -419,19 +419,18 @@ module.exports = {
             if (!filter.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
-            // const crPayments = [];
-            // try {
-            //     crPayments = await this.find({paymentType: "Cr", id},filter);
-            // } catch (error) {
-            //     return reject({ statusCode: 500, error: error });
-                
-            // }
-            // let deletedData
+            
+
             try {
+                const linkedPayments  = await this.find(ctx, {linkedPayment: id});
+                if(linkedPayments){
+                    return reject({ statusCode: 400, error: { message: 'Payment is linked to another payment' , data: linkedPayments } });
+                }
+
                 deletedData =  await this.updateOne(ctx, id, {isDeleted:true, deletedAt: new Date(), deletedBy: ctx?.user?.id})
 
             } catch (error) {
-                return reject({ statusCode: 500, error: error });
+                return reject(error);
             }
 
             return resolve({ data: { deleted: true } });

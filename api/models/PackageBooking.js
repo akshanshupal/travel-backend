@@ -55,7 +55,7 @@ module.exports = {
         bookedStatus:{
             type: 'string' ,
             allowNull: true,
-            isIn : [ 'bookedWithPartialPayment', 'bookedWithFullPayment']
+            isIn : [ 'bookedWithPartialPayment', 'bookedWithFullPayment', 'bookedWithExtraPayment', 'bookedWithNoPayment']
         },
         bookingStatus: {
             type: 'string',
@@ -79,5 +79,30 @@ module.exports = {
         deletedAt: { type: 'ref', columnType: 'datetime' },
         deletedBy: { model: 'user' }
 
-    }
+    },
+
+    afterUpdate: async function(updatedRecord, proceed) {
+        try {
+            const { id, amount, pendingAmount, bookingStatus, bookedStatus: currentBookedStatus } = updatedRecord;
+
+            let computedStatus;
+            if (amount > pendingAmount && pendingAmount > 0 && pendingAmount !== amount) {
+                computedStatus = 'bookedWithPartialPayment';
+            } else if (pendingAmount === 0) {
+                computedStatus = 'bookedWithFullPayment';
+            } else if (pendingAmount < 0) {
+                computedStatus = 'bookedWithExtraPayment';
+            } else if (amount === pendingAmount && bookingStatus === 'booked') {
+                computedStatus = 'bookedWithNoPayment';
+            }
+
+            if (computedStatus && computedStatus !== currentBookedStatus) {
+                await PackageBooking.updateOne({ id }).set({ bookedStatus: computedStatus });
+            }
+
+            return proceed();
+        } catch (err) {
+            return proceed(err);
+        }
+    },
 };
