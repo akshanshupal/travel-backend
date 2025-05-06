@@ -110,6 +110,7 @@ module.exports = {
 
         return res.json(record.data);
     },
+    
     deleteOne: async function (req, res) {
         try {
             var record = await PaymentsService.deleteOne(req, req.params.id);
@@ -151,6 +152,22 @@ module.exports = {
         }
         return res.json(record.data);
     },
+    multiPaymentsDelete: async function (req, res) {
+        // if (!req.body.title) {
+        //     return res.badRequest({ code: 'Error', message: 'Title is missing' });
+        // }
+        const ids = req.body.ids;
+        if(!ids)   return res.badRequest('ids is missing');
+
+        try {
+            var record = await PaymentsService.deleteMulti(req, ids);
+        } catch (error) {
+            return res.serverError(error);
+        }
+
+        return res.json(record.data);
+    },
+    
         
 
 };

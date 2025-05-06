@@ -280,6 +280,7 @@ module.exports = {
 
 
     },
+   
     updateOne: function (ctx, id, updtBody) {
         return new Promise(async (resolve, reject) => {
             const filter = {
@@ -406,7 +407,8 @@ module.exports = {
             return resolve({ data: record || { modified: true } });
         })
     },
-    deleteOne: function (ctx, id) {
+   
+    deleteOne: function (ctx, id, avoidLinkedPaymentCheck=false) {
         return new Promise(async (resolve, reject) => {
             const filter = {
                 id: id,
@@ -422,9 +424,11 @@ module.exports = {
             
 
             try {
-                const linkedPayments  = await this.find(ctx, {linkedPayment: id});
-                if(linkedPayments){
-                    return reject({ statusCode: 400, error: { message: 'Payment is linked to another payment' , data: linkedPayments } });
+                if(!avoidLinkedPaymentCheck){
+                    const linkedPayments  = await this.find(ctx, {linkedPayment: id});
+                    if(linkedPayments.length >  0){
+                        return reject({ statusCode: 400, error: { message: 'Payment is linked to another payment' , data: linkedPayments } });
+                    }
                 }
 
                 deletedData =  await this.updateOne(ctx, id, {isDeleted:true, deletedAt: new Date(), deletedBy: ctx?.user?.id})
@@ -667,6 +671,20 @@ module.exports = {
                 } 
             } catch (error) {
                 reject(error)  
+            }
+        })
+    },
+    
+    deleteMulti: function(ctx,ids){
+        return new Promise(async (resolve, reject) => {
+            try {
+                for(let i = 0 ; i<ids.length;i++){
+                    await this.deleteOne(ctx,ids[i], true);
+                }
+
+                return resolve({ data: { deleted: true } });
+            } catch (error) {
+                return reject({ statusCode: 500, error: error });
             }
         })
     }
