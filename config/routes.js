@@ -189,6 +189,7 @@ module.exports.routes = {
 
   'POST /api/payments': 'PaymentsController.create',
   'GET /api/payments': 'PaymentsController.find',
+  'GET /api/payments/summary': 'PaymentsController.getSummary',
   'GET /api/payments/:id': 'PaymentsController.findOne',
   'GET /api/payments/receipt/:id': 'PaymentsController.getReceipt',
   'POST /api/payments/receipt-mail/:id': 'PaymentsController.sendPaymentReceiptMail',

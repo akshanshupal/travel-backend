@@ -1,3 +1,5 @@
+const {ObjectId} = require('mongodb');
+
 module.exports = {
     find: function (ctx, filter, params) {
         return new Promise(async (resolve, reject) => {
@@ -18,6 +20,24 @@ module.exports = {
                 let dt = sails.dayjs(filter.paymentDate).endOf('date').toDate();
                 filter.paymentDate = { '>=': df, '<=': dt };
             }
+            if (filter.from && filter.to) {
+                filter.paymentDate = {
+                  '>=': sails.dayjs(filter.from).startOf('day').toDate(),
+                  '<=': sails.dayjs(filter.to).endOf('day').toDate(),
+                };
+              } else if (filter.from) {
+                filter.paymentDate = {
+                  '>=': sails.dayjs(filter.from).startOf('day').toDate(),
+                };
+              } else if (filter.to) {
+                filter.paymentDate = {
+                  '<=': sails.dayjs(filter.to).endOf('day').toDate(),
+                };
+              }
+              delete filter.from;
+              delete filter.to; 
+
+
          
             let qryObj = {where : filter};
             //sort 
@@ -43,19 +63,13 @@ module.exports = {
             if (params.select) {
                 qryObj.select = params.select;
             }
-            // var linkedPaymentData
-            // try {
-            //      linkedPaymentData = await Payments.find({paymentType: ctx.paymentType, linkedPayment: ctx.id });
-            // } catch (error) {
-            //     return reject({ statusCode: 500, error: error });
-
-            // }
+     
             try {
+      
                 var records = await Payments.find(qryObj).meta({makeLikeModifierCaseInsensitive: true});;
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
-            //populate&& populate select
             if (params.populate) {
                 let assosiationModels = {};
                 for (let ami = 0; ami < sails.models.payments.associations.length; ami++) {
@@ -97,6 +111,7 @@ module.exports = {
         })
 
     },
+  
     findOne: function (ctx, id, params) {
         return new Promise(async (resolve, reject) => {
             const filter = {
@@ -687,7 +702,124 @@ module.exports = {
                 return reject({ statusCode: 500, error: error });
             }
         })
-    }
+    },
+    getSummary: function (ctx, filter, params) {
+        return new Promise(async (resolve, reject) => {
+            if (!filter.company) {
+                filter.company = ctx.session.activeCompany.id
+            }
+            if (!filter.company) {
+                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+            }
+            try {
+              if (!params) {
+                params = {};
+            }
+            if(!filter.hasOwnProperty('isDeleted')){
+                filter.isDeleted = { $ne: true };
+            }
+            if (filter.paymentDate) {
+                let df = sails.dayjs(filter.paymentDate).startOf('date').toDate();
+                let dt = sails.dayjs(filter.paymentDate).endOf('date').toDate();
+                filter.paymentDate = { $gte : df, $lte : dt };
+            }
+            if (filter.from && filter.to) {
+                filter.paymentDate = {
+                    $gte: sails.dayjs(filter.from).startOf('day').toDate(),
+                    $lte: sails.dayjs(filter.to).endOf('day').toDate(),
+                };
+              } else if (filter.from) {
+                filter.paymentDate = {
+                    $gte: sails.dayjs(filter.from).startOf('day').toDate(),
+                };
+              } else if (filter.to) {
+                filter.paymentDate = {
+                    $lte: sails.dayjs(filter.to).endOf('day').toDate(),
+                };
+              }
+              const dateRange = {
+                from: filter.from,
+                to: filter.to
+              }; 
+              delete filter.from;
+              delete filter.to; 
+
+              const aggregateArr = [
+                { $match: {...filter, company: new ObjectId(filter.company)} }, // Apply filters
+                {
+                    $lookup: {
+                      from: 'paymentstore',
+                      localField: 'paymentStore',
+                      foreignField: '_id',
+                      as: 'paymentStore',
+                    },
+                  },
+                {
+                    $group: {
+                      _id: '$paymentStore.title', // Group by paymentStore.title
+                      noOfPayments: { $sum: 1 }, // Total number of payments
+                      noOfCrPayments: {
+                        $sum: { $cond: [{ $eq: ['$paymentType', 'Cr'] }, 1, 0] },
+                      }, // Count "Cr" payments
+                      noOfDrPayments: {
+                        $sum: { $cond: [{ $eq: ['$paymentType', 'Dr'] }, 1, 0] },
+                      }, // Count "Dr" payments
+                      totalCrAmount: {
+                        $sum: { $cond: [{ $eq: ['$paymentType', 'Cr'] }, '$amount', 0] },
+                      }, // Sum "Cr" amounts
+                      totalDrAmount: {
+                        $sum: { $cond: [{ $eq: ['$paymentType', 'Dr'] }, '$amount', 0] },
+                      }, // Sum "Dr" amounts
+                    },
+                    
+                  },
+                  {
+                    $project: {
+                      _id: 0,
+                      store: { $arrayElemAt: ['$_id', 0] }, // safely access first element
+                      noOfPayments: 1,
+                      noOfCrPayments: 1,
+                      noOfDrPayments: 1,
+                      totalCrAmount: 1,
+                      totalDrAmount: 1,
+                      totalProfit: {
+                        $subtract: ['$totalCrAmount', '$totalDrAmount']
+                      },
+                      dateRange: dateRange
+                    }
+                  }
+                  
+               ]
+            const result = await Payments.getDatastore()
+            .manager
+            .collection('payments')
+            .aggregate(aggregateArr)
+            .toArray();
+            // Calculate AllCrPayment, AllDrPayment, and AllProfit
+            const allCrPayment = result.reduce((sum, item) => sum + item.totalCrAmount, 0);
+            const allDrPayment = result.reduce((sum, item) => sum + item.totalDrAmount, 0);
+            const allProfit = allCrPayment - allDrPayment;
+            // Add aggregated values to the response
+            
+            resolve({
+                data: result,
+                summary: {
+                AllCrPayment: allCrPayment,
+                AllDrPayment: allDrPayment,
+                AllProfit: allProfit,
+                },
+            });
+        
+        //   resolve({data: result});
+                
+            } catch (error) {
+                reject(error);
+
+            }
+
+        })
+
+    },
 
 
 }

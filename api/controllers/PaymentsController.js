@@ -54,6 +54,7 @@ module.exports = {
         }
         return res.json(records);
     },
+    
     findOne: async function (req, res) {
         const filter = req.query;
         if(!req.params.id)   return res.badRequest('ID is missing');
@@ -166,6 +167,23 @@ module.exports = {
         }
 
         return res.json(record.data);
+    },
+    getSummary: async function (req, res) {
+        const {to,from} = req.allParams();
+        const filter = {};
+        if(to){
+            filter.to = to
+        }
+        if(from){
+            filter.from = from
+        }
+        try {
+            var record = await PaymentsService.getSummary(req, filter);
+        } catch (error) {
+            return res.serverError(error);
+        }
+
+        return res.json(record);
     },
     
         
