@@ -99,6 +99,7 @@ module.exports = {
 
         return res.json(record.data);
     },
+  
 
     updateOne: async function (req, res) {
 
@@ -119,6 +120,7 @@ module.exports = {
         }
 
         return res.json(record.data);
-    }
+    },
+   
 
 };

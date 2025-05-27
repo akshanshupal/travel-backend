@@ -24,6 +24,7 @@ module.exports = {
             if (filter.name && filter.name.trim()) filter.name = { contains: filter.name.trim() };
             if (filter.location && filter.location.trim()) filter.location = { contains: filter.location.trim() };
             if (filter.address && filter.address.trim()) filter.address = { contains: filter.address.trim() };
+            
             let qryObj = {where : filter};
             //sort
             let sortField = 'createdAt';

@@ -123,6 +123,7 @@ module.exports.routes = {
   'DELETE /api/bookingstype/:id': 'BookingsTypeController.deleteOne',
 
   'POST /api/packagebooking': 'PackageBookingController.create',
+  'POST /api/packagebooking/send-sms': 'PackageBookingController.sendSms',
   'GET /api/packagebooking': 'PackageBookingController.find',
   'GET /api/packagebooking/:id': 'PackageBookingController.findOne',
   'PUT /api/packagebooking/:id': 'PackageBookingController.updateOne',
@@ -161,6 +162,8 @@ module.exports.routes = {
   'POST /api/assignment': 'AssignmentController.create',
   'GET /api/assignment': 'AssignmentController.find',
   'GET /api/assignment/:id': 'AssignmentController.findOne',
+  'GET /api/assignment/agent-wise-summary': 'AssignmentController.agentWiseSummary',
+  'GET /api/assignment/agent-duration-wise-summary': 'AssignmentController.agentDurationWiseSummary',
   'POST /api/assignment/send-assignmentMail/:id': 'AssignmentController.sendAssignmentMail',
   'POST /api/mail/send-welcome-mail/:id': 'AssignmentController.sendWelcomeMail',
   'PUT /api/assignment/verify/:id': 'AssignmentController.verifyAssignment',

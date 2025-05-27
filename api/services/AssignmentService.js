@@ -721,4 +721,225 @@ module.exports = {
             
         })
     },
+
+    agentWiseSummary: function (ctx, filter) {
+                return new Promise(async (resolve, reject) => {
+                    filter.company = ctx?.session?.activeCompany?.id
+                    if (!filter.company) {
+                        return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+                    }
+                  try {
+                    let matchStage = { isDeleted: {$ne: true}, company: new ObjectId(filter.company) };
+              
+                    if (filter.from && filter.to) {
+                      matchStage.createdAt = {
+                        $gte: sails.dayjs(filter.from).startOf('day').toDate(),
+                        $lte: sails.dayjs(filter.to).endOf('day').toDate(),
+                      };
+                    } else if (filter.from) {
+                      matchStage.createdAt = {
+                        $gte: sails.dayjs(filter.from).startOf('day').toDate(),
+                      };
+                    } else if (filter.to) {
+                      matchStage.createdAt = {
+                        $lte: sails.dayjs(filter.to).endOf('day').toDate(),
+                      };
+                    }
+              
+                    let aggregateArr = [
+                      { $match: matchStage },
+                      {
+                        $group: {
+                          _id: '$agentName',
+                          totalAssignments: { $sum: 1 },
+                        },
+                      },
+                      {
+                        $lookup: {
+                          from: 'user',
+                          localField: '_id',
+                          foreignField: '_id',
+                          as: 'agentName',
+                        },
+                      },
+                      {
+                        $unwind: '$agentName',
+                      },
+                      {
+                        $project: {
+                          _id: 0,
+                          user: '$agentName.name',
+                          totalAssignments: 1,
+                        },
+                      },
+                      {$sort: {
+                        totalAssignments: -1
+                      }}
+                    ];
+              
+                    const result = await Assignment.getDatastore()
+                      .manager
+                      .collection('assignment')
+                      .aggregate(aggregateArr)
+                      .toArray();
+                  
+                    resolve({data: result});
+                  } catch (err) {
+                    reject(err);
+                  }
+                });
+        },
+
+    agentDurationWiseSummary: async function (req, filter) {
+            const { grouping, from, to } = filter;
+            const originalStart = sails.dayjs(from).startOf('day');
+            const originalEnd = sails.dayjs(to).endOf('day');
+    
+            const matchQuery = {
+                createdAt: { 
+                    $gte: originalStart.toDate(), 
+                    $lte: originalEnd.toDate() 
+                }
+            };
+            
+            if (filter.agentName) {
+                matchQuery.agentName = new ObjectId(filter.agentName);
+            }
+    
+            const aggregationPipeline = [];
+            aggregationPipeline.push({ $match: matchQuery });
+    
+            aggregationPipeline.push({
+                $lookup: {
+                    from: 'user',
+                    localField: 'agentName',
+                    foreignField: '_id',
+                    as: 'userDetails'
+                }
+            });
+    
+            aggregationPipeline.push({
+                $unwind: {
+                    path: '$userDetails',
+                    preserveNullAndEmptyArrays: true
+                }
+            });
+    
+            switch (grouping) {
+                case 'week':
+                    aggregationPipeline.push({
+                        $group: {
+                            _id: {
+                                year: { $isoWeekYear: "$createdAt" },
+                                week: { $isoWeek: "$createdAt" }
+                            },
+                            totalAssignments: { $sum: 1 },
+                            userName: { $first: '$userDetails.name' }
+                        }
+                    });
+                    break;
+    
+                case 'month':
+                    aggregationPipeline.push({
+                        $group: {
+                            _id: {
+                                year: { $year: "$createdAt" },
+                                month: { $month: "$createdAt" }
+                            },
+                            totalAssignments: { $sum: 1 },
+                            userName: { $first: '$userDetails.name' }
+                        }
+                    });
+                    break;
+    
+                default: // day
+                    aggregationPipeline.push({
+                        $group: {
+                            _id: {
+                                date: { 
+                                    $dateToString: { 
+                                        format: "%Y-%m-%d", 
+                                        date: "$createdAt" 
+                                    }
+                                }
+                            },
+                            totalAssignments: { $sum: 1 },
+                            userName: { $first: '$userDetails.name' }
+                        }
+                    });
+            }
+    
+            aggregationPipeline.push({ $sort: { "_id": 1 } });
+    
+            const result = await Assignment.getDatastore()
+                .manager
+                .collection('assignment')
+                .aggregate(aggregationPipeline)
+                .toArray();
+    
+            const intervals = [];
+            let cursor = originalStart;
+            
+            if (grouping === 'week') {
+                cursor = cursor.startOf('isoWeek');
+                while (cursor.isBefore(originalEnd)) {
+                    const year = cursor.isoWeekYear();
+                    const week = cursor.isoWeek();
+                    intervals.push({
+                        field: `Week ${week}, ${year}`,
+                        fromDate: cursor.format('YYYY-MM-DD'),
+                        toDate: sails.dayjs(cursor).endOf('isoWeek').format('YYYY-MM-DD'),
+                        key: `${year}-${week}`,
+                        totalAssignments: 0,
+                        userName: null
+                    });
+                    cursor = cursor.add(1, 'week');
+                }
+            } else if (grouping === 'month') {
+                cursor = cursor.startOf('month');
+                while (cursor.isBefore(originalEnd)) {
+                    intervals.push({
+                        field: cursor.format('MM-YYYY'),
+                        fromDate: cursor.format('YYYY-MM-DD'),
+                        toDate: cursor.endOf('month').format('YYYY-MM-DD'),
+                        key: `${cursor.year()}-${cursor.month() + 1}`,
+                        totalAssignments: 0,
+                        userName: null
+                    });
+                    cursor = cursor.add(1, 'month');
+                }
+            } else {
+                while (cursor.isBefore(originalEnd) || cursor.isSame(originalEnd, 'day')) {
+                    const date = cursor.format('YYYY-MM-DD');
+                    intervals.push({
+                        field: date,
+                        fromDate: date,
+                        toDate: date,
+                        key: date,
+                        totalAssignments: 0,
+                        userName: null
+                    });
+                    cursor = cursor.add(1, 'day');
+                }
+            }
+    
+            const intervalMap = new Map(
+                intervals.map(interval => [interval.key, interval])
+            );
+    
+            result.forEach(r => {
+                const key = grouping === 'day' 
+                    ? r._id.date 
+                    : `${r._id.year}-${r._id.week || r._id.month}`;
+                
+                const interval = intervalMap.get(key);
+                if (interval) {
+                    interval.totalAssignments = r.totalAssignments;
+                    interval.userName = r.userName;
+                }
+            });
+    
+            return { data: Array.from(intervalMap.values()) };
+        }
+
 }

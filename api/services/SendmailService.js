@@ -6,9 +6,9 @@ module.exports = {
             if (!filter.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
-            if (!filter.sendBy) {
-                return reject({ statusCode: 400, error: { message: 'sendBy id is required!' } });
-            }
+            // if (!filter.sendBy) {
+            //     return reject({ statusCode: 400, error: { message: 'sendBy id is required!' } });
+            // }
             if (!params) {
                 params = {};
             }

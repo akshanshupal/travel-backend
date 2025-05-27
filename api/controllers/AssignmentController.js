@@ -180,6 +180,44 @@ module.exports = {
         }
         return res.json(record.data);
     },
+    agentWiseSummary: async function (req, res) {
+        const {to, from} = req.allParams();
+        const filter = {};
+        
+        if(to) filter.to = to;
+        if(from) filter.from = from;
+        
+        try {
+            const record = await AssignmentService.agentWiseSummary(req, filter);
+            return res.json(record.data);
+        } catch (error) {
+            return res.serverError(error);
+        }
+    },
+    agentDurationWiseSummary: async function (req, res) {
+        let { to, from, agentName, grouping = 'day' } = req.allParams();
+      
+        if (!to && !from) {
+            const today = sails.dayjs();
+            const startOfMonth = today.startOf('month');
+            from = startOfMonth.format('YYYY-MM-DD');
+            to = today.format('YYYY-MM-DD');
+        }
+    
+        const filter = {
+            ...(agentName && { agentName }),
+            ...(grouping && { grouping }),
+            ...(to && { to }),
+            ...(from && { from })
+        };
+    
+        try {
+            const record = await AssignmentService.agentDurationWiseSummary(req, filter);
+            return res.json(record.data);
+        } catch (error) {
+            return res.serverError(error);
+        }
+    }
 
       
 };
