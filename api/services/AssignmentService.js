@@ -573,7 +573,8 @@ module.exports = {
                             email: bodyData.email || sendMail?.email,
                             subject: subject,
                             html: html,
-                            user: mailerData.email,  password: mailerData.password,
+                            user: mailerData.email,  
+                            password: mailerData.password,
                             host:mailerData.host,
                         });
                 
@@ -586,7 +587,8 @@ module.exports = {
                                     emailFunction: 'sendWelcomeMail',
                                     primaryModel: 'Assignment',
                                     modelId: id,
-                                    packageId: data?.packageId,
+                                    packageId: assignmentMailData?.packageId,
+                                    // packageId: data?.packageId,
                                     sendBy: ctx?.session?.user?.id,
                                     status: true
                                 });

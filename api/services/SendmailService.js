@@ -23,7 +23,9 @@ module.exports = {
             if(filter?.emailFunction?.trim()){
                 filter.emailFunction =  filter.emailFunction.split(',');
             }
-
+            if(!filter.status){
+                
+            }
             if(filter.hasOwnProperty('packageId')&&filter.packageId){
                 filter.packageId = { contains: filter.packageId.trim() };
             }
@@ -54,6 +56,7 @@ module.exports = {
             if (params.select) {
                 qryObj.select = params.select;
             }
+
             try {
                 var records = await Sendmail.find(qryObj).meta({makeLikeModifierCaseInsensitive: true});;
             } catch (error) {
