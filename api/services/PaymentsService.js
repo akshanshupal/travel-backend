@@ -820,6 +820,131 @@ module.exports = {
         })
 
     },
+    agentWisePayments: function (ctx, filter) {
+                    return new Promise(async (resolve, reject) => {
+                        filter.company = ctx?.session?.activeCompany?.id
+                        if (!filter.company) {
+                            return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+                        }
+                      try {
+                        let matchStage = { isDeleted: {$ne: true}, company: new ObjectId(filter.company) };
+                  
+                        if (filter.from && filter.to) {
+                          matchStage.createdAt = {
+                            $gte: sails.dayjs(filter.from).startOf('day').toDate(),
+                            $lte: sails.dayjs(filter.to).endOf('day').toDate(),
+                          };
+                        } else if (filter.from) {
+                          matchStage.createdAt = {
+                            $gte: sails.dayjs(filter.from).startOf('day').toDate(),
+                          };
+                        } else if (filter.to) {
+                          matchStage.createdAt = {
+                            $lte: sails.dayjs(filter.to).endOf('day').toDate(),
+                          };
+                        }
+                  
+                        let aggregateArr = [
+                          { $match: matchStage },
+                        //   {
+                        //     $group: {
+                        //       _id: '$agentName',
+                        //       totalAssignments: { $sum: 1 },
+                        //     },
+                        //   },
+                        {
+                            $lookup: {
+                              from: "assignment",
+                              localField: "assignment",
+                              foreignField: "_id",
+                              as: "assignment"
+                            }
+                          },
+                          { $unwind: "$assignment" },
+                          {
+                            $lookup: {
+                              from: "user",
+                              localField: "assignment.agentName",
+                              foreignField: "_id",
+                              as: "agent"
+                            }
+                          },
+                          { $unwind: "$agent" },
+                            // Step 3: Group by agent name and paymentType
+                          {
+                                $group: {
+                                _id: {
+                                    // agentId: "$agent._id",
+                                    agentName: "$agent.name",
+                                    paymentType: "$paymentType"
+                                },
+                                totalAmount: { $sum: "$amount" },
+                                count: { $sum: 1 }
+                                }
+                            },
+                            // Step 4: Group again to separate Cr and Dr payments per agent
+                        {
+                            $group: {
+                            _id: {
+                                agentId: "$_id.agentId",
+                                agentName: "$_id.agentName"
+                            },
+                            crAmount: {
+                                $sum: {
+                                $cond: [{ $eq: ["$_id.paymentType", "Cr"] }, "$totalAmount", 0]
+                                }
+                            },
+                            drAmount: {
+                                $sum: {
+                                $cond: [{ $eq: ["$_id.paymentType", "Dr"] }, "$totalAmount", 0]
+                                }
+                            },
+                            // crCount: {
+                            //     $sum: {
+                            //     $cond: [{ $eq: ["$_id.paymentType", "Cr"] }, "$count", 0]
+                            //     }
+                            // },
+                            // drCount: {
+                            //     $sum: {
+                            //     $cond: [{ $eq: ["$_id.paymentType", "Dr"] }, "$count", 0]
+                            //     }
+                            // }
+                            }
+                        },
+                        // 5 total Profit
+                        {
+                            $addFields: {
+                              totalProfit: { $subtract: ["$crAmount", "$drAmount"] }
+                            }
+                          },
+                          // Step 6: Project output
+                        {
+                            $project: {
+                            _id: 0,
+                            agentId: "$_id.agentId",
+                            agentName: "$_id.agentName",
+                            crAmount: 1,
+                            drAmount: 1,
+                            totalProfit: 1
+                            // crCount: 1,
+                            // drCount: 1,
+                            }
+                        }
+                        
+                        ];
+                  
+                        const result = await Assignment.getDatastore()
+                          .manager
+                          .collection('payments')
+                          .aggregate(aggregateArr)
+                          .toArray();
+                      
+                        resolve({data: result});
+                      } catch (err) {
+                        reject(err);
+                      }
+                    });
+            },
 
 
 }

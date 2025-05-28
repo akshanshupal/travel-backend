@@ -185,6 +185,20 @@ module.exports = {
 
         return res.json(record);
     },
+    agentWisePayments: async function (req, res) {
+        const {to, from} = req.allParams();
+        const filter = {};
+        
+        if(to) filter.to = to;
+        if(from) filter.from = from;
+        
+        try {
+            const record = await PaymentsService.agentWisePayments(req, filter);
+            return res.json(record.data);
+        } catch (error) {
+            return res.serverError(error);
+        }
+    },
     
         
 
