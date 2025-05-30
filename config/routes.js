@@ -169,9 +169,11 @@ module.exports.routes = {
   'PUT /api/assignment/verify/:id': 'AssignmentController.verifyAssignment',
   'PUT /api/assignment/finished/:id': 'AssignmentController.finishedAssignment',
   'PUT /api/assignment/bookingStatus/:id': 'AssignmentController.bookingStatus',
+  'PUT /api/assignment/adjustment/:id': 'AssignmentController.adjustment',
   'PUT /api/assignment/paymentStatus/:id': 'AssignmentController.paymentStatus',
   'PUT /api/assignment/:id': 'AssignmentController.updateOne',
   'DELETE /api/assignment/:id': 'AssignmentController.deleteOne',
+  'DELETE /api/assignment/adjustment/:id': 'AssignmentController.adjustmentDeleteOne',
 
 
   'POST /api/sendmail': 'SendmailController.create',

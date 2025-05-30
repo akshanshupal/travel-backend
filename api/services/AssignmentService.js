@@ -121,6 +121,7 @@ module.exports = {
             if (!filter.id) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
+          
             if (!filter.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
@@ -133,6 +134,9 @@ module.exports = {
             }
             if (params.select) {
                 qryObj.select = params.select;
+            }
+            if (ctx.adjustment) {
+                filter.adjustment = ctx.adjustment;
             }
             try {
                 var record = await Assignment.findOne(qryObj);;
@@ -734,16 +738,16 @@ module.exports = {
                     let matchStage = { isDeleted: {$ne: true}, company: new ObjectId(filter.company) };
               
                     if (filter.from && filter.to) {
-                      matchStage.createdAt = {
+                      matchStage.bookingDate = {
                         $gte: sails.dayjs(filter.from).startOf('day').toDate(),
                         $lte: sails.dayjs(filter.to).endOf('day').toDate(),
                       };
                     } else if (filter.from) {
-                      matchStage.createdAt = {
+                      matchStage.bookingDate = {
                         $gte: sails.dayjs(filter.from).startOf('day').toDate(),
                       };
                     } else if (filter.to) {
-                      matchStage.createdAt = {
+                      matchStage.bookingDate = {
                         $lte: sails.dayjs(filter.to).endOf('day').toDate(),
                       };
                     }
@@ -790,7 +794,7 @@ module.exports = {
                     reject(err);
                   }
                 });
-        },
+    },
 
     agentDurationWiseSummary: async function (req, filter) {
             const { grouping, from, to } = filter;
@@ -798,7 +802,7 @@ module.exports = {
             const originalEnd = sails.dayjs(to).endOf('day');
     
             const matchQuery = {
-                createdAt: { 
+                bookingDate: { 
                     $gte: originalStart.toDate(), 
                     $lte: originalEnd.toDate() 
                 }
@@ -832,8 +836,8 @@ module.exports = {
                     aggregationPipeline.push({
                         $group: {
                             _id: {
-                                year: { $isoWeekYear: "$createdAt" },
-                                week: { $isoWeek: "$createdAt" }
+                                year: { $isoWeekYear: "$bookingDate" },
+                                week: { $isoWeek: "$bookingDate" }
                             },
                             totalAssignments: { $sum: 1 },
                             userName: { $first: '$userDetails.name' }
@@ -845,8 +849,8 @@ module.exports = {
                     aggregationPipeline.push({
                         $group: {
                             _id: {
-                                year: { $year: "$createdAt" },
-                                month: { $month: "$createdAt" }
+                                year: { $year: "$bookingDate" },
+                                month: { $month: "$bookingDate" }
                             },
                             totalAssignments: { $sum: 1 },
                             userName: { $first: '$userDetails.name' }
@@ -861,7 +865,7 @@ module.exports = {
                                 date: { 
                                     $dateToString: { 
                                         format: "%Y-%m-%d", 
-                                        date: "$createdAt" 
+                                        date: "$bookingDate" 
                                     }
                                 }
                             },
@@ -942,6 +946,118 @@ module.exports = {
             });
     
             return { data: Array.from(intervalMap.values()) };
-        }
+    },
+    adjustment: async function (ctx, id, data) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const filter = {
+                    id: id,
+                    company: ctx?.session?.activeCompany?.id,
+                };
+    
+                if (!filter.id) {
+                    return reject({ statusCode: 400, error: { message: 'id is required!' } });
+                }
+                if (!filter.company) {
+                    return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+                }
+    
+                const userName = ctx?.session?.user?.name || 'Unknown';
+                const createdDate = new Date().toISOString();
+    
+                const newDetails = data?.adjustment?.map(item => ({
+                    amount: Number(item?.amount || 0),
+                    remark: item?.remark || '',
+                    createdBy: userName,
+                    createdDate: createdDate,
+                })) || [];
+    
+                const result = await this.findOne(ctx, id);
+                const record = result?.data;
+    
+                let updatedDetails = [];
+    
+                if (record?.adjustment?.details && Array.isArray(record.adjustment.details)) {
+                    // Merge old and new details
+                    updatedDetails = [...record.adjustment.details, ...newDetails];
+                } else {
+                    updatedDetails = [...newDetails];
+                }
+    
+                // Calculate total
+                const totalAmount = updatedDetails.reduce(
+                    (sum, item) => sum + Number(item.amount || 0),
+                    0
+                ).toString();
+    
+                const adjustment = {
+                    details: updatedDetails,
+                    amount: totalAmount,
+                };
+    
+                const updated = await this.updateOne(ctx, id, { adjustment });
+                return resolve(updated);
+    
+            } catch (err) {
+                return reject({
+                    statusCode: 500,
+                    error: { message: 'Error processing adjustment', details: err },
+                });
+            }
+        });
+    },
+    adjustmentDeleteOne: function (ctx, id) {
+        return new Promise(async (resolve, reject) => {
+          const filter = {
+            id: id,
+            company: ctx?.session?.activeCompany?.id,
+          };
+      
+          if (!filter.id) return reject({ statusCode: 400, error: { message: 'id is required!' } });
+          if (!filter.company) return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+      
+        //   const detailIndex = ctx.body.detailIndex; // index from frontend
+          const detailIndex = parseInt(ctx.body.detailIndex, 10);
+
+      
+          if (detailIndex === undefined) {
+            return reject({ statusCode: 400, error: { message: 'detailIndex or createdDate is required!' } });
+          }
+      
+          try {
+            const { data: assignment } = await this.findOne(ctx, id);
+      
+            if (!assignment?.adjustment?.details?.length) {
+              return reject({ statusCode: 404, error: { message: 'No adjustment details found.' } });
+            }
+      
+            let updatedDetails;
+      
+            if (detailIndex !== undefined) {
+              if (detailIndex < 0 || detailIndex >= assignment.adjustment.details.length) {
+                return reject({ statusCode: 400, error: { message: 'Invalid detailIndex.' } });
+              }
+              updatedDetails = assignment.adjustment.details.filter((_, index) => index !== detailIndex);
+            } 
+      
+            const updatedAdjustment = {
+              ...assignment.adjustment,
+              details: updatedDetails,
+              amount: updatedDetails.reduce((sum, item) => sum + (item.amount || 0), 0),
+            };
+      
+            const updatedAssignment = await this.updateOne(ctx, id, {
+              adjustment: updatedAdjustment,
+            });
+      
+            return resolve({ data: updatedAssignment });
+          } catch (error) {
+            return reject({ statusCode: 500, error });
+          }
+        });
+      }
+      
+    
+      
 
 }

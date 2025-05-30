@@ -217,7 +217,28 @@ module.exports = {
         } catch (error) {
             return res.serverError(error);
         }
-    }
+    },
+  
+    adjustment: async function (req, res) {
+
+        try {
+            var record = await AssignmentService.adjustment(req, req.params.id, req.body);
+        } catch (error) {
+            return res.serverError(error);
+        }
+
+        return res.json(record.data);
+    },
+    adjustmentDeleteOne: async function (req, res) {
+
+        try {
+            var record = await AssignmentService.adjustmentDeleteOne(req, req.params.id);
+        } catch (error) {
+            return res.status(error?.statusCode).send(error.error); 
+        }
+
+        return res.json(record.data);
+    },
 
       
 };

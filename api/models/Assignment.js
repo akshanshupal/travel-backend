@@ -187,9 +187,9 @@ module.exports = {
         siteSeeingNew:{
            type:'json'
         },
-        // tokenImg: {
-        //     type: 'string'
-        // },
+        adjustment: {
+            type: 'json'
+        },
         isDeleted: { type: 'boolean'},
         deletedAt: { type: 'ref', columnType: 'datetime' },
         deletedBy: { model: 'user' },
