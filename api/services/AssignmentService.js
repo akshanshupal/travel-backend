@@ -947,115 +947,190 @@ module.exports = {
     
             return { data: Array.from(intervalMap.values()) };
     },
-    adjustment: async function (ctx, id, data) {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const filter = {
-                    id: id,
-                    company: ctx?.session?.activeCompany?.id,
-                };
-    
-                if (!filter.id) {
-                    return reject({ statusCode: 400, error: { message: 'id is required!' } });
-                }
-                if (!filter.company) {
-                    return reject({ statusCode: 400, error: { message: 'company id is required!' } });
-                }
-    
-                const userName = ctx?.session?.user?.name || 'Unknown';
-                const createdDate = new Date().toISOString();
-    
-                const newDetails = data?.adjustment?.map(item => ({
-                    amount: Number(item?.amount || 0),
-                    remark: item?.remark || '',
-                    createdBy: userName,
-                    createdDate: createdDate,
-                })) || [];
-    
-                const result = await this.findOne(ctx, id);
-                const record = result?.data;
-    
-                let updatedDetails = [];
-    
-                if (record?.adjustment?.details && Array.isArray(record.adjustment.details)) {
-                    // Merge old and new details
-                    updatedDetails = [...record.adjustment.details, ...newDetails];
-                } else {
-                    updatedDetails = [...newDetails];
-                }
-    
-                // Calculate total
-                const totalAmount = updatedDetails.reduce(
-                    (sum, item) => sum + Number(item.amount || 0),
-                    0
-                ).toString();
-    
-                const adjustment = {
-                    details: updatedDetails,
-                    amount: totalAmount,
-                };
-    
-                const updated = await this.updateOne(ctx, id, { adjustment });
-                return resolve(updated);
-    
-            } catch (err) {
-                return reject({
-                    statusCode: 500,
-                    error: { message: 'Error processing adjustment', details: err },
-                });
-            }
-        });
-    },
-    adjustmentDeleteOne: function (ctx, id) {
-        return new Promise(async (resolve, reject) => {
-          const filter = {
-            id: id,
-            company: ctx?.session?.activeCompany?.id,
-          };
+    // adjustment: async function (ctx, id, data) {
+    //     return new Promise(async (resolve, reject) => {
+    //       try {
+    //         const filter = {
+    //           id: id,
+    //           company: ctx?.session?.activeCompany?.id,
+    //         };
       
-          if (!filter.id) return reject({ statusCode: 400, error: { message: 'id is required!' } });
-          if (!filter.company) return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+    //         if (!filter.id) {
+    //           return reject({ statusCode: 400, error: { message: 'id is required!' } });
+    //         }
+    //         if (!filter.company) {
+    //           return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+    //         }
       
-        //   const detailIndex = ctx.body.detailIndex; // index from frontend
-          const detailIndex = parseInt(ctx.body.detailIndex, 10);
+    //         const userName = ctx?.session?.user?.name || 'Unknown';
+    //         const createdDate = new Date().toISOString();
+    //         const {data : record} = await this.findOne(ctx, id);
 
       
-          if (detailIndex === undefined) {
-            return reject({ statusCode: 400, error: { message: 'detailIndex or createdDate is required!' } });
-          }
+    //         const newDetails = {
+    //           remark: data?.remark || '',
+    //           gstInclusive: data?.gstInclusive || false,
+    //           createdBy: userName,
+    //           createdDate: createdDate,
+    //         }
+    //         const amount = Number(data.amount);
+    //         const taxes = Number(record.taxes || 0);
+    //         if(newDetails.gstInclusive){
+    //             newDetails.totalAmount = amount;
+    //             // newDetails.amount = (amount / (1 + (taxes / 100))).toFixed(2);
+    //             newDetails.amount = Number((amount / (1 + (taxes / 100))).toFixed(2));
+    //         }else{
+    //             newDetails.amount = amount;
+    //             newDetails.totalAmount = amount + amount * (taxes / 100);
+    //         }
+    //         const previousAdjustments = record?.adjustment || {};
+    //         if(previousAdjustments?.details){
+                
+    //             previousAdjustments.details.push(newDetails);
+    //         }else{
+    //             previousAdjustments.initailPackageCost = record.packageCost
+    //             previousAdjustments.initialFinalPackageCost = record.finalPackageCost
+    //             previousAdjustments.details = [newDetails];
+    //         }
+    //         previousAdjustments.amount = previousAdjustments.details.reduce((total, item) => total + item.amount || 0, 0);
+    //         previousAdjustments.totalAmount = previousAdjustments.details.reduce((total, item) => total + item.totalAmount || 0, 0);
+
+
+    //         const updated = await this.updateOne(ctx, id, {
+    //             adjustment: previousAdjustments,
+    //             packageCost: (record.packageCost-newDetails.amount).toFixed(2),
+    //             finalPackageCost: (record.finalPackageCost - newDetails.totalAmount).toFixed(2),
+    //           });
       
+    //         return resolve(updated);
+      
+    //       } catch (err) {
+    //         return reject({
+    //           statusCode: 500,
+    //           error: { message: 'Error processing adjustment', details: err },
+    //         });
+    //       }
+    //     });
+    // },
+      
+    adjustment: async function (ctx, id, data) {
+        return new Promise(async (resolve, reject) => {
+          try {
+            const filter = {
+              id: id,
+              company: ctx?.session?.activeCompany?.id,
+            };
+      
+            if (!filter.id) {
+              return reject({ statusCode: 400, error: { message: 'id is required!' } });
+            }
+            if (!filter.company) {
+              return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+            }
+      
+            const userName = ctx?.session?.user?.name || 'Unknown';
+            const createdDate = new Date().toISOString();
+            const { data: record } = await this.findOne(ctx, id);
+      
+            const index = data?.index; // ✅ Accept index from payload
+      
+            const newDetails = {
+              remark: data?.remark || '',
+              gstInclusive: data?.gstInclusive || false,
+              createdBy: userName,
+              createdDate: createdDate,
+            };
+      
+            const amount = Number(data.amount);
+            const taxes = Number(record.taxes || 0);
+      
+            if (newDetails.gstInclusive) {
+              newDetails.totalAmount = amount;
+              newDetails.amount = Number((amount / (1 + taxes / 100)).toFixed(2));
+            } else {
+              newDetails.amount = amount;
+              newDetails.totalAmount = amount + amount * (taxes / 100);
+            }
+      
+            const previousAdjustments = record?.adjustment || {};
+      
+            if (previousAdjustments?.details) {
+              if (index !== undefined && index !== null && !isNaN(index) && previousAdjustments.details[index]) {
+                previousAdjustments.details[index] = newDetails;
+              } else {
+                previousAdjustments.details.push(newDetails);
+              }
+            } else {
+              // First-time adjustment
+              previousAdjustments.initailPackageCost = record.packageCost;
+              previousAdjustments.initialFinalPackageCost = record.finalPackageCost;
+              previousAdjustments.details = [newDetails];
+            }
+      
+            // ✅ Recalculate totals
+            previousAdjustments.amount = previousAdjustments.details.reduce(
+              (total, item) => total + (item.amount || 0), 0 ).toFixed(2);
+            previousAdjustments.totalAmount = previousAdjustments.details.reduce(
+              (total, item) => total + (item.totalAmount || 0), 0).toFixed(2);
+      
+            const updated = await this.updateOne(ctx, id, {
+              adjustment: previousAdjustments,
+              packageCost: (
+                record.packageCost - previousAdjustments.amount
+              ).toFixed(2),
+              finalPackageCost: (
+                record.finalPackageCost - previousAdjustments.totalAmount
+              ).toFixed(2),
+            });
+      
+            return resolve(updated);
+          } catch (err) {
+            return reject({
+              statusCode: 500,
+              error: { message: 'Error processing adjustment', details: err },
+            });
+          }
+        });
+      },
+      
+    adjustmentDeleteOne: function (ctx, id, index) {
+        return new Promise(async (resolve, reject) => {
+
+      
+          if (!id) return reject({ statusCode: 400, error: { message: 'id is required!' } });
           try {
             const { data: assignment } = await this.findOne(ctx, id);
+            
       
             if (!assignment?.adjustment?.details?.length) {
               return reject({ statusCode: 404, error: { message: 'No adjustment details found.' } });
             }
       
-            let updatedDetails;
-      
-            if (detailIndex !== undefined) {
-              if (detailIndex < 0 || detailIndex >= assignment.adjustment.details.length) {
-                return reject({ statusCode: 400, error: { message: 'Invalid detailIndex.' } });
-              }
-              updatedDetails = assignment.adjustment.details.filter((_, index) => index !== detailIndex);
-            } 
+            let selectedAdjustment;
+            if(['undefined', null, 'null'].includes(index) || isNaN(index) || index < 0 || index >= assignment.adjustment.details.length){
+                return reject({ statusCode: 400, error: { message: 'Invalid index.' } });
+            }
+            selectedAdjustment = assignment.adjustment.details[index]; 
       
             const updatedAdjustment = {
-              ...assignment.adjustment,
-              details: updatedDetails,
-              amount: updatedDetails.reduce((sum, item) => sum + (item.amount || 0), 0),
-            };
-      
-            const updatedAssignment = await this.updateOne(ctx, id, {
-              adjustment: updatedAdjustment,
-            });
+                packageCost: Number((assignment.packageCost + selectedAdjustment.amount).toFixed(2)),
+                finalPackageCost: Number((assignment.finalPackageCost + selectedAdjustment.totalAmount).toFixed(2)),
+                adjustment : { 
+                    ...assignment.adjustment,
+                    amount: Number((assignment.adjustment.amount - selectedAdjustment.amount).toFixed(2)),
+                    totalAmount: Number((assignment.adjustment.totalAmount - selectedAdjustment.totalAmount).toFixed(2)),
+                    details: assignment.adjustment.details.filter((item, i) => i !== index)
+                }
+            } 
+
+            const updatedAssignment = await this.updateOne(ctx, id, updatedAdjustment);
       
             return resolve({ data: updatedAssignment });
           } catch (error) {
             return reject({ statusCode: 500, error });
           }
         });
-      }
+    }
       
     
       

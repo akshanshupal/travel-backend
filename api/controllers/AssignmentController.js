@@ -230,9 +230,13 @@ module.exports = {
         return res.json(record.data);
     },
     adjustmentDeleteOne: async function (req, res) {
+        const index = req.body.detailIndex
+        if(isNaN(index)) return res.badRequest('detailIndex is missing');
+
+
 
         try {
-            var record = await AssignmentService.adjustmentDeleteOne(req, req.params.id);
+            var record = await AssignmentService.adjustmentDeleteOne(req, req.params.id, index);
         } catch (error) {
             return res.status(error?.statusCode).send(error.error); 
         }
