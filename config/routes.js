@@ -163,6 +163,8 @@ module.exports.routes = {
   'GET /api/assignment': 'AssignmentController.find',
   'GET /api/assignment/:id': 'AssignmentController.findOne',
   'GET /api/assignment/agent-wise-summary': 'AssignmentController.agentWiseSummary',
+  'GET /api/assignment/finished-package-wise-summary': 'AssignmentController.finishedPackageWiseSummary',
+  'GET /api/assignment/profit-reports': 'AssignmentController.profitReports',
   'GET /api/assignment/agent-duration-wise-summary': 'AssignmentController.agentDurationWiseSummary',
   'POST /api/assignment/send-assignmentMail/:id': 'AssignmentController.sendAssignmentMail',
   'POST /api/mail/send-welcome-mail/:id': 'AssignmentController.sendWelcomeMail',

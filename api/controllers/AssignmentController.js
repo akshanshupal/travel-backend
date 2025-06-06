@@ -243,6 +243,34 @@ module.exports = {
 
         return res.json(record.data);
     },
+    finishedPackageWiseSummary: async function (req, res) {
+        const {to, from} = req.allParams();
+        const filter = {};
+        
+        if(to) filter.to = to;
+        if(from) filter.from = from;
+        
+        try {
+            const record = await AssignmentService.finishedPackageWiseSummary(req, filter);
+            return res.json(record.data);
+        } catch (error) {
+            return res.serverError(error);
+        }
+    },
+    profitReports: async function (req, res) {
+        const {to, from} = req.allParams();
+        const filter = {};
+        
+        if(to) filter.to = to;
+        if(from) filter.from = from;
+        
+        try {
+            const record = await AssignmentService.profitReports(req , filter);
+            return res.json(record.data);
+        } catch (error) {
+            return res.serverError(error);
+        }
+    },
 
       
 };

@@ -1130,7 +1130,216 @@ module.exports = {
             return reject({ statusCode: 500, error });
           }
         });
-    }
+    },
+    finishedPackageWiseSummary: function (ctx, id , filter) {
+        return new Promise(async (resolve, reject) => {
+            filter.company = ctx?.session?.activeCompany?.id
+            if (!filter.company) {
+                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+            }
+          try {
+            let matchStage = { isDeleted: {$ne: true}, company: new ObjectId(filter.company) };
+      
+            if (filter.from && filter.to) {
+              matchStage.bookingDate = {
+                $gte: sails.dayjs(filter.from).startOf('day').toDate(),
+                $lte: sails.dayjs(filter.to).endOf('day').toDate(),
+              };
+            } else if (filter.from) {
+              matchStage.bookingDate = {
+                $gte: sails.dayjs(filter.from).startOf('day').toDate(),
+              };
+            } else if (filter.to) {
+              matchStage.bookingDate = {
+                $lte: sails.dayjs(filter.to).endOf('day').toDate(),
+              };
+            }
+      
+            let aggregateArr = [
+              { $match: matchStage },
+              {
+                $group: {
+                  _id: '$agentName',
+                  totalAssignments: { $sum: 1 },
+                  totalCancelled: { $sum: { $cond: [{ $eq: ['$status', 'Cancelled'] }, 1, 0] } },
+                  totalFinished:  { $sum: { $cond: [{ $eq: ['$finished', true] }, 1, 0] } },
+                  totalPending: { $sum: { $cond: [{ $eq: ['$finished', false] }, 1, 0] } },
+                },
+              },
+              {
+                $lookup: {
+                  from: 'user',
+                  localField: '_id',
+                  foreignField: '_id',
+                  as: 'agentName',
+                },
+              },
+              {
+                $unwind: '$agentName',
+              },
+              {
+                $project: {
+                  _id: 0,
+                  user: '$agentName.name',
+                  totalAssignments: 1,
+                  totalFinished: 1,
+                  totalPending: 1,
+                  totalCancelled: 1
+                },
+              },
+              {$sort: {
+                totalAssignments: -1
+            
+              }}
+            ];
+      
+            const result = await Assignment.getDatastore()
+              .manager
+              .collection('assignment')
+              .aggregate(aggregateArr)
+              .toArray();
+          
+            resolve({data: result});
+          } catch (err) {
+            reject(err);
+          }
+        });
+    },
+    profitReports: function (ctx, filter) {
+        return new Promise(async (resolve, reject) => {
+            filter.company = ctx?.session?.activeCompany?.id
+            if (!filter.company) {
+                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+            }
+          try {
+            let matchStage = { 
+                isDeleted: {$ne: true}, 
+                company: new ObjectId(filter.company) ,
+                finished : true
+            };
+      
+            if (filter.from && filter.to) {
+              matchStage.bookingDate = {
+                $gte: sails.dayjs(filter.from).startOf('day').toDate(),
+                $lte: sails.dayjs(filter.to).endOf('day').toDate(),
+              };
+            } else if (filter.from) {
+              matchStage.bookingDate = {
+                $gte: sails.dayjs(filter.from).startOf('day').toDate(),
+              };
+            } else if (filter.to) {
+              matchStage.bookingDate = {
+                $lte: sails.dayjs(filter.to).endOf('day').toDate(),
+              };
+            }
+              
+              let aggregateArr = [
+                { $match: matchStage },
+                {
+                  $group: {
+                    _id: '$agentName',
+                    totalAssignments: { $sum: 1 },
+                  },
+                },
+                {
+                  $lookup: {
+                    from: 'user',
+                    localField: '_id',
+                    foreignField: '_id',
+                    as: 'agentInfo',
+                  },
+                },
+                {
+                  $unwind: {
+                    path: '$agentInfo',
+                    preserveNullAndEmptyArrays: true,
+                  },
+                },
+                {
+                  $lookup: {
+                    from: 'assignment',
+                    let: { agentName: '$_id' },
+                    pipeline: [
+                      {
+                        $match: {
+                          $expr: { $and: [{ $eq: ['$agentName', '$$agentName'] },{ $eq: ['$finished', true] } ]},
+                        },
+                      },
+                      {
+                        $lookup: {
+                          from: 'payments',
+                          localField: '_id',
+                          foreignField: 'assignment',
+                          as: 'payments',
+                        },
+                      },
+                      {
+                        $unwind: {
+                          path: '$payments',
+                          preserveNullAndEmptyArrays: true,
+                        },
+                      },
+                      {
+                        $match: {
+                          'payments.status': true,
+                          'payments.isDeleted': { $ne: true },
+                          $or: [
+                            { 'payments.paymentType': 'Cr' },
+                            { 'payments.paymentType': 'Dr' }
+                          ]
+                        },
+                      },
+                      {
+                        $group: {
+                          _id: null,
+                          totalCrAmount: { $sum: { $cond: [ { $eq: ['$payments.paymentType', 'Cr'] }, '$payments.amount', 0 ]}},
+                          totalDrAmount: { $sum: { $cond: [ { $eq: ['$payments.paymentType', 'Dr'] }, '$payments.amount', 0 ]}}
+                        },
+                      },
+                    ],
+                    as: 'paymentStats',
+                  },
+                },
+                {
+                  $unwind: {
+                    path: '$paymentStats',
+                    preserveNullAndEmptyArrays: true,
+                  },
+                },
+                {
+                  $project: {
+                    _id: 0,
+                    user: '$agentInfo.name',
+                    totalAssignments: 1,
+                    totalCrAmount: { $ifNull: ['$paymentStats.totalCrAmount', 0] },
+                    totalDrAmount: { $ifNull: ['$paymentStats.totalDrAmount', 0] },
+                    totalProfit: {
+                      $subtract: [
+                        { $ifNull: ['$paymentStats.totalCrAmount', 0] },
+                        { $ifNull: ['$paymentStats.totalDrAmount', 0] }
+                      ],
+                    },
+                  },
+                },
+                {
+                  $sort: { totalAssignments: -1 },
+                },
+              ];
+              
+              
+      
+            const result = await Assignment.getDatastore()
+              .manager
+              .collection('assignment')
+              .aggregate(aggregateArr)
+              .toArray();
+          
+            resolve({data: result});
+          } catch (err) {
+            reject(err);
+          }
+        });
+    },
       
     
       
