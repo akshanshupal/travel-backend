@@ -251,7 +251,7 @@ module.exports = {
         if(from) filter.from = from;
         
         try {
-            const record = await AssignmentService.finishedPackageWiseSummary(req, filter);
+            const record = await AssignmentService.finishedPackageWiseSummary(req,  filter);
             return res.json(record.data);
         } catch (error) {
             return res.serverError(error);

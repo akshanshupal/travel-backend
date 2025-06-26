@@ -378,7 +378,6 @@ module.exports = {
             if (!filter.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
-
             try {
                 const {data: assignment} = await this.findOne(ctx,id);
                 if(assignment.verify){
@@ -391,19 +390,15 @@ module.exports = {
                         return reject({ statusCode: 400, error: { message: 'Please Delete all bookings from this assignment!' } })
                     } 
                 } 
-                
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
-
             }
-
             let deletedData
             try {
                 deletedData =  await this.updateOne(ctx, id, {isDeleted:true, deletedAt: new Date(), deletedBy: ctx?.user?.id})
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
-
             return resolve({ data: { deleted: true } });
         })
     },
@@ -1131,7 +1126,7 @@ module.exports = {
           }
         });
     },
-    finishedPackageWiseSummary: function (ctx, id , filter) {
+    finishedPackageWiseSummary: function (ctx , filter) {
         return new Promise(async (resolve, reject) => {
             filter.company = ctx?.session?.activeCompany?.id
             if (!filter.company) {

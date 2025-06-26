@@ -259,6 +259,27 @@ module.exports.routes = {
   'GET /api/mailer/:id': 'MailerController.findOne',
   'PUT /api/mailer/:id': 'MailerController.updateOne',
   'DELETE /api/mailer/:id': 'MailerController.deleteOne',
+  
+  // Lead Api start 
+  'POST /api/pipeline': 'PipelineController.create',
+  'GET /api/pipeline': 'PipelineController.find',
+  'GET /api/pipeline/:id': 'PipelineController.findOne',
+  'PUT /api/pipeline/:id': 'PipelineController.updateOne',
+  'DELETE /api/pipeline/:id': 'PipelineController.deleteOne',
+
+  'POST /api/campaign': 'CampaignController.create',
+  'GET /api/campaign': 'CampaignController.find',
+  'GET /api/campaign/:id': 'CampaignController.findOne',
+  'PUT /api/campaign/:id': 'CampaignController.updateOne',
+  'PUT /api/campaign/pause': 'CampaignController.pauseFunction',
+  'DELETE /api/campaign/:id': 'CampaignController.deleteOne',
+
+  'POST /api/leads': 'LeadsController.create',
+  'GET /api/leads': 'LeadsController.find',
+  'GET /api/leads/:id': 'LeadsController.findOne',
+  'PUT /api/leads/:id': 'LeadsController.updateOne',
+  'DELETE /api/leads/:id': 'LeadsController.deleteOne',
+
   /***************************************************************************
   *                                                                          *
   * More custom routes here...                                               *
