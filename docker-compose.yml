@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "1337:1337"
+    environment:
+      - NODE_ENV=production
+      # Override the database URL if you want to use the local dockerized mongodb
+      - sails_datastores__mongodbA__url=mongodb://root:example@mongo:27017/travel?authSource=admin
+      # Redis configuration if needed (Sails usually needs config/session.js or sockets.js updates to use this)
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - redis
+      - mongo
+    restart: always
+
+  mongo:
+    image: mongo:6
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    volumes:
+      - mongo-data:/data/db
+    restart: always
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    restart: always
+
+volumes:
+  mongo-data:

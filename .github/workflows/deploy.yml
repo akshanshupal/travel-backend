@@ -1,0 +1,87 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify repo contents
+        run: |
+          pwd
+          ls -la
+
+      - name: Validate Docker build (CI sanity check)
+        run: |
+          test -f Dockerfile || (echo "Dockerfile missing in $(pwd)"; exit 1)
+          docker build -t travel_app:ci-test -f Dockerfile .
+
+      - name: Clean remote directory
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            rm -rf /home/ubuntu/travel/*
+
+      - name: Upload project files to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "."
+          target: "/home/ubuntu/travel"
+
+      - name: Deploy over SSH and rebuild on server
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            set -e
+            if ! command -v docker >/dev/null 2>&1; then
+              echo "Docker is required on the server." >&2
+              exit 1
+            fi
+            
+            # Check for docker compose command
+            DCOMPOSE="docker compose"
+            if ! command -v docker compose >/dev/null 2>&1; then
+              if command -v docker-compose >/dev/null 2>&1; then
+                DCOMPOSE="docker-compose"
+              else
+                echo "docker compose not found" >&2
+                exit 1
+              fi
+            fi
+
+            REPO_DIR=/home/ubuntu/travel
+            # Ensure directory exists (though SCP should create it, good to be safe)
+            sudo mkdir -p $REPO_DIR
+            sudo chown $USER:$USER $REPO_DIR
+
+            cd $REPO_DIR
+            
+            # Create .env file with secrets
+            cat << EOF | sed 's/^[ \t]*//' > .env
+            NODE_ENV=production
+            # Add other secrets here from GitHub secrets if needed
+            MONGO_INITDB_ROOT_USERNAME=${{ secrets.MONGO_INITDB_ROOT_USERNAME }}
+            MONGO_INITDB_ROOT_PASSWORD=${{ secrets.MONGO_INITDB_ROOT_PASSWORD }}
+            MONGO_DB_NAME=travel
+
+            EOF
+            
+            # Start/Restart Docker containers
+            $DCOMPOSE down
+            $DCOMPOSE up -d --build
