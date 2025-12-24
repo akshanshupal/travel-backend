@@ -79,6 +79,7 @@ jobs:
             MONGO_INITDB_ROOT_USERNAME=${{ secrets.MONGO_INITDB_ROOT_USERNAME }}
             MONGO_INITDB_ROOT_PASSWORD=${{ secrets.MONGO_INITDB_ROOT_PASSWORD }}
             MONGO_DB_NAME=${{ secrets.MONGO_DB_NAME }}
+            REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
 
             EOF
             

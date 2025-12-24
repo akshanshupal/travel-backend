@@ -21,7 +21,7 @@ dayjs.extend(weekOfYear);
 module.exports.bootstrap = async function () {
   sails.dayjs =dayjs;
   // Create a Redis client
-  const redis = new IORedis({url: sails.config.redis.url});
+  const redis = new IORedis(sails.config.redis.url);
   sails.redis = redis;
 
   sails.redis.on('error', (err) => {

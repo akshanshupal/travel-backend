@@ -134,7 +134,8 @@ module.exports = {
   },
   redis: {
       // url:'redis://:edukit339master@216.48.178.79:6379'
-      url: "redis://127.0.0.1:6379",
+      // Construct URL from environment variables
+      url: `redis://${process.env.REDIS_USER || ''}:${process.env.REDIS_PASSWORD || ''}@${process.env.REDIS_HOST || '127.0.0.1'}:${process.env.REDIS_PORT || 6379}/${process.env.REDIS_DB || 0}`,
       expire: 6*30*24*60*60,//6 months expiry
   },
   cdnUrl: "http://localhost:1337",
