@@ -78,10 +78,10 @@ jobs:
             # Add other secrets here from GitHub secrets if needed
             MONGO_INITDB_ROOT_USERNAME=${{ secrets.MONGO_INITDB_ROOT_USERNAME }}
             MONGO_INITDB_ROOT_PASSWORD=${{ secrets.MONGO_INITDB_ROOT_PASSWORD }}
-            MONGO_DB_NAME=travel
+            MONGO_DB_NAME=${{ secrets.MONGO_DB_NAME }}
 
             EOF
             
             # Start/Restart Docker containers
-            $DCOMPOSE down
-            $DCOMPOSE up -d --build
+            $DCOMPOSE -f docker-compose.deploy.yml down
+            $DCOMPOSE -f docker-compose.deploy.yml up -d --build

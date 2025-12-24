@@ -33,7 +33,13 @@ module.exports = {
 
   mongodbA: {
     adapter: 'sails-mongo',
-    url: 'mongodb+srv://akshanshu:ashuMongo1234@cluster0.wygca.mongodb.net/travel?retryWrites=true&w=majority',
+    // url: 'mongodb+srv://akshanshu:ashuMongo1234@cluster0.wygca.mongodb.net/travel?retryWrites=true&w=majority',
+    host: process.env.MONGO_HOST || 'mongo',
+    port: 27017,
+    user: process.env.MONGO_USER,
+    password: process.env.MONGO_PASSWORD,
+    database: process.env.MONGO_DB_NAME || 'travel',
+    authSource: 'admin',
   },
 
     /***************************************************************************
