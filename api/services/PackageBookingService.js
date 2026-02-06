@@ -22,7 +22,7 @@ module.exports = {
             qryObj.sort = sortField + ' ' + sortOrder;
             //pagination
             let page = 1;
-            let limit = 10;
+            let limit = 30;
             if(params?.pagination?.page){
                 page = +params.pagination.page
             }
