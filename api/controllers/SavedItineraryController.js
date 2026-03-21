@@ -7,6 +7,12 @@ module.exports = {
     find: async function (req, res) {
         const filter = req.query;
         filter.company = req.session.activeCompany.id;
+        
+        const user = req?.session?.user;
+        if (user && String(user.type || "").toUpperCase() === "AGENT") {
+            filter.salesExecutive = user.id;
+        }
+
         let {populate,select,totalCount,sortField, sortOrder, page,limit } = req.query;
         const params = {};
         if(populate){
@@ -138,6 +144,11 @@ module.exports = {
         if(salesExecutive){
             filter.salesExecutive = salesExecutive
         }
+        
+        const user = req?.session?.user;
+        if (user && String(user.type || "").toUpperCase() === "AGENT") {
+            filter.salesExecutive = user.id;
+        }
 
         try {
             var record = await SavedItineraryService.agentWiseSavedItineraries(req, filter);
@@ -165,6 +176,11 @@ module.exports = {
             ...(from && { from }),
             
         };
+        
+        const user = req?.session?.user;
+        if (user && String(user.type || "").toUpperCase() === "AGENT") {
+            filter.salesExecutive = user.id;
+        }
     
         try {
             const record = await SavedItineraryService.agentDurationWiseSavedItineraries(req, filter);

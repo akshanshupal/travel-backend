@@ -7,6 +7,12 @@ module.exports = {
     find: async function (req, res) {
         const filter = req.query;
         filter.company = req.session.activeCompany.id;
+        
+        const user = req?.session?.user;
+        if (user && String(user.type || "").toUpperCase() === "AGENT") {
+            filter.sendBy = user.id;
+        }
+
         let {populate,select,totalCount,sortField, sortOrder, page,limit } = req.query;
         const params = {};
         if(populate){
@@ -135,6 +141,12 @@ module.exports = {
         if(sendBy){
             filter.sendBy = sendBy
         }
+        
+        const user = req?.session?.user;
+        if (user && String(user.type || "").toUpperCase() === "AGENT") {
+            filter.sendBy = user.id;
+        }
+
         try {
             var record = await SendmailService.agentWiseSendMails(req, filter);
         } catch (error) {
@@ -161,6 +173,11 @@ module.exports = {
             ...(from && { from }),
             ...(emailFunction && { emailFunction })
         };
+        
+        const user = req?.session?.user;
+        if (user && String(user.type || "").toUpperCase() === "AGENT") {
+            filter.sendBy = user.id;
+        }
     
         try {
             const record = await SendmailService.agentDurationWiseSendMails(req, filter);
