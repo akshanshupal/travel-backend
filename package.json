@@ -46,6 +46,6 @@
   "author": "akshanshupal",
   "license": "",
  "engines": {
-  "node": ">=20.7 <25"
+  "node": ">=22.0 <25"
   }
 }
