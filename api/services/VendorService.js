@@ -39,7 +39,7 @@ module.exports = {
                 qryObj.select = params.select;
             }
             try {
-                var records = await Vendor.find(qryObj);;
+                var records = await Vendor.find(qryObj).meta({makeLikeModifierCaseInsensitive: true});
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -73,7 +73,7 @@ module.exports = {
             //totalCount
             if (params.totalCount) {
                 try {
-                    var totalRecords = await Vendor.count(filter)
+                    var totalRecords = await Vendor.count(filter).meta({makeLikeModifierCaseInsensitive: true});
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }

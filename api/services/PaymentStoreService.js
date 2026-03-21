@@ -7,6 +7,7 @@ module.exports = {
             if (!params) {
                 params = {};
             }
+            if (filter.title && filter.title.trim()) filter.title = { contains: filter.title.trim() };
             let qryObj = {where : filter};
             //sort
             let sortField = 'createdAt';
@@ -32,7 +33,7 @@ module.exports = {
                 qryObj.select = params.select;
             }
             try {
-                var records = await PaymentStore.find(qryObj);;
+                var records = await PaymentStore.find(qryObj).meta({makeLikeModifierCaseInsensitive: true});
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -66,7 +67,7 @@ module.exports = {
             //totalCount
             if (params.totalCount) {
                 try {
-                    var totalRecords = await PaymentStore.count(filter)
+                    var totalRecords = await PaymentStore.count(filter).meta({makeLikeModifierCaseInsensitive: true});
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }

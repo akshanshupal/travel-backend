@@ -169,6 +169,9 @@ module.exports = {
             if(!data.hasOwnProperty('status')){
                 data.status = true
             }
+            if (data?.type === "ADMIN") {
+                data.role = null;
+            }
             let existingUser;
             try {
 
@@ -221,6 +224,10 @@ module.exports = {
                 }
             } catch (error) {
                 return reject({ statusCode: 400, error: { message: 'error in fetching existing user' } });
+            }
+
+            if (updtBody?.type === "ADMIN" || existingUser?.type === "ADMIN") {
+                updtBody.role = null;
             }
             if(updtBody.hasOwnProperty('password')&&updtBody?.password.trim()){
                 existingUser['password'] = updtBody?.password;

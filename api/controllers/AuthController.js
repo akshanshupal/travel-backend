@@ -72,7 +72,7 @@ module.exports = {
             username = username.trim().toLowerCase();
             let company = req?.session?.activeCompany?.id
 
-            var user = await User.findOne({ username: username,company:company, isDeleted: { '!=': true } });
+            var user = await User.findOne({ username: username,company:company, isDeleted: { '!=': true } }).populate('role');
             if (!user) {
                 return res.badRequest({ code: 404, message: 'Wrong username or password!' });
             }
@@ -95,6 +95,14 @@ module.exports = {
             if (!validPassword) {
                 return res.forbidden({ code: 400, message: 'Wrong username or password!!' });
             }
+
+            const role = user?.type === "ADMIN" || !user?.role
+                ? null
+                : {
+                    id: user.role.id,
+                    title: user.role.title,
+                    permissions: user.role.permissions || {},
+                };
             const outputUser = {
                 id: user.id,
                 name: user.name,
@@ -103,7 +111,7 @@ module.exports = {
                 email: user.email,
                 mobile: user.mobile,
                 type: user.type,
-                role: user.role,
+                role,
                 profileImg: user.profileImg,
             }
 
@@ -145,4 +153,3 @@ module.exports = {
         }
       },
 };
-

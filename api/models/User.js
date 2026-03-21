@@ -31,7 +31,7 @@ module.exports = {
         password: { type: 'string',  required: true},
         type: {type: 'string',  required: true}, //"ADMIN", "AGENT", "MANAGER"
         role: {
-            type: 'string',
+            model: 'role',
         },
         profileImg: { type: 'string' },
         isDeleted: { type: 'boolean'},

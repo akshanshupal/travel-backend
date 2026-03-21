@@ -41,6 +41,12 @@ module.exports.routes = {
   'DELETE /api/user/:id': 'UserController.deleteOne',
   'GET /api/user-cache/:id': 'UserController.getCacheUser',
 
+  'POST /api/role': 'RoleController.create',
+  'GET /api/role': 'RoleController.find',
+  'GET /api/role/:id': 'RoleController.findOne',
+  'PUT /api/role/:id': 'RoleController.updateOne',
+  'DELETE /api/role/:id': 'RoleController.deleteOne',
+
   'POST /api/company': 'CompanyController.create',
   'GET /api/company': 'CompanyController.find',
   'GET /api/company/:id': 'CompanyController.findOne',
@@ -293,5 +299,4 @@ module.exports.routes = {
 
 
 };
-
 
