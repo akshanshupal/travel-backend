@@ -34,6 +34,7 @@ module.exports = async function (req, res, next) {
     const resourceAliases = (() => {
         if (resource === "saveditinerary") return ["saveditinerary", "saved-itinerary"];
         if (resource === "saved-itinerary") return ["saved-itinerary", "saveditinerary"];
+        if (resource === "sendmail") return ["sendmail", "itineraryreports"];
         return [resource];
     })();
 

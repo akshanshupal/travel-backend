@@ -121,7 +121,7 @@ module.exports = {
         return res.json(record.data);
     },
     agentWiseSendMails: async function (req, res) {
-        const {to,from,emailFunction} = req.allParams();
+        const {to,from,emailFunction,sendBy} = req.allParams();
         const filter = {};
         if(to){
             filter.to = to
@@ -131,6 +131,9 @@ module.exports = {
         }
         if(emailFunction){
             filter.emailFunction = emailFunction
+        }
+        if(sendBy){
+            filter.sendBy = sendBy
         }
         try {
             var record = await SendmailService.agentWiseSendMails(req, filter);

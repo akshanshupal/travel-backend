@@ -22,6 +22,7 @@ module.exports.routes = {
   '/': { view: 'pages/homepage' },
 
   'POST /api/auth/signin': 'AuthController.signIn',
+  'POST /api/auth/signout': 'AuthController.signout',
   'POST /api/auth/getAuthToken': 'AuthController.refreshToken',
 
   'GET /api/health': 'AuthController.health',
@@ -299,4 +300,3 @@ module.exports.routes = {
 
 
 };
-

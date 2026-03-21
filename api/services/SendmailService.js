@@ -249,6 +249,9 @@ module.exports = {
             if(filter.emailFunction){
                 matchStage.emailFunction= filter.emailFunction
             }
+            if(filter.sendBy){
+                matchStage.sendBy = new ObjectId(filter.sendBy);
+            }
       
             if (filter.from && filter.to) {
               matchStage.createdAt = {
