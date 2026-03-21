@@ -31,8 +31,26 @@ module.exports = async function (req, res, next) {
         return res.forbidden({ code: "Error", message: "Not authorised!!" });
     }
 
-    const allowed = Boolean(permissions?.[resource]?.[action]);
+    const resourceAliases = (() => {
+        if (resource === "saveditinerary") return ["saveditinerary", "saved-itinerary"];
+        if (resource === "saved-itinerary") return ["saved-itinerary", "saveditinerary"];
+        return [resource];
+    })();
+
+    const allowed = resourceAliases.some((key) => Boolean(permissions?.[key]?.[action]));
     if (!allowed) {
+        const isUserListLookup =
+            action === "view" &&
+            method === "GET" &&
+            resourceAliases.includes("user") &&
+            parts[0] === "api" &&
+            parts[1] === "user" &&
+            parts.length === 2;
+
+        if (isUserListLookup) {
+            return next();
+        }
+
         return res.forbidden({ code: "Error", message: "Not authorised!!" });
     }
 

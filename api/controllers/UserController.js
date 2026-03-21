@@ -5,6 +5,11 @@ module.exports = {
         rest: false
     },
     find: async function (req, res) {
+        const sessionUser = req?.session?.user;
+        const isAdmin = String(sessionUser?.type || "").toUpperCase() === "ADMIN";
+        const permissions = sessionUser?.role?.permissions || {};
+        const canViewUsers = Boolean(permissions?.user?.view);
+
         const filter = req.query;
         filter.company = req.session.activeCompany.id;
         let {populate,select,totalCount,sortField, sortOrder, page,limit } = req.query;
@@ -38,6 +43,15 @@ module.exports = {
                 delete filter.limit;
             }
         }
+
+        if (!isAdmin && !canViewUsers) {
+            params.select = ["id", "name", "username"];
+            params.populate = undefined;
+            params.populate_select = undefined;
+            params.totalCount = undefined;
+            params.pagination = { page: 1, limit: "All" };
+        }
+
         const populateKeys = Object.keys(filter).filter(key => key.startsWith('select_'));
         if(populateKeys?.length){
             params.populate_select = populateKeys.reduce((acc, item) => {
