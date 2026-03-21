@@ -6,6 +6,9 @@ on:
       - main
       - master
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -20,8 +23,8 @@ jobs:
 
       - name: Validate Docker build (CI sanity check)
         run: |
-          test -f Dockerfile || (echo "Dockerfile missing in $(pwd)"; exit 1)
-          docker build -t travel_app:ci-test -f Dockerfile .
+          test -f travel-b/Dockerfile || (echo "Dockerfile missing in $(pwd)/travel-b"; exit 1)
+          docker build -t travel_app:ci-test -f travel-b/Dockerfile travel-b
 
       - name: Clean remote directory
         uses: appleboy/ssh-action@v1.1.0
@@ -65,7 +68,7 @@ jobs:
               fi
             fi
 
-            REPO_DIR=/home/ubuntu/travel
+            REPO_DIR=/home/ubuntu/travel/travel-b
             # Ensure directory exists (though SCP should create it, good to be safe)
             sudo mkdir -p $REPO_DIR
             sudo chown $USER:$USER $REPO_DIR
