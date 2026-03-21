@@ -291,14 +291,11 @@ module.exports = {
                     });
                 }
                 const company = ctx?.session?.activeCompany?.id;
-                if (!company) {
-                    return reject({
-                        statusCode: 400,
-                        error: { message: 'Company ID is required!' }
-                    });
-                }
     
-                const filter = { id, company };
+                const filter = { id };
+                if (company) {
+                    filter.company = company;
+                }
                 const qryObj = { where: filter };
                 if (params?.select) {
                     qryObj.select = params.select;

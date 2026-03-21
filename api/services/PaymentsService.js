@@ -114,15 +114,13 @@ module.exports = {
   
     findOne: function (ctx, id, params) {
         return new Promise(async (resolve, reject) => {
-            const filter = {
-                id: id,
-                company: ctx?.session?.activeCompany?.id,
-            };
-            if (!filter.id) {
-                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+            const filter = { id: id };
+            const company = ctx?.session?.activeCompany?.id;
+            if (company) {
+                filter.company = company;
             }
-            if (!filter.company) {
-                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+            if (!filter.id) {
+                return reject({ statusCode: 400, error: { message: 'id is required!' } });
             }
             let qryObj = { where: filter };
             if(!qryObj.where?.id){
@@ -465,15 +463,13 @@ module.exports = {
     },
     getReceipt: function (ctx, id) {
         return new Promise(async (resolve, reject) => {
-            const filter = {
-                id: id,
-                company: ctx?.session?.activeCompany?.id,
-            };
+            const filter = { id: id };
+            const company = ctx?.session?.activeCompany?.id;
+            if (company) {
+                filter.company = company;
+            }
             if (!filter.id) {
                 return reject({ statusCode: 400, error: { message: 'id is required!' } });
-            }
-            if (!filter.company) {
-                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
             const {data: payment} = await this.findOne(ctx, id, {populate: ['assignment','paymentStore']});
             if (!payment) {
