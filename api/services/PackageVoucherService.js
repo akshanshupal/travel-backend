@@ -1,8 +1,9 @@
 module.exports = {
     find: function (ctx, filter, params) {
         return new Promise(async (resolve, reject) => {
-            if (!filter.company) {
-                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+            const company = ctx?.session?.activeCompany?.id;
+            if (company) {
+                filter.company = company;
             }
             if (!params) {
                 params = {};
