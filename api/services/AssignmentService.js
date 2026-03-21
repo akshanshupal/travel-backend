@@ -1231,9 +1231,58 @@ module.exports = {
               let aggregateArr = [
                 { $match: matchStage },
                 {
+                  $lookup: {
+                    from: 'payments',
+                    let: { assignmentId: '$_id' },
+                    pipeline: [
+                      {
+                        $match: {
+                          $expr: {
+                            $and: [
+                              {
+                                $or: [
+                                  { $eq: ['$assignment', '$$assignmentId'] },
+                                  {
+                                    $eq: [
+                                      { $toString: '$assignment' },
+                                      { $toString: '$$assignmentId' },
+                                    ],
+                                  },
+                                ],
+                              },
+                              { $eq: ['$status', true] },
+                              { $ne: ['$isDeleted', true] },
+                              { $in: ['$paymentType', ['Cr', 'Dr']] },
+                            ],
+                          },
+                        },
+                      },
+                      {
+                        $group: {
+                          _id: null,
+                          totalCrAmount: {
+                            $sum: {
+                              $cond: [{ $eq: ['$paymentType', 'Cr'] }, '$amount', 0],
+                            },
+                          },
+                          totalDrAmount: {
+                            $sum: {
+                              $cond: [{ $eq: ['$paymentType', 'Dr'] }, '$amount', 0],
+                            },
+                          },
+                        },
+                      },
+                    ],
+                    as: 'paymentStats',
+                  },
+                },
+                { $unwind: { path: '$paymentStats', preserveNullAndEmptyArrays: true } },
+                {
                   $group: {
                     _id: '$agentName',
                     totalAssignments: { $sum: 1 },
+                    totalCrAmount: { $sum: { $ifNull: ['$paymentStats.totalCrAmount', 0] } },
+                    totalDrAmount: { $sum: { $ifNull: ['$paymentStats.totalDrAmount', 0] } },
                   },
                 },
                 {
@@ -1244,81 +1293,18 @@ module.exports = {
                     as: 'agentInfo',
                   },
                 },
-                {
-                  $unwind: {
-                    path: '$agentInfo',
-                    preserveNullAndEmptyArrays: true,
-                  },
-                },
-                {
-                  $lookup: {
-                    from: 'assignment',
-                    let: { agentName: '$_id' },
-                    pipeline: [
-                      {
-                        $match: {
-                          $expr: { $and: [{ $eq: ['$agentName', '$$agentName'] },{ $eq: ['$finished', true] } ]},
-                        },
-                      },
-                      {
-                        $lookup: {
-                          from: 'payments',
-                          localField: '_id',
-                          foreignField: 'assignment',
-                          as: 'payments',
-                        },
-                      },
-                      {
-                        $unwind: {
-                          path: '$payments',
-                          preserveNullAndEmptyArrays: true,
-                        },
-                      },
-                      {
-                        $match: {
-                          'payments.status': true,
-                          'payments.isDeleted': { $ne: true },
-                          $or: [
-                            { 'payments.paymentType': 'Cr' },
-                            { 'payments.paymentType': 'Dr' }
-                          ]
-                        },
-                      },
-                      {
-                        $group: {
-                          _id: null,
-                          totalCrAmount: { $sum: { $cond: [ { $eq: ['$payments.paymentType', 'Cr'] }, '$payments.amount', 0 ]}},
-                          totalDrAmount: { $sum: { $cond: [ { $eq: ['$payments.paymentType', 'Dr'] }, '$payments.amount', 0 ]}}
-                        },
-                      },
-                    ],
-                    as: 'paymentStats',
-                  },
-                },
-                {
-                  $unwind: {
-                    path: '$paymentStats',
-                    preserveNullAndEmptyArrays: true,
-                  },
-                },
+                { $unwind: { path: '$agentInfo', preserveNullAndEmptyArrays: true } },
                 {
                   $project: {
                     _id: 0,
                     user: '$agentInfo.name',
                     totalAssignments: 1,
-                    totalCrAmount: { $ifNull: ['$paymentStats.totalCrAmount', 0] },
-                    totalDrAmount: { $ifNull: ['$paymentStats.totalDrAmount', 0] },
-                    totalProfit: {
-                      $subtract: [
-                        { $ifNull: ['$paymentStats.totalCrAmount', 0] },
-                        { $ifNull: ['$paymentStats.totalDrAmount', 0] }
-                      ],
-                    },
+                    totalCrAmount: 1,
+                    totalDrAmount: 1,
+                    totalProfit: { $subtract: ['$totalCrAmount', '$totalDrAmount'] },
                   },
                 },
-                {
-                  $sort: { totalAssignments: -1 },
-                },
+                { $sort: { totalAssignments: -1 } },
               ];
               
               
