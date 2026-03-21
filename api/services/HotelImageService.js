@@ -94,7 +94,7 @@ module.exports = {
             };
             // company: ctx?.session?.activeCompany?.id,
             if (!filter.id) {
-                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+                return reject({ statusCode: 400, error: { message: 'id is required!' } });
             }
             // if (!filter.company) {
             //     return reject({ statusCode: 400, error: { message: 'company id is required!' } });
