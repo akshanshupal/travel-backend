@@ -49,7 +49,7 @@ module.exports = {
                 qryObj.select = params.select;
             }
             try {
-                var records = await ClientItinerary.find(qryObj);;
+                var records = await ClientItinerary.find(qryObj).meta({makeLikeModifierCaseInsensitive: true});
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -83,7 +83,7 @@ module.exports = {
             //totalCount
             if (params.totalCount) {
                 try {
-                    var totalRecords = await ClientItinerary.count(filter)
+                    var totalRecords = await ClientItinerary.count(filter).meta({makeLikeModifierCaseInsensitive: true});
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
