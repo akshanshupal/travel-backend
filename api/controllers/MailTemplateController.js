@@ -6,6 +6,9 @@ module.exports = {
     },
     find: async function (req, res) {
         const filter = req.query;
+        if (filter && filter.accessPath) delete filter.accessPath;
+        if (filter && filter.accessResource) delete filter.accessResource;
+        if (filter && filter.accessAction) delete filter.accessAction;
         filter.company = req.session.activeCompany.id;
         let {populate,select,totalCount,sortField, sortOrder, page,limit } = req.query;
         const params = {};
@@ -22,7 +25,7 @@ module.exports = {
             delete filter.select;
         }
         if(totalCount){
-            if(typeof totalCount === 'boolean' || totalCount=='true'){
+            if(typeof totalCount === 'boolean' || totalCount === 'true'){
                 params.totalCount= true;
             }
             delete filter.totalCount;
@@ -39,16 +42,17 @@ module.exports = {
             }
         }
         const populateKeys = Object.keys(filter).filter(key => key.startsWith('select_'));
-        if(populateKeys?.length){
+        if(populateKeys && populateKeys.length){
             params.populate_select = populateKeys.reduce((acc, item) => {
-                if(params?.populate?.length&&item.length&&params.populate.includes(item.split('_')[1])){acc[item] = filter[item].split(',');}
+                if(params && params.populate && params.populate.length && item.length && params.populate.includes(item.split('_')[1])){acc[item] = filter[item].split(',');}
                 delete filter[item];
                 return acc;
                 },{}
             );
         }
+        let records;
         try {
-            var records = await MailTemplateService.find(req, filter, params);
+            records = await MailTemplateService.find(req, filter, params);
         } catch (error) {
             return res.serverError(error);
         }
@@ -56,6 +60,9 @@ module.exports = {
     },
     findOne: async function (req, res) {
         const filter = req.query;
+        if (filter && filter.accessPath) delete filter.accessPath;
+        if (filter && filter.accessResource) delete filter.accessResource;
+        if (filter && filter.accessAction) delete filter.accessAction;
         if(!req.params.id)   return res.badRequest('ID is missing');
         let {populate,select } = req.query;
         const params = {};
@@ -70,15 +77,16 @@ module.exports = {
             }
         }
         const populateKeys = Object.keys(filter).filter(key => key.startsWith('select_'));
-        if(populateKeys?.length){
+        if(populateKeys && populateKeys.length){
             params.populate_select = populateKeys.reduce((acc, item) => {
-                if(params?.populate?.length&&item.length&&params.populate.includes(item.split('_')[1])){acc[item] = filter[item].split(',');}
+                if(params && params.populate && params.populate.length && item.length && params.populate.includes(item.split('_')[1])){acc[item] = filter[item].split(',');}
                 return acc;
                 },{}
             );
         }
+        let record;
         try {
-            var record = await MailTemplateService.findOne(req, req.params.id,params);
+            record = await MailTemplateService.findOne(req, req.params.id,params);
         } catch (error) {
             return res.serverError(error);
         }
@@ -91,8 +99,9 @@ module.exports = {
             return res.badRequest({ code: 'Error', message: 'Title is missing' });
         }
 
+        let record;
         try {
-            var record = await MailTemplateService.create(req, req.body);
+            record = await MailTemplateService.create(req, req.body);
         } catch (error) {
             return res.serverError(error);
         }
@@ -102,8 +111,9 @@ module.exports = {
 
     updateOne: async function (req, res) {
 
+        let record;
         try {
-            var record = await MailTemplateService.updateOne(req, req.params.id, req.body);
+            record = await MailTemplateService.updateOne(req, req.params.id, req.body);
         } catch (error) {
             return res.serverError(error);
         }
@@ -112,10 +122,11 @@ module.exports = {
     },
     deleteOne: async function (req, res) {
 
+        let record;
         try {
-            var record = await MailTemplateService.deleteOne(req, req.params.id);
+            record = await MailTemplateService.deleteOne(req, req.params.id);
         } catch (error) {
-            return res.status(error?.statusCode).send(error.error); 
+            return res.status(error && error.statusCode ? error.statusCode : 500).send(error.error);
         }
 
         return res.json(record.data);

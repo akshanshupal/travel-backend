@@ -1,15 +1,15 @@
 module.exports = async function (req, res, next) {
-    const user = req?.session?.user;
+    const user = req && req.session ? req.session.user : undefined;
     if (!user) {
         return res.forbidden({ code: "UnAuthorised", message: "Please login!" });
     }
 
-    if (String(user?.type || "").toUpperCase() === "ADMIN") {
+    if (String(user.type || "").toUpperCase() === "ADMIN") {
         return next();
     }
 
     const role = user.role;
-    const permissions = role?.permissions || {};
+    const permissions = (role && role.permissions) ? role.permissions : {};
 
     const method = String(req.method || "").toUpperCase();
     const action =
@@ -23,7 +23,7 @@ module.exports = async function (req, res, next) {
                         ? "delete"
                         : "view";
 
-    const controller = String(req.options?.controller || "").toLowerCase();
+    const controller = String(req.options && req.options.controller ? req.options.controller : "").toLowerCase();
     const parts = String(req.path || "").split("/").filter(Boolean);
     const resource = (controller || parts[1] || "").toLowerCase();
 
@@ -31,15 +31,30 @@ module.exports = async function (req, res, next) {
         return res.forbidden({ code: "Error", message: "Not authorised!!" });
     }
 
-    const resourceAliases = (() => {
-        if (resource === "saveditinerary") return ["saveditinerary", "saved-itinerary"];
-        if (resource === "saved-itinerary") return ["saved-itinerary", "saveditinerary"];
-        if (resource === "sendmail") return ["sendmail", "itineraryreports"];
-        return [resource];
-    })();
+    const resolveResourceAliases = (key) => {
+        if (key === "saveditinerary") return ["saveditinerary", "saved-itinerary"];
+        if (key === "saved-itinerary") return ["saved-itinerary", "saveditinerary"];
+        if (key === "sendmail") return ["sendmail", "itineraryreports"];
+        return [key];
+    };
+    const resourceAliases = resolveResourceAliases(resource);
 
-    const allowed = resourceAliases.some((key) => Boolean(permissions?.[key]?.[action]));
+    const hasAccess = (resourceKey, accessAction) => {
+        const keys = resolveResourceAliases(resourceKey);
+        return keys.some((k) => Boolean(permissions && permissions[k] && permissions[k][accessAction]));
+    };
+
+    const allowed = resourceAliases.some((key) => Boolean(permissions && permissions[key] && permissions[key][action]));
     if (!allowed) {
+        const isMailTemplateLookup = action === "view" && method === "GET" && resourceAliases.includes("mailtemplate");
+        if (isMailTemplateLookup) {
+            const accessResource = req && req.query && req.query.accessResource ? String(req.query.accessResource).toLowerCase() : "";
+            const accessAction = req && req.query && req.query.accessAction ? String(req.query.accessAction).toLowerCase() : "";
+            if (accessResource && accessAction && hasAccess(accessResource, accessAction)) {
+                return next();
+            }
+        }
+
         const isUserListLookup =
             action === "view" &&
             method === "GET" &&

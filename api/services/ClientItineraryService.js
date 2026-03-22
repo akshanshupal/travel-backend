@@ -15,8 +15,9 @@ module.exports = {
             if (filter.email && filter.email.trim()) filter.email = { contains: filter.email.trim() };
             if (filter.mobile && filter.mobile.trim()) filter.mobile = { contains: filter.mobile.trim() };
             if (filter.tourDate) {
-                let df = sails.dayjs(filter.tourDate).startOf('date').toDate();
-                let dt = sails.dayjs(filter.tourDate).endOf('date').toDate();
+                const base = sails.dayjs.tz(filter.tourDate, 'Asia/Kolkata');
+                let df = base.startOf('day').toDate();
+                let dt = base.endOf('day').toDate();
                 filter.tourDate = { '>=': df, '<=': dt };
             }
             if(filter.clientDetails){
@@ -29,25 +30,25 @@ module.exports = {
             let sortField = 'updatedAt';
             let sortOrder = 'DESC';
             const allowedSortFields = ['createdAt', 'updatedAt', 'tourDate'];
-            const requestedSortField = params?.sortField || filter?.sortField;
-            const requestedSortOrder = params?.sortOrder || filter?.sortOrder;
+            const requestedSortField = (params && params.sortField) || (filter && filter.sortField);
+            const requestedSortOrder = (params && params.sortOrder) || (filter && filter.sortOrder);
             if (requestedSortField && allowedSortFields.includes(String(requestedSortField))) {
                 sortField = String(requestedSortField);
             }
             if (requestedSortOrder && ['ASC', 'DESC'].includes(String(requestedSortOrder).toUpperCase())) {
                 sortOrder = String(requestedSortOrder).toUpperCase();
             }
-            if (filter?.sortField) delete filter.sortField;
-            if (filter?.sortOrder) delete filter.sortOrder;
+            if (filter && filter.sortField) delete filter.sortField;
+            if (filter && filter.sortOrder) delete filter.sortOrder;
             qryObj.sort = sortField + ' ' + sortOrder;
             //pagination
             let page = 1;
             let limit = 10;
-            if(params?.pagination?.page){
+            if (params && params.pagination && params.pagination.page) {
                 page = +params.pagination.page
             }
-            if(params?.pagination?.limit){
-                if(params?.pagination?.limit=='All'||params?.pagination?.limit=='all'){
+            if (params && params.pagination && params.pagination.limit) {
+                if (params.pagination.limit=='All'||params.pagination.limit=='all') {
                     limit = null
                 }else{
                     limit = +params.pagination.limit
@@ -110,7 +111,7 @@ module.exports = {
         return new Promise(async (resolve, reject) => {
             const filter = {
                 id: id,
-                company: ctx?.session?.activeCompany?.id,
+                company: ctx && ctx.session && ctx.session.activeCompany ? ctx.session.activeCompany.id : undefined,
             };
             if (!filter.id) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
@@ -119,7 +120,7 @@ module.exports = {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
             let qryObj = { where: filter };
-            if(!qryObj.where?.id){
+            if (!qryObj.where || !qryObj.where.id) {
                 return reject({ statusCode: 400, error: { message: "ID Missing!" } });
             }
             if (!params) {
@@ -160,7 +161,7 @@ module.exports = {
                     }
                 }   
             }
-            if(record?.clientArea){
+            if (record && record.clientArea) {
                 let obj = record.clientArea;
                 function isBase64(str) {
                     try {
@@ -191,7 +192,7 @@ module.exports = {
     create: function (ctx, data, avoidRecordFetch) {
         return new Promise(async (resolve, reject) => {
             if (!data.company) {
-                data.company= ctx?.session?.activeCompany?.id;
+                data.company = ctx && ctx.session && ctx.session.activeCompany ? ctx.session.activeCompany.id : undefined;
             }
 
             if (!data.company) {
@@ -200,7 +201,7 @@ module.exports = {
             if(!data.itinerary){
                 return reject({ statusCode: 400, error: { message: 'itinerary id is required!' } });
             }
-            if (data?.tourDate && typeof data?.tourDate === 'string') {
+            if (data.tourDate && typeof data.tourDate === 'string') {
                 data.tourDate = sails.dayjs(data.tourDate);
                 if (!data.tourDate.isValid()) {
                     return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid tourDate is required!' } });
@@ -225,7 +226,7 @@ module.exports = {
             data.clientArea = itineraryData.area;
             data.clientSites = itineraryData.sites;
 
-            data.createdBy = ctx?.session?.user?.id;
+            data.createdBy = ctx && ctx.session && ctx.session.user ? ctx.session.user.id : undefined;
 
             if (avoidRecordFetch) {
                 try {
@@ -250,7 +251,7 @@ module.exports = {
         return new Promise(async (resolve, reject) => {
             const filter = {
                 id: id,
-                company: ctx?.session?.activeCompany?.id,
+                company: ctx && ctx.session && ctx.session.activeCompany ? ctx.session.activeCompany.id : undefined,
             };
             if (!filter.id) {
                 return reject({ statusCode: 400, error: { message: 'id is required!' } });
@@ -261,7 +262,7 @@ module.exports = {
             if (!updtBody.company) {
                 updtBody.company= filter.company;
             }
-            if (updtBody?.tourDate && typeof updtBody?.tourDate === 'string') {
+            if (updtBody.tourDate && typeof updtBody.tourDate === 'string') {
                 updtBody.tourDate = sails.dayjs(updtBody.tourDate);
                 if (!updtBody.tourDate.isValid()) {
                     return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid tourDate is required!' } });
@@ -269,7 +270,7 @@ module.exports = {
                     updtBody.tourDate = updtBody.tourDate.toDate();
                 }
             }
-            updtBody.updatedBy = ctx?.session?.user?.id;
+            updtBody.updatedBy = ctx && ctx.session && ctx.session.user ? ctx.session.user.id : undefined;
 
 
             try {
@@ -285,7 +286,7 @@ module.exports = {
         return new Promise(async (resolve, reject) => {
             const filter = {
                 id: id,
-                company: ctx?.session?.activeCompany?.id,
+                company: ctx && ctx.session && ctx.session.activeCompany ? ctx.session.activeCompany.id : undefined,
             };
             if (!filter.id) {
                 return reject({ statusCode: 400, error: { message: 'id is required!' } });
@@ -295,7 +296,7 @@ module.exports = {
             }
             let deletedData
             try {
-                deletedData =  await this.updateOne(ctx, id, {isDeleted:true, deletedAt: new Date(), deletedBy: ctx?.user?.id})
+                deletedData =  await this.updateOne(ctx, id, {isDeleted:true, deletedAt: new Date(), deletedBy: ctx && ctx.user ? ctx.user.id : undefined})
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -306,7 +307,7 @@ module.exports = {
     },
     agentWiseClientItineraries: function (ctx, filter) {
             return new Promise(async (resolve, reject) => {
-                filter.company = ctx?.session?.activeCompany?.id
+                filter.company = ctx && ctx.session && ctx.session.activeCompany ? ctx.session.activeCompany.id : undefined
                 if (!filter.company) {
                     return reject({ statusCode: 400, error: { message: 'company id is required!' } });
                 }
@@ -374,8 +375,8 @@ module.exports = {
     
     agentDurationWiseClientItineraries: async function (req, filter) {
         const { grouping, from, to } = filter;
-        const originalStart = sails.dayjs(from).startOf('day');
-        const originalEnd = sails.dayjs(to).endOf('day');
+        const originalStart = sails.dayjs.tz(from, 'Asia/Kolkata').startOf('day');
+        const originalEnd = sails.dayjs.tz(to, 'Asia/Kolkata').endOf('day');
 
         // Add company filter
         const matchQuery = {
@@ -383,7 +384,7 @@ module.exports = {
                 $gte: originalStart.toDate(), 
                 $lte: originalEnd.toDate() 
             },
-            company: new ObjectId(req?.session?.activeCompany?.id),
+            company: new ObjectId(req && req.session && req.session.activeCompany ? req.session.activeCompany.id : undefined),
             isDeleted: { $ne: true }
         };
         
