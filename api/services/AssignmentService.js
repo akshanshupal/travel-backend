@@ -17,6 +17,20 @@ module.exports = {
             if (filter.email && filter.email.trim()) filter.email = { contains: filter.email.trim() };
             if (filter.mobile && filter.mobile.trim()) filter.mobile = { contains: filter.mobile.trim() };
 
+            const coerceBooleanFilter = (key) => {
+                if (!filter.hasOwnProperty(key)) return;
+                const raw = filter[key];
+                if (raw === true || raw === false) return;
+                const value = String(raw).trim().toLowerCase();
+                if (value === 'true') filter[key] = true;
+                else if (value === 'false') filter[key] = false;
+            };
+            coerceBooleanFilter('status');
+            coerceBooleanFilter('verify');
+            coerceBooleanFilter('finished');
+            coerceBooleanFilter('bookingStatus');
+            coerceBooleanFilter('paymentStatus');
+
             const tzOffsetMinutesRaw = filter.tzOffsetMinutes;
             delete filter.tzOffsetMinutes;
             const tzOffsetMinutes = Number.isFinite(Number(tzOffsetMinutesRaw)) ? Number(tzOffsetMinutesRaw) : 0;
