@@ -12,9 +12,10 @@ module.exports = async function (req, res, next) {
     const permissions = (role && role.permissions) ? role.permissions : {};
 
     const query = req && req.query ? req.query : {};
-    const accessMode = query && query.accessMode ? String(query.accessMode).toLowerCase() : "";
-    const accessResource = query && query.accessResource ? String(query.accessResource).toLowerCase() : "";
-    const accessAction = query && query.accessAction ? String(query.accessAction).toLowerCase() : "";
+    const accessContext = req && req.accessContext ? req.accessContext : {};
+    const accessMode = (accessContext && accessContext.accessMode ? String(accessContext.accessMode) : (query && query.accessMode ? String(query.accessMode) : "")).toLowerCase();
+    const accessResource = (accessContext && accessContext.accessResource ? String(accessContext.accessResource) : (query && query.accessResource ? String(query.accessResource) : "")).toLowerCase();
+    const accessAction = (accessContext && accessContext.accessAction ? String(accessContext.accessAction) : (query && query.accessAction ? String(query.accessAction) : "")).toLowerCase();
     if (query) {
         if (query.accessPath) delete query.accessPath;
         if (query.accessResource) delete query.accessResource;

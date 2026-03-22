@@ -35,6 +35,7 @@ module.exports.http = {
       // 'session',
       'bodyParser',
       'parseCompany',
+      'captureAccessContext',
       // 'setSessionUser',
       'compress',
       // 'poweredBy',
@@ -45,7 +46,7 @@ module.exports.http = {
 
     parseCompany: async function (req, res, next) {
       console.log('new req', req.url);
-      if (req?.headers['api-key']) {
+      if (req && req.headers && req.headers['api-key']) {
           let clientApiKey = req.headers['api-key'];
           let companyConfig
           try {
@@ -53,11 +54,11 @@ module.exports.http = {
           } catch (error) {
             return res.send(404, 'Sorry, No website found!'); 
           }
-          if(!companyConfig?.length){
+          if(!(companyConfig && companyConfig.length)){
             return res.send(404, 'Company not registered!'); 
           }
           let method = req.method;
-          if (method == 'GET') {
+          if (method === 'GET') {
               req.query = {...req.query,  company: companyConfig[0].company };
           } else {
               if (!Array.isArray(req.body)) {
@@ -66,10 +67,10 @@ module.exports.http = {
           }
           // clientConfig.path = path.resolve(__dirname, '../clients/' + clientConfig.publicDir);
           sails.activeClient = companyConfig[0].client;
-          next();
-      } else if (req?.method == 'OPTIONS' || req.url == '/api/health' || req.url?.includes("/api/file/download/")) {
-          next();
-      } else if (req?.headers?.origin || req?.headers?.apihost) {
+          return next();
+      } else if ((req && req.method === 'OPTIONS') || req.url === '/api/health' || (req.url && req.url.includes("/api/file/download/"))) {
+          return next();
+      } else if (req && req.headers && (req.headers.origin || req.headers.apihost)) {
           let url;
           if (req.headers.apihost) {
               url = new URL(req.headers.apihost);
@@ -85,8 +86,8 @@ module.exports.http = {
               return res.status(403).send(error);
           }
           let method = req.method;
-          if (hostCompany?.reqHost == hostname) {
-              if (method == 'GET') {
+          if (hostCompany && hostCompany.reqHost === hostname) {
+              if (method === 'GET') {
                   req.query = {...req.query, company: hostCompany.id};
               } else {
                   if (!Array.isArray(req.body)) {
@@ -98,7 +99,7 @@ module.exports.http = {
                 }
               req.session.activeCompany = hostCompany;
 
-              next();
+              return next();
           } else {
               let companyConfig;
               try {
@@ -125,19 +126,55 @@ module.exports.http = {
                 }
               req.session.activeCompany = cacheConf;
               let method = req.method;
-              if (method == 'GET') {
+              if (method === 'GET') {
                   req.query = {...req.query,  company: companyConfig.company.id };
               } else {
                   if (!Array.isArray(req.body)) {
                       req.body = {...req.body,  company: companyConfig.company.id };
                   }
               }
-              next();
+              return next();
           }
       } else {
           return res.status(403).send({ code: '403', message: 'Not authorised!' });
       }
   },
+
+    captureAccessContext: function (req, res, next) {
+      const query = (req && req.query) ? req.query : null;
+      const body = (req && req.body && !Array.isArray(req.body)) ? req.body : null;
+      const ctx = {};
+
+      if (query) {
+        if (query.accessMode) ctx.accessMode = query.accessMode;
+        if (query.accessResource) ctx.accessResource = query.accessResource;
+        if (query.accessAction) ctx.accessAction = query.accessAction;
+        if (query.accessPath) ctx.accessPath = query.accessPath;
+
+        if (query.accessMode) delete query.accessMode;
+        if (query.accessResource) delete query.accessResource;
+        if (query.accessAction) delete query.accessAction;
+        if (query.accessPath) delete query.accessPath;
+      }
+
+      if (body) {
+        if (body.accessMode && !ctx.accessMode) ctx.accessMode = body.accessMode;
+        if (body.accessResource && !ctx.accessResource) ctx.accessResource = body.accessResource;
+        if (body.accessAction && !ctx.accessAction) ctx.accessAction = body.accessAction;
+        if (body.accessPath && !ctx.accessPath) ctx.accessPath = body.accessPath;
+
+        if (body.accessMode) delete body.accessMode;
+        if (body.accessResource) delete body.accessResource;
+        if (body.accessAction) delete body.accessAction;
+        if (body.accessPath) delete body.accessPath;
+      }
+
+      if (Object.keys(ctx).length) {
+        req.accessContext = ctx;
+      }
+
+      return next();
+    },
 
 
     /***************************************************************************
