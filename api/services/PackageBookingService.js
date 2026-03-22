@@ -15,6 +15,9 @@ module.exports = {
             if(!filter.hasOwnProperty('isDeleted')){
                 filter.isDeleted = { '!=': true };
             }
+            if (Array.isArray(filter.assignment)) {
+                filter.assignment = { in: filter.assignment };
+            }
             let qryObj = {where : filter};
             //sort
             let sortField = 'createdAt';
@@ -23,11 +26,12 @@ module.exports = {
             //pagination
             let page = 1;
             let limit = 30;
-            if(params?.pagination?.page){
+            if (params && params.pagination && params.pagination.page) {
                 page = +params.pagination.page
             }
-            if(params?.pagination?.limit){
-                if(params?.pagination?.limit=='All'||params?.pagination?.limit=='all'){
+            if (params && params.pagination && params.pagination.limit) {
+                const limitValue = String(params.pagination.limit).toLowerCase();
+                if (limitValue === 'all') {
                     limit = null
                 }else{
                     limit = +params.pagination.limit
@@ -39,8 +43,9 @@ module.exports = {
             if (params.select) {
                 qryObj.select = params.select;
             }
+            let records;
             try {
-                var records = await PackageBooking.find(qryObj);;
+                records = await PackageBooking.find(qryObj);;
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -73,8 +78,9 @@ module.exports = {
             const rtrn = { data : records }
             //totalCount
             if (params.totalCount) {
+                let totalRecords;
                 try {
-                    var totalRecords = await PackageBooking.count(filter)
+                    totalRecords = await PackageBooking.count(filter)
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
@@ -88,9 +94,10 @@ module.exports = {
     },
     findOne: function (ctx, id, params) {
         return new Promise(async (resolve, reject) => {
+            const activeCompany = (ctx && ctx.session && ctx.session.activeCompany) ? ctx.session.activeCompany : null;
             const filter = {
                 id: id,
-                company: ctx?.session?.activeCompany?.id,
+                company: activeCompany ? activeCompany.id : undefined,
             };
             if (!filter.id) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
@@ -99,7 +106,7 @@ module.exports = {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
             let qryObj = { where: filter };
-            if(!qryObj.where?.id){
+            if (!qryObj.where || !qryObj.where.id) {
                 return reject({ statusCode: 400, error: { message: "ID Missing!" } });
             }
             if (!params) {
@@ -108,8 +115,9 @@ module.exports = {
             if (params.select) {
                 qryObj.select = params.select;
             }
+            let record;
             try {
-                var record = await PackageBooking.findOne(qryObj);;
+                record = await PackageBooking.findOne(qryObj);;
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -147,7 +155,7 @@ module.exports = {
     create: function (ctx, data, avoidRecordFetch) {
         return new Promise(async (resolve, reject) => {
             if (!data.company) {
-                data.company= ctx?.session?.activeCompany?.id;
+                data.company = (ctx && ctx.session && ctx.session.activeCompany) ? ctx.session.activeCompany.id : undefined;
             }
 
             if (!data.company) {
@@ -157,7 +165,7 @@ module.exports = {
                 data.status = true
             }
 
-            if (data?.startDate && typeof data?.startDate === 'string') {
+            if (data.startDate && typeof data.startDate === 'string') {
                 data.startDate = sails.dayjs(data.startDate);
                 if (!data.startDate.isValid()) {
                     return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid startDate is required!' } });
@@ -165,7 +173,7 @@ module.exports = {
                     data.startDate = data.startDate.toDate();
                 }
             }
-            if (data?.endDate && typeof data?.endDate === 'string') {
+            if (data.endDate && typeof data.endDate === 'string') {
                 data.endDate = sails.dayjs(data.endDate);
                 if (!data.endDate.isValid()) {
                     return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid endDate is required!' } });
@@ -173,7 +181,7 @@ module.exports = {
                     data.endDate = data.endDate.toDate();
                 }
             }
-            if (data?.nextPaymentDate && typeof data?.nextPaymentDate === 'string') {
+            if (data.nextPaymentDate && typeof data.nextPaymentDate === 'string') {
                 data.nextPaymentDate = sails.dayjs(data.nextPaymentDate);
                 if (!data.nextPaymentDate.isValid()) {
                     return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid nextPaymentDate is required!' } });
@@ -181,15 +189,16 @@ module.exports = {
                     data.nextPaymentDate = data.nextPaymentDate.toDate();
                 }
             }
+            let record;
             if (avoidRecordFetch) {
                 try {
-                    var record = await PackageBooking.create(data);
+                    record = await PackageBooking.create(data);
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
             } else {
                 try {
-                    var record = await PackageBooking.create(data).fetch();
+                    record = await PackageBooking.create(data).fetch();
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
@@ -202,9 +211,10 @@ module.exports = {
     },
     updateOne: function (ctx, id, updtBody) {
         return new Promise(async (resolve, reject) => {
+            const activeCompany = (ctx && ctx.session && ctx.session.activeCompany) ? ctx.session.activeCompany : null;
             const filter = {
                 id: id,
-                company: ctx?.session?.activeCompany?.id,
+                company: activeCompany ? activeCompany.id : undefined,
             };
             if (!filter.id) {
                 return reject({ statusCode: 400, error: { message: 'id is required!' } });
@@ -215,7 +225,7 @@ module.exports = {
             if (!updtBody.company) {
                 updtBody.company= filter.company;
             }
-            if (updtBody?.startDate && typeof updtBody?.startDate === 'string') {
+            if (updtBody.startDate && typeof updtBody.startDate === 'string') {
                 updtBody.startDate = sails.dayjs(updtBody.startDate);
                 if (!updtBody.startDate.isValid()) {
                     return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid startDate is required!' } });
@@ -223,7 +233,7 @@ module.exports = {
                     updtBody.startDate = updtBody.startDate.toDate();
                 }
             }
-            if (updtBody?.endDate && typeof updtBody?.endDate === 'string') {
+            if (updtBody.endDate && typeof updtBody.endDate === 'string') {
                 updtBody.endDate = sails.dayjs(updtBody.endDate);
                 if (!updtBody.endDate.isValid()) {
                     return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid endDate is required!' } });
@@ -231,7 +241,7 @@ module.exports = {
                     updtBody.endDate = updtBody.endDate.toDate();
                 }
             }
-            if (updtBody?.nextPaymentDate && typeof updtBody?.nextPaymentDate === 'string') {
+            if (updtBody.nextPaymentDate && typeof updtBody.nextPaymentDate === 'string') {
                 updtBody.nextPaymentDate = sails.dayjs(updtBody.nextPaymentDate);
                 if (!updtBody.nextPaymentDate.isValid()) {
                     return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid nextPaymentDate is required!' } });
@@ -239,7 +249,7 @@ module.exports = {
                     updtBody.nextPaymentDate = updtBody.nextPaymentDate.toDate();
                 }
             }
-            if(updtBody?.amount && typeof updtBody?.amount === 'string'){
+            if (updtBody.amount && typeof updtBody.amount === 'string') {
                 updtBody.amount = parseFloat(updtBody.amount);
                 let {data} = await this.findOne(ctx, id);
 
@@ -252,8 +262,9 @@ module.exports = {
                     }
                 }
             }
+            let record;
             try {
-                var record = await PackageBooking.updateOne(filter).set(updtBody);
+                record = await PackageBooking.updateOne(filter).set(updtBody);
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -263,9 +274,10 @@ module.exports = {
     },
     deleteOne: function (ctx, id) {
         return new Promise(async (resolve, reject) => {
+            const activeCompany = (ctx && ctx.session && ctx.session.activeCompany) ? ctx.session.activeCompany : null;
             const filter = {
                 id: id,
-                company: ctx?.session?.activeCompany?.id,
+                company: activeCompany ? activeCompany.id : undefined,
             };
             if (!filter.id) {
                 return reject({ statusCode: 400, error: { message: 'id is required!' } });
@@ -288,7 +300,8 @@ module.exports = {
             }
             let deletedArea
             try {
-                deletedArea =  await this.updateOne(ctx, id, {isDeleted:true, deletedAt: new Date(), deletedBy: ctx?.user?.id})
+                const deletedBy = (ctx && ctx.user) ? ctx.user.id : undefined;
+                deletedArea =  await this.updateOne(ctx, id, {isDeleted:true, deletedAt: new Date(), deletedBy: deletedBy})
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -298,7 +311,8 @@ module.exports = {
 
     decreasePendingAmount: function (ctx, id, amount, nextPaymentDate) {
         return new Promise(async (resolve, reject) => {
-            const filter = { id: id, company: ctx?.session?.activeCompany?.id };
+            const activeCompany = (ctx && ctx.session && ctx.session.activeCompany) ? ctx.session.activeCompany : null;
+            const filter = { id: id, company: activeCompany ? activeCompany.id : undefined };
             if (!filter.id) {
                 return reject({ statusCode: 400, error: { message: 'id is required!' } });
             }

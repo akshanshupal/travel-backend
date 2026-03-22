@@ -49,11 +49,12 @@ module.exports = {
             //pagination
             let page = 1;
             let limit = 10;
-            if(params?.pagination?.page){
+            if (params && params.pagination && params.pagination.page) {
                 page = +params.pagination.page
             }
-            if(params?.pagination?.limit){
-                if(params?.pagination?.limit=='All'||params?.pagination?.limit=='all'){
+            if (params && params.pagination && params.pagination.limit) {
+                const limitValue = String(params.pagination.limit).toLowerCase();
+                if (limitValue === 'all') {
                     limit = null
                 }else{
                     limit = +params.pagination.limit
@@ -65,8 +66,9 @@ module.exports = {
             if (params.select) {
                 qryObj.select = params.select;
             }
+            let records;
             try {
-                var records = await Assignment.find(qryObj);;
+                records = await Assignment.find(qryObj);;
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -97,10 +99,39 @@ module.exports = {
                 }
             }
             const rtrn = { data : records }
+            if(records.length){
+                const assignmentIds = records.map((r) => r.id).filter(Boolean);
+                if (assignmentIds.length) {
+                    let packageBookings = [];
+                    try {
+                        packageBookings = await PackageBookingService.find(
+                            ctx,
+                            { assignment: assignmentIds, company: filter.company, isDeleted: { '!=': true } },
+                            { pagination: { limit: 'all' }, select: ['assignment', 'amount'] }
+                        );
+                    } catch (error) {
+                        return reject({ statusCode: 500, error: error });
+                    }
+
+                    const amountByAssignment = packageBookings.reduce((acc, booking) => {
+                        const key = String(booking.assignment || '');
+                        if (!key) return acc;
+                        const amount = Number(booking.amount) || 0;
+                        acc[key] = (acc[key] || 0) + amount;
+                        return acc;
+                    }, {});
+
+                    for (let i = 0; i < records.length; i++) {
+                        const key = String(records[i].id || '');
+                        records[i].bookingsAmount = amountByAssignment[key] || 0;
+                    }
+                }
+            }
             //totalCount
             if (params.totalCount) {
+                let totalRecords;
                 try {
-                    var totalRecords = await Assignment.count(filter)
+                    totalRecords = await Assignment.count(filter)
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
@@ -114,9 +145,10 @@ module.exports = {
     },
     findOne: function (ctx, id, params) {
         return new Promise(async (resolve, reject) => {
+            const activeCompany = (ctx && ctx.session && ctx.session.activeCompany) ? ctx.session.activeCompany : null;
             const filter = {
                 id: id,
-                company: ctx?.session?.activeCompany?.id,
+                company: activeCompany ? activeCompany.id : undefined,
             };
             if (!filter.id) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
@@ -126,7 +158,7 @@ module.exports = {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
             let qryObj = { where: filter };
-            if(!qryObj.where?.id){
+            if (!qryObj.where || !qryObj.where.id) {
                 return reject({ statusCode: 400, error: { message: "ID Missing!" } });
             }
             if (!params) {
@@ -138,8 +170,9 @@ module.exports = {
             if (ctx.adjustment) {
                 filter.adjustment = ctx.adjustment;
             }
+            let record;
             try {
-                var record = await Assignment.findOne(qryObj);;
+                record = await Assignment.findOne(qryObj);;
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -177,7 +210,7 @@ module.exports = {
     create: function (ctx, data, avoidRecordFetch) {
         return new Promise(async (resolve, reject) => {
             if (!data.company) {
-                data.company= ctx?.session?.activeCompany?.id;
+                data.company = (ctx && ctx.session && ctx.session.activeCompany) ? ctx.session.activeCompany.id : undefined;
             }
 
             if (!data.company) {
@@ -195,7 +228,7 @@ module.exports = {
             if(!data.hasOwnProperty('status')){
                 data.status = true
             }
-            if (data?.bookingDate && typeof data?.bookingDate === 'string') {
+            if (data.bookingDate && typeof data.bookingDate === 'string') {
                 data.bookingDate = sails.dayjs(data.bookingDate);
                 if (!data.bookingDate.isValid()) {
                     return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid bookingDate is required!' } });
@@ -203,7 +236,7 @@ module.exports = {
                     data.bookingDate = data.bookingDate.toDate();
                 }
             }
-            if (data?.leadDate && typeof data?.leadDate === 'string') {
+            if (data.leadDate && typeof data.leadDate === 'string') {
                 data.leadDate = sails.dayjs(data.leadDate);
                 if (!data.leadDate.isValid()) {
                     return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid leadDate is required!' } });
@@ -211,7 +244,7 @@ module.exports = {
                     data.leadDate = data.leadDate.toDate();
                 }
             }
-            if (data?.tourDate && typeof data?.tourDate === 'string') {
+            if (data.tourDate && typeof data.tourDate === 'string') {
                 data.tourDate = sails.dayjs(data.tourDate);
                 if (!data.tourDate.isValid()) {
                     return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid tourDate is required!' } });
@@ -224,9 +257,10 @@ module.exports = {
             //     return reject({ statusCode: 404, error: { message: 'Company configuration not found!' } });
             // }
             // data.configSettings = companyConfig;
+            const activeCompany = (ctx && ctx.session && ctx.session.activeCompany) ? ctx.session.activeCompany : null;
             let packageId;
-            if(ctx?.session?.activeCompany?.packagePrefix){
-                packageId = ctx.session.activeCompany.packagePrefix
+            if (activeCompany && activeCompany.packagePrefix) {
+                packageId = activeCompany.packagePrefix
             }
             const getInitials = (name) => {
                 if (!name || typeof name !== "string") return "";
@@ -239,14 +273,18 @@ module.exports = {
                 
                 return initials.join(""); // Combine all initials
             };
-            if(data?.clientName){
-                packageId = packageId + getInitials(data?.clientName)
+            if (data.clientName) {
+                packageId = packageId + getInitials(data.clientName)
             }
-            let key = 'packageNo' +':' + ctx.session.activeCompany.id.toString() + ':' + ctx?.session?.activeCompany?.packagePrefix || '';
+            const packagePrefix = (activeCompany && activeCompany.packagePrefix) ? activeCompany.packagePrefix : '';
+            let key = 'packageNo' +':' + String(activeCompany ? activeCompany.id : '') + ':' + packagePrefix || '';
 
             let redisPackagePrefix = await sails.redis.incr(key);
               
-            data.packageId = packageId + redisPackagePrefix.toString().padStart((ctx?.session?.activeCompany?.packageLength-packageId.length), '0');
+            const packageLength = (activeCompany && typeof activeCompany.packageLength === 'number') ? activeCompany.packageLength : 0;
+            const packagePrefixLength = packageId ? packageId.length : 0;
+            const digitsLength = Math.max(packageLength - packagePrefixLength, 0);
+            data.packageId = packageId + redisPackagePrefix.toString().padStart(digitsLength, '0');
             let paymentData;
             if(data.tokenAmount&&data.paymentStore&&data.paymentDate){
                 
@@ -262,7 +300,7 @@ module.exports = {
                 if(data.tokenImg){
                     paymentData.paymentImg = data.tokenImg;
                 }
-                if (data?.paymentDate && typeof data?.paymentDate === 'string') {
+                if (data.paymentDate && typeof data.paymentDate === 'string') {
                     data.paymentDate = sails.dayjs(data.paymentDate);
                     if (!data.paymentDate.isValid()) {
                         return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid paymentDate is required!' } });
@@ -282,15 +320,16 @@ module.exports = {
 
             delete data.tokenImg
             delete data.paymentDate
+            let record;
             if (avoidRecordFetch) {
                 try {
-                    var record = await Assignment.create(data);
+                    record = await Assignment.create(data);
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
             } else {
                 try {
-                    var record = await Assignment.create(data).fetch();
+                    record = await Assignment.create(data).fetch();
                 } catch (error) {
                     return reject({ statusCode: 500, error: error });
                 }
@@ -317,9 +356,10 @@ module.exports = {
     },
     updateOne: function (ctx, id, updtBody) {
         return new Promise(async (resolve, reject) => {
+            const activeCompany = (ctx && ctx.session && ctx.session.activeCompany) ? ctx.session.activeCompany : null;
             const filter = {
                 id: id,
-                company: ctx?.session?.activeCompany?.id,
+                company: activeCompany ? activeCompany.id : undefined,
             };
             if (!filter.id) {
                 return reject({ statusCode: 400, error: { message: 'id is required!' } });
@@ -330,7 +370,7 @@ module.exports = {
             if (!updtBody.company) {
                 updtBody.company= filter.company;
             }
-            if (updtBody?.bookingDate && typeof updtBody?.bookingDate === 'string') {
+            if (updtBody.bookingDate && typeof updtBody.bookingDate === 'string') {
                 updtBody.bookingDate = sails.dayjs(updtBody.bookingDate);
                 if (!updtBody.bookingDate.isValid()) {
                     return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid bookingDate is required!' } });
@@ -338,7 +378,7 @@ module.exports = {
                     updtBody.bookingDate = updtBody.bookingDate.toDate();
                 }
             }
-            if (updtBody?.leadDate && typeof updtBody?.leadDate === 'string') {
+            if (updtBody.leadDate && typeof updtBody.leadDate === 'string') {
                 updtBody.leadDate = sails.dayjs(updtBody.leadDate);
                 if (!updtBody.leadDate.isValid()) {
                     return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid leadDate is required!' } });
@@ -346,7 +386,7 @@ module.exports = {
                     updtBody.leadDate = updtBody.leadDate.toDate();
                 }
             }
-            if (updtBody?.tourDate && typeof updtBody?.tourDate === 'string') {
+            if (updtBody.tourDate && typeof updtBody.tourDate === 'string') {
                 updtBody.tourDate = sails.dayjs(updtBody.tourDate);
                 if (!updtBody.tourDate.isValid()) {
                     return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid tourDate is required!' } });
@@ -357,8 +397,9 @@ module.exports = {
             
             
 
+            let record;
             try {
-                var record = await Assignment.updateOne(filter).set(updtBody);
+                record = await Assignment.updateOne(filter).set(updtBody);
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -368,9 +409,10 @@ module.exports = {
     },
     deleteOne: function (ctx, id) {
         return new Promise(async (resolve, reject) => {
+            const activeCompany = (ctx && ctx.session && ctx.session.activeCompany) ? ctx.session.activeCompany : null;
             const filter = {
                 id: id,
-                company: ctx?.session?.activeCompany?.id,
+                company: activeCompany ? activeCompany.id : undefined,
             };
             if (!filter.id) {
                 return reject({ statusCode: 400, error: { message: 'id is required!' } });
@@ -395,7 +437,8 @@ module.exports = {
             }
             let deletedData
             try {
-                deletedData =  await this.updateOne(ctx, id, {isDeleted:true, deletedAt: new Date(), deletedBy: ctx?.user?.id})
+                const deletedBy = (ctx && ctx.user) ? ctx.user.id : undefined;
+                deletedData =  await this.updateOne(ctx, id, {isDeleted:true, deletedAt: new Date(), deletedBy: deletedBy})
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
@@ -406,6 +449,13 @@ module.exports = {
     sendAssignmentMail: async function (ctx, id, bodyData) {
         return new Promise(async (resolve, reject) => {
             try {
+                const activeCompany = (ctx && ctx.session && ctx.session.activeCompany) ? ctx.session.activeCompany : null;
+                const companyLogo = (activeCompany && activeCompany.logo) ? activeCompany.logo : "";
+                const companyName = (activeCompany && activeCompany.name) ? activeCompany.name : "";
+                const companyAddress = (activeCompany && activeCompany.address) ? activeCompany.address : "";
+                const companyEmail = (activeCompany && activeCompany.email) ? activeCompany.email : "";
+                const sendBy = (ctx && ctx.session && ctx.session.user) ? ctx.session.user.id : undefined;
+
                 let assignmentMailData
                 const {data}= await this.findOne(ctx, id);
                 if(data){
@@ -418,7 +468,7 @@ module.exports = {
                         <div style="max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 10px; 
                                     box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);">
                             
-                            <img src="${ctx.session?.activeCompany?.logo}" alt="Company Logo" 
+                            <img src="${companyLogo}" alt="Company Logo" 
                                  style="width: 120px; margin-bottom: 10px;">
                     
                             <h1 style="color: #28a745; font-size: 24px; font-weight: bold; margin-bottom: 10px;">
@@ -426,14 +476,14 @@ module.exports = {
                             </h1>
                     
                             <p style="color: #333; font-size: 16px; margin-bottom: 20px;">
-                                Thank you for choosing <strong>${ctx?.session?.activeCompany?.name}</strong>. <br>
+                                Thank you for choosing <strong>${companyName}</strong>. <br>
                                 Your booking has been successfully confirmed.
                             </p>
                 
                             <!-- Booking Details -->
                             <p style="color: #555; font-size: 14px; margin-bottom: 20px;">
-                                <strong>Booking ID:</strong> #${assignmentMailData?.id} <br>
-                                <strong>Booking Date:</strong> ${assignmentMailData?.bookingDate 
+                                <strong>Booking ID:</strong> #${assignmentMailData.id} <br>
+                                <strong>Booking Date:</strong> ${assignmentMailData.bookingDate 
                                     ? new Date(assignmentMailData.bookingDate).toLocaleDateString("en-GB") 
                                     : "Not Provided"}
                             </p>
@@ -457,22 +507,22 @@ module.exports = {
                 
                             <!-- Footer -->
                             <p style="color: #555; font-size: 14px; margin-top: 15px;">
-                                <strong>${ctx?.session?.activeCompany?.name}</strong><br>
-                                Address: ${ctx?.session?.activeCompany?.address}<br>
-                                Email: <a href="mailto:${ctx?.session?.activeCompany?.email}" 
+                                <strong>${companyName}</strong><br>
+                                Address: ${companyAddress}<br>
+                                Email: <a href="mailto:${companyEmail}" 
                                           style="color: #1a73e8; text-decoration: none;">
-                                    ${ctx?.session?.activeCompany?.email}
+                                    ${companyEmail}
                                 </a>
                             </p>
                         </div>
                 
                     </div>`;
                 
-                    let subject = `🎉 Booking Confirmed - #${assignmentMailData?.id} | ${ctx?.session?.activeCompany?.name} ✅`;
+                    let subject = `🎉 Booking Confirmed - #${assignmentMailData.id} | ${companyName} ✅`;
                 
                     try {
                         const { data } = await EmailService.sendEmail(ctx, {
-                            email: bodyData.email || sendMail?.email,
+                            email: bodyData.email || (sendMail && sendMail.email),
                             subject: subject,
                             html: html,
                             from:'support@hospitalitygroup.in',  
@@ -486,7 +536,7 @@ module.exports = {
                                     subject: subject,
                                     html: html,
                                     payments: id,
-                                    sendBy: ctx?.session?.user?.id,
+                                    sendBy: sendBy,
                                     status: true
                                 });
                             } catch (error) {
@@ -501,7 +551,7 @@ module.exports = {
                                 subject: subject,
                                 html: html,
                                 payments: id,
-                                sendBy: ctx?.session?.user?.id,
+                                sendBy: sendBy,
                                 status: false
                             });
                         } catch (error) {
@@ -519,11 +569,15 @@ module.exports = {
     sendWelcomeMail: async function (ctx, id, bodyData) {
         return new Promise(async (resolve, reject) => {
             try {
+                const activeCompany = (ctx && ctx.session && ctx.session.activeCompany) ? ctx.session.activeCompany : null;
+                const host = (activeCompany && activeCompany.host) ? activeCompany.host : "";
+                const sendBy = (ctx && ctx.session && ctx.session.user) ? ctx.session.user.id : undefined;
+
                 let assignmentMailData
                 const {data}= await this.findOne(ctx, id,{ populate: ['agentName'] });
-                data.packageId = data?.packageId
+                data.packageId = data.packageId
                 data.assignmentId = data.id
-                data.packageLink = `https://${ctx?.session?.activeCompany?.host}/package-mail/${id}`;
+                data.packageLink = host ? `https://${host}/package-mail/${id}` : "";
                 const [mailerData] = await MailerService.find(ctx, {emailFunction: 'sendWelcomeMail', status:true, })
                 if(!mailerData){
                     return reject({ statusCode: 400, error: { message: 'sendWelcomeMail mailer not configured' } });
@@ -569,7 +623,7 @@ module.exports = {
                     }else{
                     try {
                         const { data } = await EmailService.sendEmail(ctx, {
-                            email: bodyData.email || sendMail?.email,
+                            email: bodyData.email || (sendMail && sendMail.email),
                             subject: subject,
                             html: html,
                             user: mailerData.email,  
@@ -586,9 +640,9 @@ module.exports = {
                                     emailFunction: 'sendWelcomeMail',
                                     primaryModel: 'Assignment',
                                     modelId: id,
-                                    packageId: assignmentMailData?.packageId,
+                                    packageId: assignmentMailData ? assignmentMailData.packageId : undefined,
                                     // packageId: data?.packageId,
-                                    sendBy: ctx?.session?.user?.id,
+                                    sendBy: sendBy,
                                     status: true
                                 });
                             } catch (error) {
@@ -603,7 +657,7 @@ module.exports = {
                                 subject: subject,
                                 html: html,
                                 payments: id,
-                                sendBy: ctx?.session?.user?.id,
+                                sendBy: sendBy,
                                 status: false
                             });
                         } catch (error) {
@@ -629,13 +683,13 @@ module.exports = {
         try {
             let result;
 
-            if(type=='paymentReceived'){
+            if (type === 'paymentReceived') {
 
                 result = await Assignment.getDatastore().manager.collection('assignment').updateOne(
                    { _id: new ObjectId(assignmentId) }, // Query to find the document
                    { $inc: { paymentReceived: diff } }, // Increment paymentReceived by diff
                );
-            }else if (type=='serviceReceived'){
+            } else if (type === 'serviceReceived') {
                 let x = typeof diff
 
                 result = await Assignment.getDatastore().manager.collection('assignment').updateOne(
@@ -691,7 +745,7 @@ module.exports = {
         return new Promise(async (resolve, reject) => {
             try {
                 const {data:assignment} = await this.findOne(ctx, id );
-                if ((assignment.finalPackageCost - assignment.paymentReceived) == 0) {      
+                if ((assignment.finalPackageCost - assignment.paymentReceived) === 0) {      
                     const {data} = await this.updateOne(ctx, id, {...paymentStatusData });
                     await PaymentsService.updateOne(ctx, data.tokenPayment, {packageId: data.packageId});
                     resolve({data:data})
@@ -725,7 +779,7 @@ module.exports = {
 
     agentWiseSummary: function (ctx, filter) {
                 return new Promise(async (resolve, reject) => {
-                    filter.company = ctx?.session?.activeCompany?.id
+                    filter.company = (ctx && ctx.session && ctx.session.activeCompany) ? ctx.session.activeCompany.id : undefined
                     if (!filter.company) {
                         return reject({ statusCode: 400, error: { message: 'company id is required!' } });
                     }
@@ -1011,9 +1065,11 @@ module.exports = {
     adjustment: async function (ctx, id, data) {
         return new Promise(async (resolve, reject) => {
           try {
+            const activeCompany = (ctx && ctx.session && ctx.session.activeCompany) ? ctx.session.activeCompany : null;
+            const sessionUser = (ctx && ctx.session && ctx.session.user) ? ctx.session.user : null;
             const filter = {
               id: id,
-              company: ctx?.session?.activeCompany?.id,
+              company: activeCompany ? activeCompany.id : undefined,
             };
       
             if (!filter.id) {
@@ -1023,15 +1079,15 @@ module.exports = {
               return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
       
-            const userName = ctx?.session?.user?.name || 'Unknown';
+            const userName = (sessionUser && sessionUser.name) ? sessionUser.name : 'Unknown';
             const createdDate = new Date().toISOString();
             const { data: record } = await this.findOne(ctx, id);
       
-            const index = data?.index; // ✅ Accept index from payload
+            const index = data ? data.index : undefined; // ✅ Accept index from payload
       
             const newDetails = {
-              remark: data?.remark || '',
-              gstInclusive: data?.gstInclusive || false,
+              remark: (data && data.remark) ? data.remark : '',
+              gstInclusive: Boolean(data && data.gstInclusive),
               createdBy: userName,
               createdDate: createdDate,
             };
@@ -1047,9 +1103,9 @@ module.exports = {
               newDetails.totalAmount = amount + amount * (taxes / 100);
             }
       
-            const previousAdjustments = record?.adjustment || {};
+            const previousAdjustments = (record && record.adjustment) ? record.adjustment : {};
       
-            if (previousAdjustments?.details) {
+            if (previousAdjustments.details) {
               if (index !== undefined && index !== null && !isNaN(index) && previousAdjustments.details[index]) {
                 previousAdjustments.details[index] = newDetails;
               } else {
@@ -1071,10 +1127,10 @@ module.exports = {
             const updated = await this.updateOne(ctx, id, {
               adjustment: previousAdjustments,
               packageCost: (
-                record.packageCost - previousAdjustments.amount
+                record.packageCost - Number(previousAdjustments.amount)
               ).toFixed(2),
               finalPackageCost: (
-                record.finalPackageCost - previousAdjustments.totalAmount
+                record.finalPackageCost - Number(previousAdjustments.totalAmount)
               ).toFixed(2),
             });
       
@@ -1097,7 +1153,7 @@ module.exports = {
             const { data: assignment } = await this.findOne(ctx, id);
             
       
-            if (!assignment?.adjustment?.details?.length) {
+            if (!assignment || !assignment.adjustment || !assignment.adjustment.details || !assignment.adjustment.details.length) {
               return reject({ statusCode: 404, error: { message: 'No adjustment details found.' } });
             }
       
@@ -1128,7 +1184,7 @@ module.exports = {
     },
     finishedPackageWiseSummary: function (ctx , filter) {
         return new Promise(async (resolve, reject) => {
-            filter.company = ctx?.session?.activeCompany?.id
+            filter.company = (ctx && ctx.session && ctx.session.activeCompany) ? ctx.session.activeCompany.id : undefined
             if (!filter.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
@@ -1202,7 +1258,7 @@ module.exports = {
     },
     profitReports: function (ctx, filter) {
         return new Promise(async (resolve, reject) => {
-            filter.company = ctx?.session?.activeCompany?.id
+            filter.company = (ctx && ctx.session && ctx.session.activeCompany) ? ctx.session.activeCompany.id : undefined
             if (!filter.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
