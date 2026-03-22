@@ -11,6 +11,17 @@ module.exports = async function (req, res, next) {
     const role = user.role;
     const permissions = (role && role.permissions) ? role.permissions : {};
 
+    const query = req && req.query ? req.query : {};
+    const accessMode = query && query.accessMode ? String(query.accessMode).toLowerCase() : "";
+    const accessResource = query && query.accessResource ? String(query.accessResource).toLowerCase() : "";
+    const accessAction = query && query.accessAction ? String(query.accessAction).toLowerCase() : "";
+    if (query) {
+        if (query.accessPath) delete query.accessPath;
+        if (query.accessResource) delete query.accessResource;
+        if (query.accessAction) delete query.accessAction;
+        if (query.accessMode) delete query.accessMode;
+    }
+
     const method = String(req.method || "").toUpperCase();
     const action =
         method === "GET"
@@ -46,13 +57,15 @@ module.exports = async function (req, res, next) {
 
     const allowed = resourceAliases.some((key) => Boolean(permissions && permissions[key] && permissions[key][action]));
     if (!allowed) {
-        const isMailTemplateLookup = action === "view" && method === "GET" && resourceAliases.includes("mailtemplate");
-        if (isMailTemplateLookup) {
-            const accessResource = req && req.query && req.query.accessResource ? String(req.query.accessResource).toLowerCase() : "";
-            const accessAction = req && req.query && req.query.accessAction ? String(req.query.accessAction).toLowerCase() : "";
-            if (accessResource && accessAction && hasAccess(accessResource, accessAction)) {
-                return next();
-            }
+        const canBypassViewForLookup =
+            method === "GET" &&
+            action === "view" &&
+            accessMode === "lookup" &&
+            accessResource &&
+            (accessAction === "add" || accessAction === "edit" || accessAction === "view") &&
+            hasAccess(accessResource, accessAction);
+        if (canBypassViewForLookup) {
+            return next();
         }
 
         const isUserListLookup =
