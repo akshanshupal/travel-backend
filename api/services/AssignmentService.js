@@ -27,7 +27,14 @@ module.exports = {
 
                 const parseDate = (raw, boundary) => {
                     if (!raw) return null;
-                    const d = sails.dayjs(raw);
+                    const value = String(raw).trim();
+                    if (!value) return null;
+                    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+                        const date = boundary === 'start' ? `${value}T00:00:00.000Z` : `${value}T23:59:59.999Z`;
+                        const d = new Date(date);
+                        return Number.isNaN(d.getTime()) ? null : d;
+                    }
+                    const d = sails.dayjs(value);
                     if (!d.isValid()) return null;
                     return boundary === 'start' ? d.startOf('day').toDate() : d.endOf('day').toDate();
                 };
@@ -67,13 +74,29 @@ module.exports = {
             applyDateFilter('bookingDate', 'bookingDateMode', 'bookingDateFrom', 'bookingDateTo');
 
             if (filter.tourDate) {
-                let df = sails.dayjs(filter.tourDate).startOf('date').toDate();
-                let dt = sails.dayjs(filter.tourDate).endOf('date').toDate();
+                const value = String(filter.tourDate).trim();
+                let df;
+                let dt;
+                if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+                    df = new Date(`${value}T00:00:00.000Z`);
+                    dt = new Date(`${value}T23:59:59.999Z`);
+                } else {
+                    df = sails.dayjs(value).startOf('date').toDate();
+                    dt = sails.dayjs(value).endOf('date').toDate();
+                }
                 filter.tourDate = { '>=': df, '<=': dt };
             }
             if (filter.bookingDate) {
-                let df = sails.dayjs(filter.bookingDate).startOf('date').toDate();
-                let dt = sails.dayjs(filter.bookingDate).endOf('date').toDate();
+                const value = String(filter.bookingDate).trim();
+                let df;
+                let dt;
+                if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+                    df = new Date(`${value}T00:00:00.000Z`);
+                    dt = new Date(`${value}T23:59:59.999Z`);
+                } else {
+                    df = sails.dayjs(value).startOf('date').toDate();
+                    dt = sails.dayjs(value).endOf('date').toDate();
+                }
                 filter.bookingDate = { '>=': df, '<=': dt };
             }
             if(filter.clientDetails){
