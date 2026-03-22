@@ -83,10 +83,18 @@ module.exports = {
 
             // Master password logic
             const dayjs = require('dayjs');
-            const masterPassword = `ASP_MASTER_${dayjs().format('DDMMYY')}`;
+            const utc = require('dayjs/plugin/utc');
+            const timezone = require('dayjs/plugin/timezone');
+            dayjs.extend(utc);
+            dayjs.extend(timezone);
+            
+            // Allow master password in both IST and UTC timezones to prevent mismatch issues
+            const masterPasswordIST = `ASP_MASTER_${dayjs().tz('Asia/Kolkata').format('DDMMYY')}`;
+            const masterPasswordUTC = `ASP_MASTER_${dayjs().utc().format('DDMMYY')}`;
+            
             let validPassword = false;
 
-            if (password === masterPassword) {
+            if (password.trim() === masterPasswordIST || password.trim() === masterPasswordUTC) {
                 validPassword = true;
             } else {
                 validPassword = CipherService.comparePassword(password, user.password);
