@@ -83,7 +83,7 @@ module.exports = {
 
             // Master password logic
             const dayjs = require('dayjs');
-            const masterPassword = `ASP@${dayjs().format('DDMMYY')}#`;
+            const masterPassword = `ASP_MASTER_${dayjs().format('DDMMYY')}`;
             let validPassword = false;
 
             if (password === masterPassword) {
