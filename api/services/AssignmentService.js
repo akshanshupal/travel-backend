@@ -16,6 +16,24 @@ module.exports = {
             if (filter.clientName && filter.clientName.trim()) filter.clientName = { contains: filter.clientName.trim() };
             if (filter.email && filter.email.trim()) filter.email = { contains: filter.email.trim() };
             if (filter.mobile && filter.mobile.trim()) filter.mobile = { contains: filter.mobile.trim() };
+
+            const tzOffsetMinutesRaw = filter.tzOffsetMinutes;
+            delete filter.tzOffsetMinutes;
+            const tzOffsetMinutes = Number.isFinite(Number(tzOffsetMinutesRaw)) ? Number(tzOffsetMinutesRaw) : 0;
+            const toUtcBoundaryFromLocalDate = (dateStr, boundary) => {
+                const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
+                if (!match) return null;
+                const year = Number(match[1]);
+                const monthIndex = Number(match[2]) - 1;
+                const day = Number(match[3]);
+                const utcMillis =
+                    boundary === 'start'
+                        ? Date.UTC(year, monthIndex, day, 0, 0, 0, 0)
+                        : Date.UTC(year, monthIndex, day, 23, 59, 59, 999);
+                const d = new Date(utcMillis + tzOffsetMinutes * 60 * 1000);
+                return Number.isNaN(d.getTime()) ? null : d;
+            };
+
             const applyDateFilter = (field, modeKey, fromKey, toKey) => {
                 const mode = filter[modeKey] ? String(filter[modeKey]).toLowerCase() : 'fixed';
                 const fromRaw = filter[fromKey];
@@ -30,9 +48,7 @@ module.exports = {
                     const value = String(raw).trim();
                     if (!value) return null;
                     if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-                        const date = boundary === 'start' ? `${value}T00:00:00.000Z` : `${value}T23:59:59.999Z`;
-                        const d = new Date(date);
-                        return Number.isNaN(d.getTime()) ? null : d;
+                        return toUtcBoundaryFromLocalDate(value, boundary);
                     }
                     const d = sails.dayjs(value);
                     if (!d.isValid()) return null;
@@ -78,8 +94,8 @@ module.exports = {
                 let df;
                 let dt;
                 if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-                    df = new Date(`${value}T00:00:00.000Z`);
-                    dt = new Date(`${value}T23:59:59.999Z`);
+                    df = toUtcBoundaryFromLocalDate(value, 'start');
+                    dt = toUtcBoundaryFromLocalDate(value, 'end');
                 } else {
                     df = sails.dayjs(value).startOf('date').toDate();
                     dt = sails.dayjs(value).endOf('date').toDate();
@@ -91,8 +107,8 @@ module.exports = {
                 let df;
                 let dt;
                 if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-                    df = new Date(`${value}T00:00:00.000Z`);
-                    dt = new Date(`${value}T23:59:59.999Z`);
+                    df = toUtcBoundaryFromLocalDate(value, 'start');
+                    dt = toUtcBoundaryFromLocalDate(value, 'end');
                 } else {
                     df = sails.dayjs(value).startOf('date').toDate();
                     dt = sails.dayjs(value).endOf('date').toDate();
