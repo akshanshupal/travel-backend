@@ -28,6 +28,17 @@ module.exports = {
             //sort
             let sortField = 'createdAt';
             let sortOrder = 'DESC';
+            const allowedSortFields = ['createdAt', 'updatedAt', 'tourDate'];
+            const requestedSortField = params?.sortField || filter?.sortField;
+            const requestedSortOrder = params?.sortOrder || filter?.sortOrder;
+            if (requestedSortField && allowedSortFields.includes(String(requestedSortField))) {
+                sortField = String(requestedSortField);
+            }
+            if (requestedSortOrder && ['ASC', 'DESC'].includes(String(requestedSortOrder).toUpperCase())) {
+                sortOrder = String(requestedSortOrder).toUpperCase();
+            }
+            if (filter?.sortField) delete filter.sortField;
+            if (filter?.sortOrder) delete filter.sortOrder;
             qryObj.sort = sortField + ' ' + sortOrder;
             //pagination
             let page = 1;

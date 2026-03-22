@@ -27,6 +27,14 @@ module.exports = {
             }
             delete filter.totalCount;
         }
+        if(sortField){
+            params.sortField = sortField;
+            delete filter.sortField;
+        }
+        if(sortOrder){
+            params.sortOrder = sortOrder;
+            delete filter.sortOrder;
+        }
         if((page||limit)){
             params.pagination = {}
             if(page){
