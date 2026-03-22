@@ -16,6 +16,56 @@ module.exports = {
             if (filter.clientName && filter.clientName.trim()) filter.clientName = { contains: filter.clientName.trim() };
             if (filter.email && filter.email.trim()) filter.email = { contains: filter.email.trim() };
             if (filter.mobile && filter.mobile.trim()) filter.mobile = { contains: filter.mobile.trim() };
+            const applyDateFilter = (field, modeKey, fromKey, toKey) => {
+                const mode = filter[modeKey] ? String(filter[modeKey]).toLowerCase() : 'fixed';
+                const fromRaw = filter[fromKey];
+                const toRaw = filter[toKey];
+
+                delete filter[modeKey];
+                delete filter[fromKey];
+                delete filter[toKey];
+
+                const parseDate = (raw, boundary) => {
+                    if (!raw) return null;
+                    const d = sails.dayjs(raw);
+                    if (!d.isValid()) return null;
+                    return boundary === 'start' ? d.startOf('day').toDate() : d.endOf('day').toDate();
+                };
+
+                const fromStart = parseDate(fromRaw, 'start');
+                const fromEnd = parseDate(fromRaw, 'end');
+                const toStart = parseDate(toRaw, 'start');
+                const toEnd = parseDate(toRaw, 'end');
+
+                if (mode === 'range') {
+                    if (fromStart && toEnd) {
+                        filter[field] = { '>=': fromStart, '<=': toEnd };
+                    } else if (fromStart) {
+                        filter[field] = { '>=': fromStart };
+                    } else if (toEnd) {
+                        filter[field] = { '<=': toEnd };
+                    }
+                    return;
+                }
+
+                if (mode === 'before') {
+                    if (fromEnd) filter[field] = { '<=': fromEnd };
+                    return;
+                }
+
+                if (mode === 'after') {
+                    if (fromStart) filter[field] = { '>=': fromStart };
+                    return;
+                }
+
+                if (mode === 'fixed') {
+                    if (fromStart && fromEnd) filter[field] = { '>=': fromStart, '<=': fromEnd };
+                }
+            };
+
+            applyDateFilter('tourDate', 'tourDateMode', 'tourDateFrom', 'tourDateTo');
+            applyDateFilter('bookingDate', 'bookingDateMode', 'bookingDateFrom', 'bookingDateTo');
+
             if (filter.tourDate) {
                 let df = sails.dayjs(filter.tourDate).startOf('date').toDate();
                 let dt = sails.dayjs(filter.tourDate).endOf('date').toDate();
