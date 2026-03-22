@@ -24,7 +24,7 @@ module.exports.policies = {
   '*': ['isAuthenticated', 'hasPermission'],
 
   AuthController: {
-      signIn: true,
+      signin: true,
       signout: true,
       refreshToken: true,
       health: true,
