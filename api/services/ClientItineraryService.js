@@ -26,7 +26,7 @@ module.exports = {
             }
             let qryObj = {where : filter};
             //sort
-            let sortField = 'createdAt';
+            let sortField = 'updatedAt';
             let sortOrder = 'DESC';
             const allowedSortFields = ['createdAt', 'updatedAt', 'tourDate'];
             const requestedSortField = params?.sortField || filter?.sortField;
