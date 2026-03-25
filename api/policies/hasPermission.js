@@ -12,6 +12,18 @@ module.exports = async function (req, res, next) {
     const permissions = (role && role.permissions) ? role.permissions : {};
 
     const query = req && req.query ? req.query : {};
+    if (query && typeof query.select === "string" && query.select.includes("?")) {
+        const parts = query.select.split("?");
+        query.select = parts[0];
+        const tail = parts.slice(1).join("?");
+        if (tail) {
+            for (const [key, value] of new URLSearchParams(tail)) {
+                if (query[key] === undefined) {
+                    query[key] = value;
+                }
+            }
+        }
+    }
     const accessContext = req && req.accessContext ? req.accessContext : {};
     const accessMode = (accessContext && accessContext.accessMode ? String(accessContext.accessMode) : (query && query.accessMode ? String(query.accessMode) : "")).toLowerCase();
     const accessResource = (accessContext && accessContext.accessResource ? String(accessContext.accessResource) : (query && query.accessResource ? String(query.accessResource) : "")).toLowerCase();

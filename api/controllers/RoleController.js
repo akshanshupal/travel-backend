@@ -12,7 +12,8 @@ module.exports = {
         const params = {};
         if (select) {
             if (typeof select === "string") {
-                params.select = select.split(",");
+                const safeSelect = select.includes("?") ? select.split("?")[0] : select;
+                params.select = safeSelect.split(",").map((s) => s.trim()).filter(Boolean);
             }
             delete filter.select;
         }
@@ -47,7 +48,8 @@ module.exports = {
         const params = {};
         if (select) {
             if (typeof select === "string") {
-                params.select = select.split(",");
+                const safeSelect = select.includes("?") ? select.split("?")[0] : select;
+                params.select = safeSelect.split(",").map((s) => s.trim()).filter(Boolean);
             }
         }
         try {
@@ -88,4 +90,3 @@ module.exports = {
         return res.json(record);
     },
 };
-
