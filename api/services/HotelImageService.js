@@ -154,6 +154,17 @@ module.exports = {
             if (!data.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
+            const sanitizeUrl = (value) => {
+                if (value === null || value === undefined) return '';
+                const raw = String(value).trim();
+                if (!raw) return '';
+                return raw.replace(/`/g, '').trim();
+            };
+            const normalizeUrls = (value) => {
+                if (Array.isArray(value)) return value.map(sanitizeUrl).filter(Boolean);
+                const single = sanitizeUrl(value);
+                return single ? [single] : [];
+            };
             // try {
             //     // Function to process and save images in batches
             //     async function saveImagesInBatches(images, batchSize) {
@@ -196,21 +207,39 @@ module.exports = {
             if(!data.hasOwnProperty('status')){
                 data.status = true
             }
-            if (avoidRecordFetch) {
-                try {
-                    var record = await HotelImage.create(data);
-                } catch (error) {
-                    return reject({ statusCode: 500, error: error });
+            const urls = normalizeUrls(data.url ?? data.urls);
+            if (!urls.length) {
+                return reject({ statusCode: 400, error: { message: 'url is required!' } });
+            }
+            const base = { ...data };
+            delete base.urls;
+            delete base.url;
+
+            if (urls.length === 1) {
+                const payload = { ...base, url: urls[0] };
+                if (avoidRecordFetch) {
+                    try {
+                        var record = await HotelImage.create(payload);
+                    } catch (error) {
+                        return reject({ statusCode: 500, error: error });
+                    }
+                } else {
+                    try {
+                        var record = await HotelImage.create(payload).fetch();
+                    } catch (error) {
+                        return reject({ statusCode: 500, error: error });
+                    }
                 }
-            } else {
-                try {
-                    var record = await HotelImage.create(data).fetch();
-                } catch (error) {
-                    return reject({ statusCode: 500, error: error });
-                }
+                return resolve({ data: record || { created: true } });
             }
 
-            return resolve({ data: record || { created: true } });
+            const createPayloads = urls.map((url) => ({ ...base, url }));
+            try {
+                const created = avoidRecordFetch ? await HotelImage.createEach(createPayloads) : await HotelImage.createEach(createPayloads).fetch();
+                return resolve({ data: created || { created: true } });
+            } catch (error) {
+                return reject({ statusCode: 500, error: error });
+            }
         })
 
 
