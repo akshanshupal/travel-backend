@@ -14,6 +14,7 @@ module.exports = {
         if (!uploadedFile || !uploadesdFile._files[0]) {
             return res.status(400).send('No files were uploaded.');
           }
+          console.log(1)
 
 
         const REGION = 'sg'; // If German region, set this to an empty string: ''
