@@ -41,6 +41,9 @@ module.exports.policies = {
   fileNewController: {
     'download' : true
   },
+  FileController: {
+    uploadFile: ['isAuthenticated']
+  },
   SavedItineraryController: {
     'findOne' : true
   },
