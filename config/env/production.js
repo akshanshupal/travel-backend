@@ -348,6 +348,13 @@ module.exports = {
 
 
   http: {
+    middleware: {
+      bodyParser: (function _configureBodyParser(){
+        var skipper = require('skipper');
+        var middlewareFn = skipper({ strict: true, limit: '20mb' });
+        return middlewareFn;
+      })(),
+    },
 
     /***************************************************************************
     *                                                                          *

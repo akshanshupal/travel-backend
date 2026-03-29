@@ -138,6 +138,40 @@ module.exports = {
                 delete filter.clientDetails
             }
 
+            const assignmentModel = sails.models.assignment;
+            const assignmentAttributeKeys = Object.keys(assignmentModel.attributes || {});
+            const assignmentAssociationAliases = (assignmentModel.associations || []).map((a) => a.alias);
+
+            const cleanedSelect = Array.isArray(params.select)
+                ? params.select.filter((key) => assignmentAttributeKeys.includes(key))
+                : null;
+            params.select = cleanedSelect && cleanedSelect.length ? cleanedSelect : null;
+
+            const cleanedPopulate = Array.isArray(params.populate)
+                ? params.populate.filter((key) => assignmentAssociationAliases.includes(key))
+                : null;
+            params.populate = cleanedPopulate && cleanedPopulate.length ? cleanedPopulate : null;
+
+            const supportedMetaKeys = new Set([
+                'sortField',
+                'sortOrder',
+                'clientDetails',
+                'tourDateMode',
+                'tourDateFrom',
+                'tourDateTo',
+                'bookingDateMode',
+                'bookingDateFrom',
+                'bookingDateTo',
+                'tzOffsetMinutes'
+            ]);
+            Object.keys(filter).forEach((key) => {
+                if (supportedMetaKeys.has(key)) return;
+                if (key === 'or' || key === 'and') return;
+                if (!assignmentAttributeKeys.includes(key)) {
+                    delete filter[key];
+                }
+            });
+
             let qryObj = {where : filter};
             //sort
             let sortField = 'bookingDate';
@@ -149,6 +183,12 @@ module.exports = {
             if(filter.sortOrder){
                 sortOrder = filter.sortOrder;
                 delete filter.sortOrder;
+            }
+            if (!assignmentAttributeKeys.includes(sortField)) {
+                sortField = 'bookingDate';
+            }
+            if (String(sortOrder).toUpperCase() !== 'ASC' && String(sortOrder).toUpperCase() !== 'DESC') {
+                sortOrder = 'DESC';
             }
 
             qryObj.sort = sortField + ' ' + sortOrder;
