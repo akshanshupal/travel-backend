@@ -119,76 +119,83 @@ module.exports = {
 
     uploadFile: async function(req, res) {
         try {
-        const uploadedFile = req.file('fmFile');
-        if (!uploadedFile || !uploadedFile._files[0]) {
-            return res.status(400).send('No files were uploaded.');
-        }
-
-        let folder = req.body?.folder || '';
-        const file = uploadedFile._files[0];
-        let STORAGE_ZONE_NAME = sails.config.bunnyCDN.STORAGE_ZONE_NAME;
-        if (folder) {
-            STORAGE_ZONE_NAME = `travelimg/${folder}`;
-        }
-
-        let FILENAME_TO_UPLOAD = encodeURIComponent(file.stream.filename.replace(/[^a-zA-Z0-9-,\(/\)/.#_]/g, ''));
-        const urlParts = FILENAME_TO_UPLOAD.split('.');
-        const newUrl = `${urlParts.slice(0, -1).join('.')}_${new Date().getTime()}.${urlParts[urlParts.length - 1]}`;
-        FILENAME_TO_UPLOAD = newUrl;
-
-        const options = {
-            method: 'PUT',
-            host: sails.config.bunnyCDN.HOSTNAME,
-            path: `/${STORAGE_ZONE_NAME}/${FILENAME_TO_UPLOAD}`,
-            headers: {
-            AccessKey: sails.config.bunnyCDN.PASSWORD,
-            'Content-Type': 'application/octet-stream',
-            },
-        };
-
-        const maxRetries = 3; // Set the maximum number of retries
-        const delay = 100;   // Initial delay in milliseconds
-
-        // Retry logic
-        async function uploadWithRetry(attempt = 1) {
-            return new Promise((resolve, reject) => {
-            const uploadReq = https.request(options, (response) => {
-                let data = '';
-                response.on('data', (chunk) => {
-                data += chunk;
-                });
-                response.on('end', () => {
-                if (response.statusCode === 200||response.statusCode === 201) {
-                    const fileUrl = folder ? `${sails.config.bunnyCDN.baseUrl}/${folder}/${FILENAME_TO_UPLOAD}` : `${sails.config.bunnyCDN.baseUrl}/${FILENAME_TO_UPLOAD}`;
-                    resolve(fileUrl);
-                } else {
-                    const error = new Error(`Upload failed with status code: ${response.statusCode}`);
-                    reject(error);
-                }
+            const uploadLimitBytes = 20 * 1024 * 1024;
+            const uploadedFiles = await new Promise((resolve, reject) => {
+                req.file('fmFile').upload({ maxBytes: uploadLimitBytes }, (error, files) => {
+                    if (error) return reject(error);
+                    return resolve(files || []);
                 });
             });
 
-            uploadReq.on('error', (error) => reject(error));
-            file.stream.pipe(uploadReq);
-            })
-            .catch(async (error) => {
-            console.error(`Attempt ${attempt} failed:`, error.message);
-            if (attempt < maxRetries) {
-                // Wait with exponential backoff before retrying
-                await new Promise(resolve => setTimeout(resolve, delay * attempt));
-                return uploadWithRetry(attempt + 1);
+            if (!uploadedFiles.length) {
+                return res.status(400).send('No files were uploaded.');
             }
-            throw new Error('Max retries reached. Upload failed.');
-            });
-        }
 
-        // Perform upload with retry logic
-        const fileUrl = await uploadWithRetry();
-        return res.ok(fileUrl);
+            const file = uploadedFiles[0];
+            const folder = req.body?.folder || '';
+            let STORAGE_ZONE_NAME = sails.config.bunnyCDN.STORAGE_ZONE_NAME;
+            if (folder) {
+                STORAGE_ZONE_NAME = `travelimg/${folder}`;
+            }
 
+            let FILENAME_TO_UPLOAD = encodeURIComponent(String(file.filename || '').replace(/[^a-zA-Z0-9-,\(/\)/.#_]/g, ''));
+            const urlParts = FILENAME_TO_UPLOAD.split('.');
+            const newUrl = `${urlParts.slice(0, -1).join('.')}_${new Date().getTime()}.${urlParts[urlParts.length - 1]}`;
+            FILENAME_TO_UPLOAD = newUrl;
+
+            const options = {
+                method: 'PUT',
+                host: sails.config.bunnyCDN.HOSTNAME,
+                path: `/${STORAGE_ZONE_NAME}/${FILENAME_TO_UPLOAD}`,
+                headers: {
+                    AccessKey: sails.config.bunnyCDN.PASSWORD,
+                    'Content-Type': 'application/octet-stream',
+                },
+            };
+
+            const maxRetries = 3;
+            const delay = 100;
+            const filePath = file.fd || file.extra && file.extra.fd;
+            if (!filePath) {
+                return res.status(400).send('Invalid upload payload.');
+            }
+
+            const uploadWithRetry = async (attempt = 1) => {
+                return new Promise((resolve, reject) => {
+                    const uploadReq = https.request(options, (response) => {
+                        let data = '';
+                        response.on('data', (chunk) => {
+                            data += chunk;
+                        });
+                        response.on('end', () => {
+                            if (response.statusCode === 200 || response.statusCode === 201) {
+                                const fileUrl = folder ? `${sails.config.bunnyCDN.baseUrl}/${folder}/${FILENAME_TO_UPLOAD}` : `${sails.config.bunnyCDN.baseUrl}/${FILENAME_TO_UPLOAD}`;
+                                return resolve(fileUrl);
+                            }
+                            return reject(new Error(`Upload failed with status code: ${response.statusCode}`));
+                        });
+                    });
+
+                    uploadReq.on('error', (error) => reject(error));
+                    fs.createReadStream(filePath).pipe(uploadReq);
+                }).catch(async (error) => {
+                    console.error(`Attempt ${attempt} failed:`, error.message);
+                    if (attempt < maxRetries) {
+                        await new Promise((resolve) => setTimeout(resolve, delay * attempt));
+                        return uploadWithRetry(attempt + 1);
+                    }
+                    throw new Error('Max retries reached. Upload failed.');
+                });
+            };
+
+            const fileUrl = await uploadWithRetry();
+            return res.ok(fileUrl);
         } catch (error) {
-        console.error('Error uploading file:', error);
-        res.serverError('Internal Server Error');
+            if (error && error.code === 'E_EXCEEDS_UPLOAD_LIMIT') {
+                return res.status(413).send({ code: 'Error', message: 'File size exceeds 20MB limit' });
+            }
+            console.error('Error uploading file:', error);
+            return res.serverError('Internal Server Error');
         }
     },
 
