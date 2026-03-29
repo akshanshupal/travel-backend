@@ -108,6 +108,10 @@ module.exports = {
         dropTime: {
             type: 'ref', columnType: 'time'
         },
+        dateNotDecided: {
+            type: 'boolean',
+            defaultsTo: false
+        },
         dropAddress: {
             type: 'string'
         },    

@@ -1,5 +1,7 @@
 
 const {ObjectId} = require('mongodb');
+
+const isTruthyBoolean = (value) => value === true || String(value).trim().toLowerCase() === 'true';
 module.exports = {
     find: function (ctx, filter, params) {
         return new Promise(async (resolve, reject) => {
@@ -30,6 +32,7 @@ module.exports = {
             coerceBooleanFilter('finished');
             coerceBooleanFilter('bookingStatus');
             coerceBooleanFilter('paymentStatus');
+            coerceBooleanFilter('dateNotDecided');
 
             const tzOffsetMinutesRaw = filter.tzOffsetMinutes;
             delete filter.tzOffsetMinutes;
@@ -331,6 +334,17 @@ module.exports = {
             if(!data.hasOwnProperty('status')){
                 data.status = true
             }
+            const dateNotDecided = isTruthyBoolean(data.dateNotDecided);
+            data.dateNotDecided = dateNotDecided;
+            if (dateNotDecided) {
+                if (data.pickUpDate || data.pickUpTime || data.dropDate || data.dropTime) {
+                    return reject({ statusCode: 400, error: { message: 'Pickup and drop date-time fields are not allowed when date is not decided!' } });
+                }
+                data.pickUpDate = null;
+                data.pickUpTime = null;
+                data.dropDate = null;
+                data.dropTime = null;
+            }
             if (data.bookingDate && typeof data.bookingDate === 'string') {
                 data.bookingDate = sails.dayjs(data.bookingDate);
                 if (!data.bookingDate.isValid()) {
@@ -353,6 +367,22 @@ module.exports = {
                     return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid tourDate is required!' } });
                 } else {
                     data.tourDate = data.tourDate.toDate();
+                }
+            }
+            if (data.pickUpDate && typeof data.pickUpDate === 'string') {
+                data.pickUpDate = sails.dayjs(data.pickUpDate);
+                if (!data.pickUpDate.isValid()) {
+                    return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid pickUpDate is required!' } });
+                } else {
+                    data.pickUpDate = data.pickUpDate.toDate();
+                }
+            }
+            if (data.dropDate && typeof data.dropDate === 'string') {
+                data.dropDate = sails.dayjs(data.dropDate);
+                if (!data.dropDate.isValid()) {
+                    return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid dropDate is required!' } });
+                } else {
+                    data.dropDate = data.dropDate.toDate();
                 }
             }
             // const [companyConfig] = await CompanyconfigService.find(ctx,{});
@@ -473,6 +503,19 @@ module.exports = {
             if (!updtBody.company) {
                 updtBody.company= filter.company;
             }
+            if (updtBody.hasOwnProperty('dateNotDecided')) {
+                const dateNotDecided = isTruthyBoolean(updtBody.dateNotDecided);
+                updtBody.dateNotDecided = dateNotDecided;
+                if (dateNotDecided) {
+                    if (updtBody.pickUpDate || updtBody.pickUpTime || updtBody.dropDate || updtBody.dropTime) {
+                        return reject({ statusCode: 400, error: { message: 'Pickup and drop date-time fields are not allowed when date is not decided!' } });
+                    }
+                    updtBody.pickUpDate = null;
+                    updtBody.pickUpTime = null;
+                    updtBody.dropDate = null;
+                    updtBody.dropTime = null;
+                }
+            }
             if (updtBody.bookingDate && typeof updtBody.bookingDate === 'string') {
                 updtBody.bookingDate = sails.dayjs(updtBody.bookingDate);
                 if (!updtBody.bookingDate.isValid()) {
@@ -495,6 +538,22 @@ module.exports = {
                     return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid tourDate is required!' } });
                 } else {
                     updtBody.tourDate = updtBody.tourDate.toDate();
+                }
+            }
+            if (updtBody.pickUpDate && typeof updtBody.pickUpDate === 'string') {
+                updtBody.pickUpDate = sails.dayjs(updtBody.pickUpDate);
+                if (!updtBody.pickUpDate.isValid()) {
+                    return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid pickUpDate is required!' } });
+                } else {
+                    updtBody.pickUpDate = updtBody.pickUpDate.toDate();
+                }
+            }
+            if (updtBody.dropDate && typeof updtBody.dropDate === 'string') {
+                updtBody.dropDate = sails.dayjs(updtBody.dropDate);
+                if (!updtBody.dropDate.isValid()) {
+                    return reject({ statusCode: 400, error: { code: 'Error', message: 'Invalid dropDate is required!' } });
+                } else {
+                    updtBody.dropDate = updtBody.dropDate.toDate();
                 }
             }
             
