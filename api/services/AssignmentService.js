@@ -33,6 +33,9 @@ module.exports = {
             coerceBooleanFilter('bookingStatus');
             coerceBooleanFilter('paymentStatus');
             coerceBooleanFilter('dateNotDecided');
+            if (filter.hasOwnProperty('dateNotDecided') && filter.dateNotDecided === false) {
+                filter.dateNotDecided = { '!=': true };
+            }
 
             const tzOffsetMinutesRaw = filter.tzOffsetMinutes;
             delete filter.tzOffsetMinutes;
@@ -133,7 +136,12 @@ module.exports = {
                 filter.bookingDate = { '>=': df, '<=': dt };
             }
             if(filter.clientDetails){
-                const searchCriteriaOr = [{ clientName: { contains: filter.clientDetails } },{ email: { contains: filter.clientDetails } },{ mobile: { contains: filter.clientDetails } }];
+                const searchCriteriaOr = [
+                    { clientName: { contains: filter.clientDetails } },
+                    { email: { contains: filter.clientDetails } },
+                    { mobile: { contains: filter.clientDetails } },
+                    { packageId: { contains: filter.clientDetails } }
+                ];
                 filter.or = searchCriteriaOr;
                 delete filter.clientDetails
             }
@@ -665,7 +673,45 @@ module.exports = {
                 }
 
                 if (assignmentMailData) {
-                    let html = `<div style="font-family: Arial, sans-serif; background-color: #f9f9f9; text-align: center; padding: 20px;">
+                    const [mailerData] = await MailerService.find(ctx, { emailFunction: 'sendAssignmentMail', status: true });
+                    const [fallbackMailerData] = mailerData ? [null] : await MailerService.find(ctx, { status: true }, { pagination: { limit: 1 } });
+                    const mailerConfig = mailerData || fallbackMailerData;
+                    if (!mailerConfig) {
+                        return reject({ statusCode: 400, error: { message: 'sendAssignmentMail mailer not configured' } });
+                    }
+
+                    const replaceSquareBrackets = (html, data) => {
+                        return String(html || "").replace(/\[\[(.*?)\]\]/g, (match, key) => {
+                            if (key === "tourDate" || key === "bookingDate") {
+                                const rawDate = data[key];
+                                if (rawDate && !isNaN(new Date(rawDate))) {
+                                    return new Date(rawDate).toISOString().split("T")[0];
+                                }
+                                return "N/A";
+                            }
+                            const keys = String(key || "").split(".");
+                            let value = data;
+                            for (const k of keys) {
+                                if (value && k in value) {
+                                    value = value[k];
+                                } else {
+                                    value = "N/A";
+                                    break;
+                                }
+                            }
+                            return value;
+                        });
+                    };
+
+                    let html, subject;
+                    if (!bodyData.showPreview && bodyData.html && bodyData.subject) {
+                        html = bodyData.html;
+                        subject = bodyData.subject;
+                    } else if (mailerData && mailerData.html && mailerData.subject) {
+                        html = replaceSquareBrackets(mailerData.html, assignmentMailData);
+                        subject = replaceSquareBrackets(mailerData.subject, assignmentMailData);
+                    } else {
+                        html = `<div style="font-family: Arial, sans-serif; background-color: #f9f9f9; text-align: center; padding: 20px;">
                     
                         <div style="max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 10px; 
                                     box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);">
@@ -720,15 +766,21 @@ module.exports = {
                 
                     </div>`;
                 
-                    let subject = `🎉 Booking Confirmed - #${assignmentMailData.id} | ${companyName} ✅`;
-                
+                        subject = `Booking Confirmed - #${assignmentMailData.id} | ${companyName}`;
+                    }
+
+                    if (bodyData.showPreview) {
+                        return resolve({ data: { html: html, subject: subject } });
+                    }
+
                     try {
                         const { data } = await EmailService.sendEmail(ctx, {
-                            email: bodyData.email || (sendMail && sendMail.email),
+                            email: bodyData.email,
                             subject: subject,
                             html: html,
-                            from:'support@hospitalitygroup.in',  
-                            password: 'Priyanka@123'
+                            user: mailerConfig.email,
+                            password: mailerConfig.password,
+                            host: mailerConfig.host,
                         });
                 
                         if (data) {
@@ -737,7 +789,10 @@ module.exports = {
                                     email: bodyData.email,
                                     subject: subject,
                                     html: html,
-                                    payments: id,
+                                    emailFunction: 'sendAssignmentMail',
+                                    primaryModel: 'Assignment',
+                                    modelId: id,
+                                    packageId: assignmentMailData ? assignmentMailData.packageId : undefined,
                                     sendBy: sendBy,
                                     status: true
                                 });
@@ -752,9 +807,13 @@ module.exports = {
                                 email: bodyData.email,
                                 subject: subject,
                                 html: html,
-                                payments: id,
+                                emailFunction: 'sendAssignmentMail',
+                                primaryModel: 'Assignment',
+                                modelId: id,
+                                packageId: assignmentMailData ? assignmentMailData.packageId : undefined,
                                 sendBy: sendBy,
-                                status: false
+                                status: false,
+                                error: error?.message || "mailer error"
                             });
                         } catch (error) {
                             reject(error);

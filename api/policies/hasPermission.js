@@ -36,7 +36,7 @@ module.exports = async function (req, res, next) {
     }
 
     const method = String(req.method || "").toUpperCase();
-    const action =
+    let action =
         method === "GET"
             ? "view"
             : method === "POST"
@@ -50,6 +50,10 @@ module.exports = async function (req, res, next) {
     const controller = String(req.options && req.options.controller ? req.options.controller : "").toLowerCase();
     const parts = String(req.path || "").split("/").filter(Boolean);
     const resource = (controller || parts[1] || "").toLowerCase();
+    const normalizedPath = String(req.path || "").toLowerCase();
+    if (method === "POST" && resource === "assignment" && normalizedPath.startsWith("/api/assignment/send-assignmentmail/")) {
+        action = "edit";
+    }
 
     if (!resource) {
         return res.forbidden({ code: "Error", message: "Not authorised!!" });

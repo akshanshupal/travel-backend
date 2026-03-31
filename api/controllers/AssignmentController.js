@@ -126,6 +126,9 @@ module.exports = {
         try {
             var record = await AssignmentService.sendAssignmentMail(req, req.params.id, req.body);
         } catch (error) {
+            if (error && error.statusCode) {
+                return res.status(error.statusCode).send(error.error || error);
+            }
             return res.serverError(error);
         }
         return res.json(record.data);
