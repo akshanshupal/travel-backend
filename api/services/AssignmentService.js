@@ -109,8 +109,8 @@ module.exports = {
             applyDateFilter('tourDate', 'tourDateMode', 'tourDateFrom', 'tourDateTo');
             applyDateFilter('bookingDate', 'bookingDateMode', 'bookingDateFrom', 'bookingDateTo');
 
-            if (filter.tourDate) {
-                const value = String(filter.tourDate).trim();
+            if (typeof filter.tourDate === 'string') {
+                const value = filter.tourDate.trim();
                 let df;
                 let dt;
                 if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
@@ -122,8 +122,8 @@ module.exports = {
                 }
                 filter.tourDate = { '>=': df, '<=': dt };
             }
-            if (filter.bookingDate) {
-                const value = String(filter.bookingDate).trim();
+            if (typeof filter.bookingDate === 'string') {
+                const value = filter.bookingDate.trim();
                 let df;
                 let dt;
                 if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
