@@ -673,23 +673,52 @@ module.exports = {
                 }
 
                 if (assignmentMailData) {
-                    const [mailerData] = await MailerService.find(ctx, { emailFunction: 'sendAssignmentMail', status: true });
-                    const [fallbackMailerData] = mailerData ? [null] : await MailerService.find(ctx, { status: true }, { pagination: { limit: 1 } });
-                    const mailerConfig = mailerData || fallbackMailerData;
+                    assignmentMailData.assignmentId = assignmentMailData.id;
+                    let resolvedPackageId = assignmentMailData.packageId;
+                    if (!resolvedPackageId) {
+                        const latestPackageBooking = await PackageBooking.findOne({
+                            assignment: id,
+                            isDeleted: { "!=": true }
+                        }).sort("createdAt DESC");
+                        if (latestPackageBooking) {
+                            resolvedPackageId =
+                                latestPackageBooking.packageId ||
+                                latestPackageBooking.package ||
+                                latestPackageBooking.id;
+                        }
+                    }
+                    if (!resolvedPackageId && assignmentMailData.package) {
+                        if (typeof assignmentMailData.package === "object") {
+                            resolvedPackageId =
+                                assignmentMailData.package.packageId ||
+                                assignmentMailData.package.id ||
+                                assignmentMailData.package._id;
+                        } else {
+                            resolvedPackageId = assignmentMailData.package;
+                        }
+                    }
+                    assignmentMailData.packageId = resolvedPackageId || "N/A";
+
+                    const [mailerData] = await MailerService.find(ctx, { emailFunction: 'sendWelcomeMail', status: true });
+                    const mailerConfig = mailerData;
                     if (!mailerConfig) {
-                        return reject({ statusCode: 400, error: { message: 'sendAssignmentMail mailer not configured' } });
+                        return reject({ statusCode: 400, error: { message: 'sendWelcomeMail mailer not configured' } });
                     }
 
                     const replaceSquareBrackets = (html, data) => {
                         return String(html || "").replace(/\[\[(.*?)\]\]/g, (match, key) => {
-                            if (key === "tourDate" || key === "bookingDate") {
-                                const rawDate = data[key];
+                            const normalizedKey = String(key || "").trim();
+                            if (normalizedKey === "bookingId") {
+                                return data.id || "N/A";
+                            }
+                            if (normalizedKey === "tourDate" || normalizedKey === "bookingDate") {
+                                const rawDate = data[normalizedKey];
                                 if (rawDate && !isNaN(new Date(rawDate))) {
                                     return new Date(rawDate).toISOString().split("T")[0];
                                 }
                                 return "N/A";
                             }
-                            const keys = String(key || "").split(".");
+                            const keys = normalizedKey.split(".");
                             let value = data;
                             for (const k of keys) {
                                 if (value && k in value) {
