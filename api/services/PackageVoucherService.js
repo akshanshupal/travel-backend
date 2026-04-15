@@ -226,8 +226,11 @@ module.exports = {
             try {
                 let {data:paymentVoucher}= await this.findOne(ctx, id, {populate: ['assignmentId']});
                 paymentVoucher.packageId = paymentVoucher.assignmentId.packageId
+                paymentVoucher.assignmentId = paymentVoucher.assignmentId.id
                 paymentVoucher.paymentVoucherId = paymentVoucher.id
                 paymentVoucher.packageLink = `https://${ctx?.session?.activeCompany?.host}/package-mail/${id}`;
+                paymentVoucher.packageVoucherLink = `https://${ctx?.session?.activeCompany?.host}/package-voucher/${id}`       
+                
                 if(!paymentVoucher){
                     return reject({ statusCode: 400, error: { message: 'Package voucher is not found!' } });
                 }
@@ -322,5 +325,6 @@ module.exports = {
                 reject(error)  
             }
         })
-   }
+   },
+
 }
