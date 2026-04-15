@@ -239,7 +239,7 @@ module.exports = {
                     return reject({ statusCode: 400, error: { message: 'sendPaymentVoucherMail mailer not configured' } });
                 }
                 function replaceSquareBrackets(html, data) {
-                    return html.replace(/\[\[(.*?)\]\]/g, (match, key) => {
+                    return String(html || "").replace(/\[\[(.*?)\]\]/g, (match, key) => {
                       // Handle tourDate specifically
                       if (key === "tourDate") {
                         const rawDate = data.tourDate; // Get the raw date from the data object
@@ -267,14 +267,10 @@ module.exports = {
 
                 if(paymentVoucher){
 
-                    let html, subject
-                    if(!bodyData.showPreview&&bodyData.html&&bodyData.subject){
-                         html = bodyData.html;    
-                         subject = bodyData.subject; 
-                    }else{
-                        html = replaceSquareBrackets(mailerData.html, paymentVoucher);    
-                        subject = replaceSquareBrackets(mailerData.subject, paymentVoucher); 
-                    }
+                    const templateHtml = bodyData?.html || mailerData.html;
+                    const templateSubject = bodyData?.subject || mailerData.subject;
+                    const html = replaceSquareBrackets(templateHtml, paymentVoucher);
+                    const subject = replaceSquareBrackets(templateSubject, paymentVoucher);
                     if(bodyData.showPreview){
                         resolve({data: {html: html, subject: subject}})
                     }else{
