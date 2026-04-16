@@ -232,14 +232,6 @@ module.exports = {
 
             }
             try {
-                const [dt] = await this.find(ctx,{alias:data.alias}, {pagination: {limit:1}})
-                if(dt){
-                    return reject({ statusCode: 400, error: { message: 'Area with this alias exists in the panel' } });
-                } 
-            } catch (error) {
-                return reject(error);    
-            }
-            try {
                 var record = await Area.updateOne(filter).set(updtBody);
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
@@ -263,7 +255,7 @@ module.exports = {
             try {
                 deletedArea =  await this.updateOne(ctx, id, {isDeleted:true, deletedAt: new Date(), deletedBy: ctx?.user?.id})
             } catch (error) {
-                return reject({ statusCode: 500, error: error });
+                return reject(error);
             }
             return resolve(deletedArea);
         })
