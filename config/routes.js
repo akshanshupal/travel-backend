@@ -288,6 +288,16 @@ module.exports.routes = {
   'PUT /api/leads/:id': 'LeadsController.updateOne',
   'DELETE /api/leads/:id': 'LeadsController.deleteOne',
 
+  // Photography estimate APIs
+  'POST /api/photography-client': 'PhotographyClientController.create',
+  'GET /api/photography-client': 'PhotographyClientController.find',
+  'GET /api/photography-client/:id': 'PhotographyClientController.findOne',
+  'PUT /api/photography-client/:id': 'PhotographyClientController.updateOne',
+  'POST /api/photography-estimate': 'PhotographyEstimateController.create',
+  'GET /api/photography-estimate': 'PhotographyEstimateController.find',
+  'GET /api/photography-estimate/:id': 'PhotographyEstimateController.findOne',
+  'PUT /api/photography-estimate/:id': 'PhotographyEstimateController.updateOne',
+
   /***************************************************************************
   *                                                                          *
   * More custom routes here...                                               *

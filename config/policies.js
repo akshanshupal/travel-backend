@@ -81,6 +81,12 @@ module.exports.policies = {
   PaymentsController:{
     "getReceipt" : true,
   },
+  PhotographyClientController: {
+    "*": ["isAuthenticated"],
+  },
+  PhotographyEstimateController: {
+    "*": ["isAuthenticated"],
+  },
   
  
   
