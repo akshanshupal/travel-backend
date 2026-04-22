@@ -219,7 +219,7 @@ module.exports = {
                 return reject({ statusCode: 500, error: error });
             }
             if (record && record.isDefault === true) {
-                await PackageVoucher.update({company: ctx?.session?.activeCompany?.id, id: {'!=' : record.id}}).set({isDefault: false});
+                await PackageVoucher.update({company: ctx?.session?.activeCompany?.id, assignmentId: record.assignmentId, id: {'!=' : record.id}}).set({isDefault: false});
             }
 
             return resolve({ data: record || { modified: true } });
