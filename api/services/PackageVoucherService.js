@@ -1,4 +1,25 @@
 module.exports = {
+    _toBooleanIfProvided: function (value) {
+        if (value === undefined || value === null) {
+            return undefined;
+        }
+        if (typeof value === 'boolean') {
+            return value;
+        }
+        if (typeof value === 'number') {
+            return value === 1;
+        }
+        if (typeof value === 'string') {
+            const normalized = value.trim().toLowerCase();
+            if (normalized === 'true' || normalized === '1') {
+                return true;
+            }
+            if (normalized === 'false' || normalized === '0') {
+                return false;
+            }
+        }
+        return Boolean(value);
+    },
     find: function (ctx, filter, params) {
         return new Promise(async (resolve, reject) => {
             const company = ctx?.session?.activeCompany?.id;
@@ -185,13 +206,19 @@ module.exports = {
             if (!updtBody.company) {
                 updtBody.company= filter.company;
             }
+            if (Object.prototype.hasOwnProperty.call(updtBody, 'isDefault')) {
+                updtBody.isDefault = this._toBooleanIfProvided(updtBody.isDefault);
+            }
+            if (Object.prototype.hasOwnProperty.call(updtBody, 'status')) {
+                updtBody.status = this._toBooleanIfProvided(updtBody.status);
+            }
 
             try {
                 var record = await PackageVoucher.updateOne(filter).set(updtBody);
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
-            if(record.isDefault){
+            if (record && record.isDefault === true) {
                 await PackageVoucher.update({company: ctx?.session?.activeCompany?.id, id: {'!=' : record.id}}).set({isDefault: false});
             }
 

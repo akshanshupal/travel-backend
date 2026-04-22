@@ -7,6 +7,10 @@ module.exports = {
             if (!params) {
                 params = {};
             }
+            if(filter?.getClientConfig){
+                delete filter.getClientConfig;
+                delete filter.company;
+            }
             let qryObj = {where : filter};
             //sort
             let sortField = 'createdAt';

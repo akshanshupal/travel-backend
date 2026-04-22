@@ -103,8 +103,9 @@ module.exports.http = {
           } else {
               let companyConfig;
               try {
-                [companyConfig] = await CompanyconfigService.find(req, {websiteUrls: hostname}, {pagination: {limit:1}, populate:['company']});
+                [companyConfig] = await CompanyconfigService.find(req,{websiteUrls: hostname, getClientConfig: true}, {populate: ['company'],pagination: {limit: 1}});
               } catch (error) {
+                  console.error('CompanyconfigService.find Error:', error);
                   return res.status(403).send(error);
               }
               if (!companyConfig) return res.status(404).send('No website found!!');
