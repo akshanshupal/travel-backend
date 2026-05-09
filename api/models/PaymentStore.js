@@ -18,6 +18,11 @@ module.exports = {
         description:{
             type: 'string'
         },
+        module: {
+            type: 'string',
+            isIn: ['booking', 'photography'],
+            defaultsTo: 'booking'
+        },
         company: {
             model: 'company'
         },   

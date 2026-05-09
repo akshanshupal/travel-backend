@@ -1,20 +1,6 @@
 module.exports = {
     attributes: {
-        name: {
-            type: "string",
-            required: true,
-        },
-        phone: {
-            type: "string",
-            required: true,
-        },
-        whatsappNumber: {
-            type: "string",
-        },
-        email: {
-            type: "string",
-        },
-        address: {
+        title: {
             type: "string",
             required: true,
         },

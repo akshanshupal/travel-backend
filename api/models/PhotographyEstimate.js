@@ -4,6 +4,13 @@ module.exports = {
             model: "photographyclient",
             required: true,
         },
+        agent: {
+            model: "user",
+            required: true,
+        },
+        booking: {
+            model: "photographybooking",
+        },
         estimateNumber: {
             type: "string",
             required: true,
@@ -19,6 +26,11 @@ module.exports = {
         grandTotal: {
             type: "number",
             defaultsTo: 0,
+        },
+        items: {
+            type: "json",
+            columnType: "array",
+            defaultsTo: [],
         },
         company: {
             model: "company",

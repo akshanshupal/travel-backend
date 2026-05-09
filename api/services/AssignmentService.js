@@ -705,6 +705,14 @@ module.exports = {
                         return reject({ statusCode: 400, error: { message: 'sendWelcomeMail mailer not configured' } });
                     }
 
+                    const formatDateToDDMMMYY = (date) => {
+                        const day = String(date.getDate()).padStart(2, '0');
+                        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                        const month = monthNames[date.getMonth()];
+                        const year = String(date.getFullYear()).slice(-2);
+                        return `${day}-${month}-${year}`;
+                    };
+
                     const replaceSquareBrackets = (html, data) => {
                         return String(html || "").replace(/\[\[(.*?)\]\]/g, (match, key) => {
                             const normalizedKey = String(key || "").trim();
@@ -714,7 +722,7 @@ module.exports = {
                             if (normalizedKey === "tourDate" || normalizedKey === "bookingDate") {
                                 const rawDate = data[normalizedKey];
                                 if (rawDate && !isNaN(new Date(rawDate))) {
-                                    return new Date(rawDate).toISOString().split("T")[0];
+                                    return formatDateToDDMMMYY(new Date(rawDate));
                                 }
                                 return "N/A";
                             }

@@ -297,6 +297,22 @@ module.exports.routes = {
   'GET /api/photography-estimate': 'PhotographyEstimateController.find',
   'GET /api/photography-estimate/:id': 'PhotographyEstimateController.findOne',
   'PUT /api/photography-estimate/:id': 'PhotographyEstimateController.updateOne',
+  'POST /api/photography-booking/convert/:id': 'PhotographyBookingController.convertEstimate',
+  'POST /api/photography-booking': 'PhotographyBookingController.create',
+  'GET /api/photography-booking': 'PhotographyBookingController.find',
+  'GET /api/photography-booking/:id': 'PhotographyBookingController.findOne',
+  'PUT /api/photography-booking/:id': 'PhotographyBookingController.updateOne',
+  'POST /api/photography-payment': 'PhotographyPaymentController.create',
+  'GET /api/photography-payment': 'PhotographyPaymentController.find',
+  'GET /api/photography-payment/receipt/:id': 'PhotographyPaymentController.getReceipt',
+  'GET /api/photography-payment/:id': 'PhotographyPaymentController.findOne',
+  'PUT /api/photography-payment/:id': 'PhotographyPaymentController.updateOne',
+  'DELETE /api/photography-payment/:id': 'PhotographyPaymentController.deleteOne',
+  'POST /api/photography-deliverable': 'PhotographyDeliverableController.create',
+  'GET /api/photography-deliverable': 'PhotographyDeliverableController.find',
+  'GET /api/photography-deliverable/:id': 'PhotographyDeliverableController.findOne',
+  'PUT /api/photography-deliverable/:id': 'PhotographyDeliverableController.updateOne',
+  'DELETE /api/photography-deliverable/:id': 'PhotographyDeliverableController.deleteOne',
 
   /***************************************************************************
   *                                                                          *

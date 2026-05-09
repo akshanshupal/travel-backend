@@ -1,3 +1,17 @@
+const normalizeModule = (value) => {
+    const module = String(value || '').trim().toLowerCase();
+    return module === 'photography' ? 'photography' : 'booking';
+};
+
+const applyModuleScopeToFilter = (filter = {}, moduleScope = 'booking') => {
+    if (moduleScope === 'photography') {
+        filter.module = 'photography';
+        return;
+    }
+    // Keep backward compatibility for old booking records without module.
+    filter.or = [{ module: 'booking' }, { module: null }, { module: '' }];
+};
+
 module.exports = {
     find: function (ctx, filter, params) {
         return new Promise(async (resolve, reject) => {
@@ -7,7 +21,10 @@ module.exports = {
             if (!params) {
                 params = {};
             }
+            const moduleScope = normalizeModule(filter?.module);
+            delete filter.module;
             if (filter.title && filter.title.trim()) filter.title = { contains: filter.title.trim() };
+            applyModuleScopeToFilter(filter, moduleScope);
             let qryObj = {where : filter};
             //sort
             let sortField = 'createdAt';
@@ -81,6 +98,7 @@ module.exports = {
     },
     findOne: function (ctx, id, params) {
         return new Promise(async (resolve, reject) => {
+            const moduleScope = normalizeModule(params?.module);
             const filter = {
                 id: id,
                 company: ctx?.session?.activeCompany?.id,
@@ -92,6 +110,7 @@ module.exports = {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
             let qryObj = { where: filter };
+            applyModuleScopeToFilter(qryObj.where, moduleScope);
             if(!qryObj.where?.id){
                 return reject({ statusCode: 400, error: { message: "ID Missing!" } });
             }
@@ -146,6 +165,7 @@ module.exports = {
             if (!data.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
+            data.module = normalizeModule(data.module);
             if(!data.hasOwnProperty('status')){
                 data.status  = true;
             }
@@ -171,10 +191,12 @@ module.exports = {
     },
     updateOne: function (ctx, id, updtBody) {
         return new Promise(async (resolve, reject) => {
+            const moduleScope = normalizeModule(updtBody?.module || ctx?.query?.module);
             const filter = {
                 id: id,
                 company: ctx?.session?.activeCompany?.id,
             };
+            applyModuleScopeToFilter(filter, moduleScope);
             if (!filter.id) {
                 return reject({ statusCode: 400, error: { message: 'id is required!' } });
             }
@@ -184,6 +206,7 @@ module.exports = {
             if (!updtBody.company) {
                 updtBody.company= filter.company;
             }
+            if (updtBody.module) updtBody.module = normalizeModule(updtBody.module);
 
             try {
                 var record = await PaymentStore.updateOne(filter).set(updtBody);
@@ -196,10 +219,12 @@ module.exports = {
     },
     deleteOne: function (ctx, id) {
         return new Promise(async (resolve, reject) => {
+            const moduleScope = normalizeModule(ctx?.query?.module);
             const filter = {
                 id: id,
                 company: ctx?.session?.activeCompany?.id,
             };
+            applyModuleScopeToFilter(filter, moduleScope);
             if (!filter.id) {
                 return reject({ statusCode: 400, error: { message: 'id is required!' } });
             }
