@@ -1,3 +1,26 @@
+const PACKAGE_ITEM_CODES = new Set(["PACKAGE_INCLUSIONS", "PACKAGE_EXCLUSIONS"]);
+
+const normalizePackageItemsValue = (value) => {
+    if (!Array.isArray(value)) return [];
+    return value
+        .map((entry) => {
+            if (typeof entry === "string") return entry.trim();
+            if (entry && typeof entry === "object" && Object.prototype.hasOwnProperty.call(entry, "Items")) {
+                const v = entry.Items;
+                return typeof v === "string" ? v.trim() : String(v || "").trim();
+            }
+            return String(entry || "").trim();
+        })
+        .filter(Boolean);
+};
+
+const maybeNormalizeValueByCode = (recordOrBody) => {
+    if (!recordOrBody || typeof recordOrBody !== "object") return;
+    const code = String(recordOrBody.code || "").trim();
+    if (!PACKAGE_ITEM_CODES.has(code)) return;
+    recordOrBody.value = normalizePackageItemsValue(recordOrBody.value);
+};
+
 module.exports = {
     find: function (ctx, filter, params) {
         return new Promise(async (resolve, reject) => {
@@ -60,6 +83,11 @@ module.exports = {
                             return reject({ statusCode: 500, error: error });
                         }
                     }
+                }
+            }
+            if (Array.isArray(records)) {
+                for (const record of records) {
+                    maybeNormalizeValueByCode(record);
                 }
             }
             const rtrn = { data : records }
@@ -132,6 +160,7 @@ module.exports = {
                     }
                 }   
             }
+            maybeNormalizeValueByCode(record);
             const rtrn = { data: record }
             return resolve({ data: record });
         })
@@ -148,6 +177,7 @@ module.exports = {
             if(!data.hasOwnProperty('status')){
                 data.status = true
             }
+            maybeNormalizeValueByCode(data);
             if (avoidRecordFetch) {
                 try {
                     var record = await GeneralData.create(data);
@@ -182,6 +212,7 @@ module.exports = {
             if (!updtBody.company) {
                 updtBody.company= filter.company;
             }
+            maybeNormalizeValueByCode(updtBody);
 
             try {
                 var record = await GeneralData.updateOne(filter).set(updtBody);

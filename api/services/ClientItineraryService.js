@@ -129,6 +129,7 @@ module.exports = {
             if (params.select) {
                 qryObj.select = params.select;
             }
+
             try {
                 var record = await ClientItinerary.findOne(qryObj);;
             } catch (error) {
@@ -183,6 +184,24 @@ module.exports = {
                     obj.footerContent = con.toString('utf8');
                 }
                 record.clientArea = obj;
+            }
+            if(params.populate && params.populate.includes('templateId')){
+                let packageInclusion;
+                let packageExclusion;
+                if(record.templateId.packageInclusion){
+                    const {data} = await GeneralDataService.findOne(ctx, record.templateId.packageInclusion);
+                    if(data){
+                        packageInclusion = data;
+                    }
+                }
+                if(record.templateId.packageExclusion){
+                    const {data} = await GeneralDataService.findOne(ctx, record.templateId.packageExclusion);
+                    if(data){
+                        packageExclusion = data;
+                    }
+                }
+                record.templateId.packageInclusion = packageInclusion;
+                record.templateId.packageExclusion = packageExclusion;
             }
 
             const rtrn = { data: record }

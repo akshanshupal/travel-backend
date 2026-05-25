@@ -48,6 +48,14 @@ module.exports = {
         mailId:{
             type:'json',
         },
+        packageExclusion:{
+            model: 'generaldata',
+
+        },
+        packageInclusion:{
+            model: 'generaldata',
+
+        },
         isDeleted: { type: 'boolean'},
         deletedAt: { type: 'ref', columnType: 'datetime' },
         deletedBy: { model: 'user' },
