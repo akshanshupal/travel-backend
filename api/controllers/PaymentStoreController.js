@@ -57,11 +57,8 @@ module.exports = {
     findOne: async function (req, res) {
         const filter = req.query;
         if(!req.params.id)   return res.badRequest('ID is missing');
-        let {populate,select,module } = req.query;
+        let {populate,select } = req.query;
         const params = {};
-        if(module){
-            params.module = module;
-        }
         if(populate){
             if(typeof populate === 'string'){
                 params.populate= populate.split(',')
@@ -104,9 +101,7 @@ module.exports = {
     },
 
     updateOne: async function (req, res) {
-        if(req.query?.module && !req.body?.module){
-            req.body.module = req.query.module;
-        }
+
         try {
             var record = await PaymentStoreService.updateOne(req, req.params.id, req.body);
         } catch (error) {
@@ -116,6 +111,7 @@ module.exports = {
         return res.json(record.data);
     },
     deleteOne: async function (req, res) {
+
         try {
             var record = await PaymentStoreService.deleteOne(req, req.params.id);
         } catch (error) {

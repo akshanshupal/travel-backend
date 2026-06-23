@@ -1,5 +1,14 @@
 module.exports = {
     attributes: {
+        estimateNumber: {
+            type: "string",
+            unique: true,
+        },
+        estimateDate: {
+            type: "ref",
+            required: true,
+            columnType: "datetime",
+        },
         client: {
             model: "photographyclient",
             required: true,
@@ -8,35 +17,29 @@ module.exports = {
             model: "user",
             required: true,
         },
+        company: {
+            model: "company",
+        },
         booking: {
             model: "photographybooking",
         },
-        estimateNumber: {
-            type: "string",
-            required: true,
-        },
-        estimateDate: {
-            type: "string",
-            required: true,
-        },
-        validUntil: {
-            type: "string",
-            allowNull: true,
+        items: {
+            type: "json",
+            defaultsTo: [],
         },
         grandTotal: {
             type: "number",
             defaultsTo: 0,
         },
-        items: {
-            type: "json",
-            columnType: "array",
-            defaultsTo: [],
+        isDeleted: {
+            type: "boolean",
         },
-        company: {
-            model: "company",
+        deletedAt: {
+            type: "ref",
+            columnType: "datetime",
         },
-        isDeleted: { type: "boolean" },
-        deletedAt: { type: "ref", columnType: "datetime" },
-        deletedBy: { model: "user" },
+        deletedBy: {
+            model: "user",
+        },
     },
 };

@@ -8,12 +8,6 @@ module.exports = {
             type: "string",
             required: true,
         },
-        whatsappNumber: {
-            type: "string",
-        },
-        email: {
-            type: "string",
-        },
         address: {
             type: "string",
             required: true,

@@ -54,12 +54,8 @@ const normalizeItems = (items = []) => {
               : [];
         return {
             mainEventName: String(item?.mainEventName || ""),
-            timing: String(item?.timing || item?.time || ""),
-            eventDate: item?.eventDate ? String(item.eventDate) : item?.date ? String(item.date) : "",
-            duration: toNumber(item?.duration),
-            durationType: String(item?.durationType || ""),
-            address: String(item?.address || ""),
-            location: String(item?.location || ""),
+            timing: String(item?.timing || ""),
+            eventDate: item?.eventDate ? String(item.eventDate) : "",
             deliverables,
             packageCost: toNumber(item?.packageCost),
         };
@@ -69,7 +65,7 @@ const normalizeItems = (items = []) => {
 const normalizeEvents = (events = []) => {
     if (!Array.isArray(events)) return [];
     return events.map((event) => ({
-        title: String(event?.title || event?.mainEventName || ""),
+        title: String(event?.title || ""),
         deliverables: Array.isArray(event?.deliverables)
             ? event.deliverables.map((entry) => String(entry || "")).filter(Boolean)
             : Array.isArray(event?.dileverables)
@@ -83,8 +79,6 @@ const normalizeEvents = (events = []) => {
         timing: event?.timing ? String(event.timing) : event?.time ? String(event.time) : "",
         duration: toNumber(event?.duration),
         durationType: String(event?.durationType || ""),
-        address: String(event?.address || event?.venueAddress || ""),
-        location: String(event?.location || event?.venueLocation || ""),
     }));
 };
 
@@ -94,10 +88,8 @@ const itemsToEvents = (items = []) => {
         deliverables: Array.isArray(item?.deliverables) ? item.deliverables : [],
         eventDate: item?.eventDate ? String(item.eventDate) : "",
         timing: item?.timing ? String(item.timing) : "",
-        duration: toNumber(item?.duration),
-        durationType: String(item?.durationType || ""),
-        address: String(item?.address || ""),
-        location: String(item?.location || ""),
+        duration: 0,
+        durationType: "",
     }));
 };
 
@@ -106,10 +98,6 @@ const eventsToItems = (events = []) => {
         mainEventName: String(event?.title || ""),
         timing: String(event?.timing || ""),
         eventDate: event?.eventDate ? String(event.eventDate) : "",
-        duration: toNumber(event?.duration),
-        durationType: String(event?.durationType || ""),
-        address: String(event?.address || ""),
-        location: String(event?.location || ""),
         deliverables: Array.isArray(event?.deliverables) ? event.deliverables : [],
         packageCost: 0,
     }));

@@ -80,6 +80,10 @@ module.exports.policies = {
   },
   PaymentsController:{
     "getReceipt" : true,
-  } 
+  },
+
+  EnquiryController: {
+    create: true
+  }
   
 };

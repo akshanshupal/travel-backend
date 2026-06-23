@@ -46,6 +46,12 @@ module.exports.http = {
 
     parseCompany: async function (req, res, next) {
       console.log('new req', req.url);
+      if (req && req.method === 'POST' && (req.url === '/api/enquiry' || (req.url && req.url.startsWith('/api/enquiry/')))) {
+          if(!req.session) {
+                req.session = {};
+            }
+          return next();
+      }
       if (req && req.headers && req.headers['api-key']) {
           let clientApiKey = req.headers['api-key'];
           let companyConfig
