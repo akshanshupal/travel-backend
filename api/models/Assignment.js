@@ -41,6 +41,24 @@ module.exports = {
         taxes:{
             type:'string'
         },
+        landPackageAmount: {
+            type: 'number'
+        },
+        landPackageGstPercentage: {
+            type: 'number'
+        },
+        landPackageGstAmount: {
+            type: 'number'
+        },
+        transportPackageAmount: {
+            type: 'number'
+        },
+        transportPackageGstPercentage: {
+            type: 'number'
+        },
+        transportPackageGstAmount: {
+            type: 'number'
+        },
         finalPackageCost: {
             type: 'number'
         },

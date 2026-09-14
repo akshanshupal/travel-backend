@@ -15,6 +15,10 @@
 
 module.exports.datastores = {
 
+  mongodbA: {
+    adapter: 'sails-mongo',
+    url: 'mongodb://root:TravelSafe2025%21%40%23@127.0.0.1:27018/travel?authSource=admin',
+  },
 
   /***************************************************************************
   *                                                                          *

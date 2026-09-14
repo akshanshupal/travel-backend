@@ -71,6 +71,10 @@ module.exports = {
         try {
             username = username.trim().toLowerCase();
             let company = req?.session?.activeCompany?.id
+            let users = await User.find({ company: company, isDeleted: { '!=': true } });
+            if (users.length === 0) {
+                return res.badRequest({ code: 404, message: 'Wrong username or password!' });
+            }
 
             var user = await User.findOne({ username: username,company:company, isDeleted: { '!=': true } }).populate('role');
             if (!user) {

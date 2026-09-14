@@ -22,6 +22,8 @@ module.exports.routes = {
   '/': { view: 'pages/homepage' },
 
   'POST /api/auth/signin': 'AuthController.signin',
+  'POST /api/auth/request-otp': 'OtpAuthController.requestOtp',
+  'POST /api/auth/verify-otp': 'OtpAuthController.verifyOtp',
   
   'POST /api/auth/signout': 'AuthController.signout',
   'POST /api/auth/getAuthToken': 'AuthController.refreshToken',

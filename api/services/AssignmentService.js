@@ -2,6 +2,35 @@
 const {ObjectId} = require('mongodb');
 
 const isTruthyBoolean = (value) => value === true || String(value).trim().toLowerCase() === 'true';
+
+const roundMoney = (value) => Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+const hasSplitPackagePricing = (data) => [
+    'landPackageAmount',
+    'landPackageGstPercentage',
+    'transportPackageAmount',
+    'transportPackageGstPercentage'
+].some((key) => Object.prototype.hasOwnProperty.call(data, key));
+
+const applySplitPackagePricing = (data) => {
+    if (!hasSplitPackagePricing(data)) return;
+
+    const landAmount = Number(data.landPackageAmount) || 0;
+    const landGstPercentage = Number(data.landPackageGstPercentage) || 0;
+    const transportAmount = Number(data.transportPackageAmount) || 0;
+    const transportGstPercentage = Number(data.transportPackageGstPercentage) || 0;
+    const landGstAmount = roundMoney(landAmount * landGstPercentage / 100);
+    const transportGstAmount = roundMoney(transportAmount * transportGstPercentage / 100);
+
+    data.landPackageAmount = roundMoney(landAmount);
+    data.landPackageGstPercentage = landGstPercentage;
+    data.landPackageGstAmount = landGstAmount;
+    data.transportPackageAmount = roundMoney(transportAmount);
+    data.transportPackageGstPercentage = transportGstPercentage;
+    data.transportPackageGstAmount = transportGstAmount;
+    data.packageCost = roundMoney(landAmount + transportAmount);
+    data.finalPackageCost = roundMoney(landAmount + landGstAmount + transportAmount + transportGstAmount);
+};
+
 module.exports = {
     find: function (ctx, filter, params) {
         return new Promise(async (resolve, reject) => {
@@ -551,6 +580,7 @@ module.exports = {
             if (!updtBody.company) {
                 updtBody.company= filter.company;
             }
+            applySplitPackagePricing(updtBody);
             if (updtBody.hasOwnProperty('dateNotDecided')) {
                 const dateNotDecided = isTruthyBoolean(updtBody.dateNotDecided);
                 updtBody.dateNotDecided = dateNotDecided;

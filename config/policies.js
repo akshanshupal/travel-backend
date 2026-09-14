@@ -24,12 +24,15 @@ module.exports.policies = {
   '*': ['isAuthenticated', 'hasPermission'],
 
   AuthController: {
-      signin: true,
-      signout: true,
-      refreshToken: true,
-      health: true,
-      getApiVersion: true,
-
+    signin: true,
+    signout: true,
+    refreshToken: true,
+    health: true,
+    getApiVersion: true,
+  },
+  OtpAuthController: {
+    requestOtp: true,
+    verifyOtp: true,
   },
 
   CompanyController: {
