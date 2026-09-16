@@ -110,6 +110,15 @@ module.exports = {
 
         return res.json(record.data);
     },
+    transitionStage: async function (req, res) {
+        if (!req.params.id) return res.badRequest('ID is missing');
+        try {
+            const record = await LeadsService.transitionStage(req, req.params.id, req.body);
+            return res.json(record.data);
+        } catch (error) {
+            return res.serverError(error);
+        }
+    },
     deleteOne: async function (req, res) {
 
         try {

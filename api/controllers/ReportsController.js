@@ -4,6 +4,22 @@ module.exports = {
         shortcuts: false,
         rest: false
     },
+    leadFunnel: async function (req, res) {
+        try {
+            const record = await ReportsService.leadFunnel(req, req.query);
+            return res.json(record.data);
+        } catch (error) {
+            return res.serverError(error);
+        }
+    },
+    allAgentPerformance: async function (req, res) {
+        try {
+            const record = await ReportsService.allAgentPerformance(req, req.query);
+            return res.json(record.data);
+        } catch (error) {
+            return res.serverError(error);
+        }
+    },
     find: async function (req, res) {
         const filter = req.query;
         filter.company = req.session.activeCompany.id;

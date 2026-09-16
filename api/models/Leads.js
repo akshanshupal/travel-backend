@@ -36,6 +36,32 @@ module.exports = {
         source:{
             type: 'string'
         },
+        walkInAt: { type: 'ref', columnType: 'datetime' },
+        walkInLocation: { type: 'string' },
+        visitorName: { type: 'string' },
+        currentStageId: {
+            type: 'string'
+        },
+        currentStageName: {
+            type: 'string'
+        },
+        customProperties: {
+            type: 'json',
+            defaultsTo: {}
+        },
+        priority: {
+            type: 'string'
+        },
+        leadStatus: {
+            type: 'string'
+        },
+        convertedAt: { type: 'ref', columnType: 'datetime' },
+        lostReason: {
+            type: 'string'
+        },
+        enquiry: {
+            model: 'enquiry'
+        },
         isDeleted: { type: 'boolean'},
         deletedAt: { type: 'ref', columnType: 'datetime' },
         deletedBy: { model: 'user' }

@@ -72,6 +72,16 @@ module.exports = {
         return res.json(record.data);
     },
 
+    convertToLead: async function (req, res) {
+        if (!req.params.id) return res.badRequest("ID is missing");
+        try {
+            const record = await EnquiryService.convertToLead(req, req.params.id, req.body);
+            return res.json(record.data);
+        } catch (error) {
+            return res.serverError(error);
+        }
+    },
+
     updateOne: async function (req, res) {
         if (!req.params.id) return res.badRequest("ID is missing");
         try {

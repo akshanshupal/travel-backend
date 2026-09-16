@@ -154,6 +154,63 @@ module.exports = {
         });
     },
 
+    convertToLead: async function (ctx, id, data = {}) {
+        const company = String(ctx?.session?.activeCompany?.id || ctx?.session?.activeCompany?._id || "");
+        if (!id || !company) throw { statusCode: 400, error: { message: "Enquiry id and company are required" } };
+        const enquiry = await Enquiry.findOne({ id, company, isDeleted: { "!=": true } });
+        if (!enquiry) throw { statusCode: 404, error: { message: "Enquiry not found" } };
+        if (enquiry.convertedLead) {
+            const existingLead = await Leads.findOne({ id: enquiry.convertedLead, company, isDeleted: { "!=": true } });
+            if (existingLead) return { data: existingLead, alreadyConverted: true };
+        }
+
+        const leadData = {
+            title: enquiry.fullName,
+            mobile: enquiry.mobile,
+            email: enquiry.email,
+            source: enquiry.source || "enquiry",
+            otherOptions: enquiry.message,
+            enquiry: enquiry.id,
+            ...data,
+            company,
+        };
+        let payload;
+        try {
+            payload = await LeadsService.preparePayload(ctx, leadData, null);
+        } catch (error) {
+            throw error?.statusCode ? error : { statusCode: 500, error };
+        }
+
+        const manager = Enquiry.getDatastore().manager;
+        const session = manager?.client?.startSession ? manager.client.startSession() : null;
+        if (!session) throw { statusCode: 500, error: { message: "Database transactions are unavailable" } };
+        try {
+            let lead;
+            await session.withTransaction(async () => {
+                const enquiryCollection = manager.collection(Enquiry.tableName || "enquiry");
+                const leadsCollection = manager.collection(Leads.tableName || "leads");
+                const { ObjectId } = require("mongodb");
+                const enquiryId = new ObjectId(id);
+                const companyObjectId = new ObjectId(company);
+                const locked = await enquiryCollection.findOne({ _id: enquiryId, company: companyObjectId, transferredToLead: { $ne: true }, isDeleted: { $ne: true } }, { session });
+                if (!locked) throw { statusCode: 409, error: { message: "Enquiry has already been converted" } };
+                const now = new Date();
+                const nativePayload = { ...payload, _id: new ObjectId(), company: companyObjectId, enquiry: enquiryId, createdAt: now, updatedAt: now };
+                for (const key of ["campaign", "pipeline", "salesExecutive"]) if (nativePayload[key]) nativePayload[key] = new ObjectId(nativePayload[key]);
+                delete nativePayload.id;
+                await leadsCollection.insertOne(nativePayload, { session });
+                await enquiryCollection.updateOne({ _id: enquiryId }, { $set: { transferredToLead: true, convertedLead: nativePayload._id, updatedAt: now } }, { session });
+                lead = { ...nativePayload, id: String(nativePayload._id) };
+                delete lead._id;
+            });
+            return { data: lead };
+        } catch (error) {
+            throw error?.statusCode ? error : { statusCode: 500, error };
+        } finally {
+            await session.endSession();
+        }
+    },
+
     updateOne: function (ctx, id, updtBody) {
         return new Promise(async (resolve, reject) => {
             const companyId = ctx?.session?.activeCompany?.id;

@@ -87,6 +87,9 @@ module.exports.policies = {
 
   EnquiryController: {
     create: true
+  },
+  DialController: {
+    '*': ['isAuthenticated']
   }
   
 };

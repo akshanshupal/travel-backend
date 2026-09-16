@@ -1,4 +1,99 @@
+const { ObjectId } = require("mongodb");
+
+const reportMatch = (ctx, filter = {}) => {
+    const company = ctx?.session?.activeCompany?.id || ctx?.session?.activeCompany?._id;
+    if (!company || !ObjectId.isValid(String(company))) throw { statusCode: 400, error: { message: "company id is required!" } };
+    const match = { company: new ObjectId(String(company)), isDeleted: { $ne: true } };
+    if (filter.from || filter.to) {
+        match.createdAt = {};
+        if (filter.from) match.createdAt.$gte = sails.dayjs(filter.from).startOf("day").toDate();
+        if (filter.to) match.createdAt.$lte = sails.dayjs(filter.to).endOf("day").toDate();
+    }
+    return match;
+};
+
 module.exports = {
+    leadFunnel: async function (ctx, filter = {}) {
+        try {
+            const manager = Leads.getDatastore().manager;
+            const match = reportMatch(ctx, filter);
+            if (filter.pipeline) {
+                if (!ObjectId.isValid(String(filter.pipeline))) throw { statusCode: 400, error: { message: "pipeline is invalid" } };
+                match.pipeline = new ObjectId(String(filter.pipeline));
+            }
+            if (filter.campaign) {
+                if (!ObjectId.isValid(String(filter.campaign))) throw { statusCode: 400, error: { message: "campaign is invalid" } };
+                match.campaign = new ObjectId(String(filter.campaign));
+            }
+            const stages = await manager.collection(Leads.tableName || "leads").aggregate([
+                { $match: match },
+                { $group: { _id: { name: { $ifNull: ["$currentStageName", "Unspecified"] }, status: { $ifNull: ["$leadStatus", "open"] } }, count: { $sum: 1 } } },
+                { $project: { _id: 0, stageName: "$_id.name", leadStatus: "$_id.status", count: 1 } },
+                { $sort: { count: -1, stageName: 1 } },
+            ]).toArray();
+            const totals = stages.reduce((result, row) => {
+                result.total += row.count;
+                result[row.leadStatus] = (result[row.leadStatus] || 0) + row.count;
+                return result;
+            }, { total: 0, open: 0, converted: 0, lost: 0 });
+            return { data: { stages, totals, conversionRate: totals.total ? Number(((totals.converted / totals.total) * 100).toFixed(2)) : 0 } };
+        } catch (error) {
+            throw error?.statusCode ? error : { statusCode: 500, error };
+        }
+    },
+
+    allAgentPerformance: async function (ctx, filter = {}) {
+        try {
+            const match = reportMatch(ctx, filter);
+            const company = String(ctx?.session?.activeCompany?.id || ctx?.session?.activeCompany?._id);
+            const manager = Leads.getDatastore().manager;
+            const [agents, leadStats, followUpStats] = await Promise.all([
+                User.find({ where: { company, isDeleted: { "!=": true }, type: ["AGENT", "MANAGER", "ADMIN"] }, select: ["id", "name", "email", "type"] }),
+                manager.collection(Leads.tableName || "leads").aggregate([
+                    { $match: match },
+                    { $group: {
+                        _id: "$salesExecutive",
+                        totalLeads: { $sum: 1 },
+                        convertedLeads: { $sum: { $cond: [{ $eq: ["$leadStatus", "converted"] }, 1, 0] } },
+                        lostLeads: { $sum: { $cond: [{ $eq: ["$leadStatus", "lost"] }, 1, 0] } },
+                        openLeads: { $sum: { $cond: [{ $in: [{ $ifNull: ["$leadStatus", "open"] }, ["open", null]] }, 1, 0] } },
+                    } },
+                ]).toArray(),
+                manager.collection(LeadFollowUp.tableName || "leadfollowup").aggregate([
+                    { $match: match },
+                    { $group: {
+                        _id: "$assignedTo",
+                        totalFollowUps: { $sum: 1 },
+                        completedFollowUps: { $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] } },
+                        pendingFollowUps: { $sum: { $cond: [{ $eq: ["$status", "pending"] }, 1, 0] } },
+                    } },
+                ]).toArray(),
+            ]);
+            const leadMap = leadStats.reduce((map, row) => { if (row._id) map[String(row._id)] = row; return map; }, {});
+            const followMap = followUpStats.reduce((map, row) => { if (row._id) map[String(row._id)] = row; return map; }, {});
+            const data = agents.map((agent) => {
+                const leads = leadMap[String(agent.id)] || {};
+                const followUps = followMap[String(agent.id)] || {};
+                const totalLeads = leads.totalLeads || 0;
+                const convertedLeads = leads.convertedLeads || 0;
+                return {
+                    agent,
+                    totalLeads,
+                    openLeads: leads.openLeads || 0,
+                    convertedLeads,
+                    lostLeads: leads.lostLeads || 0,
+                    conversionRate: totalLeads ? Number(((convertedLeads / totalLeads) * 100).toFixed(2)) : 0,
+                    totalFollowUps: followUps.totalFollowUps || 0,
+                    completedFollowUps: followUps.completedFollowUps || 0,
+                    pendingFollowUps: followUps.pendingFollowUps || 0,
+                };
+            });
+            return { data };
+        } catch (error) {
+            throw error?.statusCode ? error : { statusCode: 500, error };
+        }
+    },
+
     find: function (ctx, filter, params) {
         return new Promise(async (resolve, reject) => {
             if (!filter.company) {

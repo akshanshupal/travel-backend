@@ -36,6 +36,9 @@ module.exports = {
             type: "boolean",
             defaultsTo: false,
         },
+        convertedLead: {
+            model: "leads",
+        },
         source: {
             type: "string",
         },
