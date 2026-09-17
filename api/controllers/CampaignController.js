@@ -139,4 +139,18 @@ module.exports = {
         return res.json(record.data);
     },
 
+    copy: async function (req, res) {
+        if (!req.params.id) {
+            return res.badRequest({ code: 'Error', message: 'ID is missing' });
+        }
+
+        try {
+            var record = await CampaignService.copyOne(req, req.params.id, req.body || {});
+        } catch (error) {
+            return res.serverError(error);
+        }
+
+        return res.json(record.data);
+    },
+
 };

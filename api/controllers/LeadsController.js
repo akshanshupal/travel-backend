@@ -128,6 +128,49 @@ module.exports = {
         }
 
         return res.json(record.data);
+    },
+
+    bulk: async function (req, res) {
+        const { leadIds, action, status, currentStageName, destinationCampaign, lostReason, assignedTo, followUpAt } = req.body || {};
+        if (!Array.isArray(leadIds) || !leadIds.length) return res.badRequest({ message: 'leadIds must be a non-empty array' });
+        if (!['update', 'delete', 'move', 'copy', 'close'].includes(action)) return res.badRequest({ message: 'Unsupported bulk action' });
+        if (['move', 'copy'].includes(action) && !destinationCampaign) return res.badRequest({ message: 'destinationCampaign is required' });
+        if (action === 'close' && !['converted', 'lost'].includes(status)) return res.badRequest({ message: 'Close status must be converted or lost' });
+        if (action === 'close' && status === 'lost' && !String(lostReason || '').trim()) return res.badRequest({ message: 'lostReason is required for lost leads' });
+        const results = { succeeded: [], failed: [] };
+        try {
+            const leads = await Promise.all(leadIds.map(id => LeadsService.findOne(req, id).then(record => record.data)));
+            for (const lead of leads) {
+                try {
+                    if (action === 'delete') await LeadsService.deleteOne(req, lead.id);
+                    else if (action === 'update') {
+                        if (status !== undefined || assignedTo) await LeadsService.updateOne(req, lead.id, {
+                            ...(status !== undefined ? { status: status === true || status === 'active' || status === 'true' } : {}),
+                            ...(assignedTo ? { salesExecutive: assignedTo } : {}),
+                        });
+                        if (currentStageName) await LeadsService.transitionStage(req, lead.id, { currentStageName });
+                        if (followUpAt) {
+                            const assignee = assignedTo || lead.salesExecutive;
+                            if (!assignee) throw new Error('Assign a user before setting a follow-up date');
+                            await LeadFollowUpService.create(req, { lead: lead.id, assignedTo: assignee, type: 'follow-up', dueAt: followUpAt, status: 'pending' });
+                        }
+                    } else if (action === 'move') {
+                        await LeadsService.updateOne(req, lead.id, { campaign: destinationCampaign });
+                    } else if (action === 'copy') {
+                        const fields = ['title', 'mobile', 'email', 'otherOptions', 'status', 'source', 'walkInAt', 'walkInLocation', 'visitorName', 'salesExecutive', 'customProperties', 'priority', 'enquiry'];
+                        const clone = fields.reduce((payload, field) => { if (lead[field] !== undefined && lead[field] !== null) payload[field] = lead[field]; return payload; }, { campaign: destinationCampaign });
+                        await LeadsService.create(req, clone);
+                    } else {
+                        const pipeline = await sails.models.pipeline.findOne({ id: lead.pipeline, company: req.session.activeCompany.id });
+                        const target = status === 'converted' ? pipeline?.convertedStage : pipeline?.rejectedStage;
+                        if (!target) throw new Error(`No ${status} stage configured for lead`);
+                        await LeadsService.transitionStage(req, lead.id, { currentStageName: target.name, lostReason: status === 'lost' ? lostReason : '' });
+                    }
+                    results.succeeded.push(lead.id);
+                } catch (error) { results.failed.push({ id: lead.id, message: error?.error?.message || error?.message || 'Failed' }); }
+            }
+            return res.json({ ...results, successCount: results.succeeded.length, failureCount: results.failed.length });
+        } catch (error) { return res.serverError(error); }
     }
 
 };

@@ -4,9 +4,33 @@ module.exports = {
         shortcuts: false,
         rest: false
     },
+    leadDashboard: async function (req, res) {
+        try {
+            const record = await ReportsService.leadDashboard(req, req.query);
+            return res.json(record.data);
+        } catch (error) {
+            return res.serverError(error);
+        }
+    },
     leadFunnel: async function (req, res) {
         try {
             const record = await ReportsService.leadFunnel(req, req.query);
+            return res.json(record.data);
+        } catch (error) {
+            return res.serverError(error);
+        }
+    },
+    pinCampaign: async function (req, res) {
+        try {
+            const record = await ReportsService.pinCampaign(req, { campaignId: req.body?.campaignId || req.body?.id, pinned: req.body?.pinned !== false });
+            return res.json(record.data);
+        } catch (error) {
+            return res.serverError(error);
+        }
+    },
+    campaignDashboard: async function (req, res) {
+        try {
+            const record = await ReportsService.campaignDashboard(req, req.params.id);
             return res.json(record.data);
         } catch (error) {
             return res.serverError(error);

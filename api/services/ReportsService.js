@@ -13,6 +13,92 @@ const reportMatch = (ctx, filter = {}) => {
 };
 
 module.exports = {
+    leadDashboard: async function (ctx, filter = {}) {
+        try {
+            const company = String(ctx?.session?.activeCompany?.id || ctx?.session?.activeCompany?._id || "");
+            const match = reportMatch(ctx, filter);
+            if (filter.pipeline) {
+                if (!ObjectId.isValid(String(filter.pipeline))) throw { statusCode: 400, error: { message: "pipeline is invalid" } };
+                match.pipeline = new ObjectId(String(filter.pipeline));
+            }
+            if (filter.campaign) {
+                if (!ObjectId.isValid(String(filter.campaign))) throw { statusCode: 400, error: { message: "campaign is invalid" } };
+                match.campaign = new ObjectId(String(filter.campaign));
+            }
+            const manager = Leads.getDatastore().manager;
+            const callMatch = { company: new ObjectId(company), isDeleted: { $ne: true } };
+            if (match.createdAt) callMatch.createdAt = match.createdAt;
+            if (match.campaign) callMatch.campaign = match.campaign;
+
+            const currentUser = String(ctx?.session?.user?.id || ctx?.session?.user?._id || "");
+            const [stageRows, callRows, agents, pipelines, campaigns, userRecord] = await Promise.all([
+                manager.collection(Leads.tableName || "leads").aggregate([
+                    { $match: match },
+                    { $group: { _id: { name: { $ifNull: ["$currentStageName", "Unspecified"] }, status: { $ifNull: ["$leadStatus", "open"] } }, count: { $sum: 1 } } },
+                    { $sort: { count: -1 } },
+                ]).toArray(),
+                manager.collection(DialCallLog.tableName || "dialcalllog").aggregate([
+                    { $match: callMatch },
+                    { $group: { _id: null, total: { $sum: 1 }, connected: { $sum: { $cond: [{ $or: [{ $eq: ["$connected", true] }, { $eq: ["$status", "connected"] }] }, 1, 0] } } } },
+                ]).toArray(),
+                User.find({ where: { company, isDeleted: { "!=": true }, type: ["AGENT", "MANAGER", "ADMIN"] }, select: ["id", "status", "type"] }),
+                Pipeline.find({ where: { company, isDeleted: { "!=": true } }, select: ["id", "title"] }).sort("createdAt DESC"),
+                Campaign.find({ where: { company, isDeleted: { "!=": true } }, select: ["id", "title", "pipeline", "createdAt"] }).sort("createdAt DESC"),
+                currentUser ? User.find({ where: { id: currentUser }, select: ["id", "pinnedCampaigns"] }) : Promise.resolve([]),
+            ]);
+            const leadTotal = stageRows.reduce((sum, row) => sum + Number(row.count || 0), 0);
+            const stages = stageRows.map((row) => ({
+                name: row._id?.name || "Unspecified",
+                status: row._id?.status || "open",
+                count: Number(row.count || 0),
+                percentage: leadTotal ? Number(((Number(row.count || 0) / leadTotal) * 100).toFixed(1)) : 0,
+            }));
+            const calls = callRows[0] || {};
+            const total = Number(calls.total || 0);
+            const connected = Number(calls.connected || 0);
+            const onBreak = 0;
+            const active = agents.filter((user) => user.status === true).length;
+            const campaignById = new Map(campaigns.map((campaign) => [String(campaign.id), campaign]));
+            const rawPins = userRecord?.[0]?.pinnedCampaigns;
+            const hasCustomPins = Array.isArray(rawPins);
+            const savedPins = hasCustomPins ? rawPins.map(String) : [];
+            const pinnedCampaigns = hasCustomPins
+                ? savedPins.map((id) => campaignById.get(id)).filter(Boolean).map((campaign) => ({ id: campaign.id, title: campaign.title, createdAt: campaign.createdAt }))
+                : campaigns.slice(0, 5).map((campaign) => ({ id: campaign.id, title: campaign.title, createdAt: campaign.createdAt }));
+            return { data: {
+                callOverview: { connected, total, percentage: total ? Number(((connected / total) * 100).toFixed(1)) : 0 },
+                agentActivity: { active, total: agents.length, onBreak },
+                stages,
+                pipelines: pipelines.map((pipeline) => ({ id: pipeline.id, title: pipeline.title })),
+                campaigns: campaigns.map((campaign) => ({ id: campaign.id, title: campaign.title, pipeline: campaign.pipeline })),
+                pinnedCampaigns,
+            } };
+        } catch (error) {
+            throw error?.statusCode ? error : { statusCode: 500, error };
+        }
+    },
+
+    pinCampaign: async function (ctx, { campaignId, pinned = true }) {
+        try {
+            const company = String(ctx?.session?.activeCompany?.id || ctx?.session?.activeCompany?._id || "");
+            const userId = String(ctx?.session?.user?.id || ctx?.session?.user?._id || "");
+            if (!userId) throw { statusCode: 401, error: { message: "user is not logged in" } };
+            if (!campaignId || !ObjectId.isValid(String(campaignId))) throw { statusCode: 400, error: { message: "campaign id is invalid" } };
+            const campaign = await Campaign.findOne({ id: String(campaignId), isDeleted: { "!=": true }, company });
+            if (!campaign) throw { statusCode: 404, error: { message: "campaign not found" } };
+            const user = await User.findOne({ id: userId }).select(["id", "pinnedCampaigns"]);
+            const current = Array.isArray(user?.pinnedCampaigns) ? user.pinnedCampaigns.map(String) : [];
+            const next = pinned ? Array.from(new Set([...current, String(campaignId)])) : current.filter((id) => id !== String(campaignId));
+            await User.updateOne({ id: userId }).set({ pinnedCampaigns: next });
+            const campaigns = await Campaign.find({ where: { company, isDeleted: { "!=": true } }, select: ["id", "title", "createdAt"] }).sort("createdAt DESC");
+            const campaignById = new Map(campaigns.map((item) => [String(item.id), item]));
+            const pinnedCampaigns = next.map((id) => campaignById.get(id)).filter(Boolean).map((item) => ({ id: item.id, title: item.title, createdAt: item.createdAt }));
+            return { data: { pinnedCampaigns } };
+        } catch (error) {
+            throw error?.statusCode ? error : { statusCode: 500, error };
+        }
+    },
+
     leadFunnel: async function (ctx, filter = {}) {
         try {
             const manager = Leads.getDatastore().manager;
@@ -37,6 +123,127 @@ module.exports = {
                 return result;
             }, { total: 0, open: 0, converted: 0, lost: 0 });
             return { data: { stages, totals, conversionRate: totals.total ? Number(((totals.converted / totals.total) * 100).toFixed(2)) : 0 } };
+        } catch (error) {
+            throw error?.statusCode ? error : { statusCode: 500, error };
+        }
+    },
+
+    campaignDashboard: async function (ctx, campaignId) {
+        try {
+            const company = String(ctx?.session?.activeCompany?.id || ctx?.session?.activeCompany?._id || "");
+            if (!company || !ObjectId.isValid(company)) {
+                throw { statusCode: 400, error: { message: "company id is required!" } };
+            }
+            if (!campaignId || !ObjectId.isValid(String(campaignId))) {
+                throw { statusCode: 400, error: { message: "campaign is invalid" } };
+            }
+
+            const campaign = await Campaign.findOne({ id: String(campaignId), company, isDeleted: { "!=": true } });
+            if (!campaign) {
+                throw { statusCode: 404, error: { message: "Campaign not found!" } };
+            }
+
+            const manager = Leads.getDatastore().manager;
+            const leadMatch = {
+                company: new ObjectId(company),
+                campaign: new ObjectId(String(campaignId)),
+                isDeleted: { $ne: true },
+            };
+            const callMatch = {
+                company: new ObjectId(company),
+                campaign: new ObjectId(String(campaignId)),
+                isDeleted: { $ne: true },
+            };
+
+            const [statusRows, distributionRows, callRows, lastLead] = await Promise.all([
+                manager.collection(Leads.tableName || "leads").aggregate([
+                    { $match: leadMatch },
+                    { $group: { _id: { $ifNull: ["$leadStatus", "open"] }, count: { $sum: 1 } } },
+                ]).toArray(),
+                manager.collection(Leads.tableName || "leads").aggregate([
+                    { $match: leadMatch },
+                    { $group: {
+                        _id: { agent: "$salesExecutive", status: { $ifNull: ["$leadStatus", "open"] } },
+                        count: { $sum: 1 },
+                    } },
+                ]).toArray(),
+                manager.collection(DialCallLog.tableName || "dialcalllog").aggregate([
+                    { $match: callMatch },
+                    { $group: {
+                        _id: null,
+                        total: { $sum: 1 },
+                        connected: { $sum: { $cond: ["$connected", 1, 0] } },
+                        durationSeconds: { $sum: { $ifNull: ["$durationSeconds", 0] } },
+                    } },
+                ]).toArray(),
+                manager.collection(Leads.tableName || "leads").find(leadMatch).sort({ updatedAt: -1 }).limit(1).toArray(),
+            ]);
+
+            const statusCounts = statusRows.reduce((result, row) => {
+                result[String(row._id || "open").toLowerCase()] = Number(row.count || 0);
+                return result;
+            }, {});
+            const total = statusRows.reduce((sum, row) => sum + Number(row.count || 0), 0);
+            const open = Number(statusCounts.open || 0);
+            const inProgress = Number(statusCounts["in-progress"] || statusCounts.inprogress || 0);
+            const converted = Number(statusCounts.converted || 0);
+            const lost = Number(statusCounts.lost || 0);
+            const closedBySystem = Number(statusCounts["closed-by-system"] || 0);
+
+            const agentIds = [...new Set(distributionRows.map((row) => row._id?.agent).filter(Boolean).map(String))];
+            const agents = agentIds.length
+                ? await User.find({ where: { id: agentIds, company }, select: ["id", "name", "email", "username"] })
+                : [];
+            const agentMap = agents.reduce((map, user) => {
+                map[String(user.id)] = user.name || user.username || user.email || String(user.id);
+                return map;
+            }, {});
+            const distributionMap = {};
+            distributionRows.forEach((row) => {
+                const agentId = row._id?.agent ? String(row._id.agent) : "unassigned";
+                if (!distributionMap[agentId]) {
+                    distributionMap[agentId] = {
+                        agentId: agentId === "unassigned" ? null : agentId,
+                        agentName: agentId === "unassigned" ? "Unassigned" : (agentMap[agentId] || agentId),
+                        uncontacted: 0,
+                        noFollowUp: 0,
+                        followUp: 0,
+                        closed: 0,
+                        total: 0,
+                    };
+                }
+                const status = String(row._id?.status || "open").toLowerCase();
+                const count = Number(row.count || 0);
+                if (status === "open") distributionMap[agentId].uncontacted += count;
+                else if (status === "in-progress" || status === "inprogress") distributionMap[agentId].followUp += count;
+                else distributionMap[agentId].closed += count;
+                distributionMap[agentId].total += count;
+            });
+
+            const callStats = callRows[0] || {};
+            return {
+                data: {
+                    statistics: {
+                        total,
+                        uncontacted: open,
+                        inProgress,
+                        closed: converted + lost + closedBySystem,
+                        noFollowUp: open,
+                        followUp: inProgress,
+                        converted,
+                        lost,
+                        closedBySystem,
+                    },
+                    distribution: Object.values(distributionMap),
+                    calls: {
+                        total: Number(callStats.total || 0),
+                        connected: Number(callStats.connected || 0),
+                        durationSeconds: Number(callStats.durationSeconds || 0),
+                    },
+                    lastUpdatedAt: lastLead[0]?.updatedAt || campaign.updatedAt || campaign.createdAt,
+                    uploadedFiles: [],
+                },
+            };
         } catch (error) {
             throw error?.statusCode ? error : { statusCode: 500, error };
         }

@@ -35,14 +35,48 @@ const prepare = async (ctx, data, existing) => {
 };
 
 module.exports = {
-    find: async function (ctx, filter = {}) {
+    find: async function (ctx, params = {}) {
         const company = companyId(ctx);
         if (!company) throw { statusCode: 400, error: { message: "company id is required!" } };
-        const where = { ...filter, company };
+
+        const {
+            totalCount,
+            page,
+            limit,
+            sort,
+            accessMode,
+            accessPath,
+            accessResource,
+            accessAction,
+            ...filters
+        } = params || {};
+
+        const where = { ...filters, company };
         if (!where.hasOwnProperty("isDeleted")) where.isDeleted = { "!=": true };
         if (where.lead) where.lead = normalizeId(where.lead);
         if (where.assignedTo) where.assignedTo = normalizeId(where.assignedTo);
-        return LeadFollowUp.find({ where, sort: "dueAt ASC" });
+
+        const query = LeadFollowUp.find({ where, sort: sort || "dueAt ASC" });
+
+        const numericLimit = Number(limit);
+        const numericPage = Number(page);
+        if (limit && limit !== "all" && Number.isFinite(numericLimit) && numericLimit > 0) {
+            query.limit(numericLimit);
+            if (Number.isFinite(numericPage) && numericPage > 1) {
+                query.skip((numericPage - 1) * numericLimit);
+            }
+        }
+
+        const records = await query;
+
+        if (totalCount === true || totalCount === "true") {
+            return {
+                data: records,
+                totalCount: await LeadFollowUp.count(where),
+            };
+        }
+
+        return records;
     },
     findOne: async function (ctx, id) {
         const record = await LeadFollowUp.findOne({ id, ...activeWhere(companyId(ctx)) });

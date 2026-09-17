@@ -9,6 +9,9 @@ module.exports = {
         title: {
             type: 'string'
         },
+        color: {
+            type: 'string'
+        },
         status: {
             type: 'boolean'
         },

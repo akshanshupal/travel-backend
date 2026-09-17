@@ -203,6 +203,9 @@ module.exports.routes = {
   'PUT /api/generaldata/:id': 'GeneralDataController.updateOne',
   'DELETE /api/generaldata/:id': 'GeneralDataController.deleteOne',
 
+  'GET /api/custom-columns': 'DataController.findCustomColumn',
+  'PUT /api/custom-columns': 'DataController.saveCustomColumn',
+
 
   'POST /api/payments': 'PaymentsController.create',
   'GET /api/payments': 'PaymentsController.find',
@@ -219,8 +222,12 @@ module.exports.routes = {
 
   'POST /api/reports': 'ReportsController.create',
   'GET /api/reports': 'ReportsController.find',
+  'GET /api/lead-dashboard': 'ReportsController.leadDashboard',
+  'POST /api/lead-dashboard/pins': 'ReportsController.pinCampaign',
   'GET /api/reports/lead-funnel': 'ReportsController.leadFunnel',
   'GET /api/reports/all-agent-performance': 'ReportsController.allAgentPerformance',
+  'GET /api/reports/campaign/:id/dashboard': 'ReportsController.campaignDashboard',
+  'GET /api/campaign/:id/dashboard': 'ReportsController.campaignDashboard',
   'GET /api/lead-reports/funnel': 'ReportsController.leadFunnel',
   'GET /api/lead-reports/agents': 'ReportsController.allAgentPerformance',
   'GET /api/reports/:id': 'ReportsController.findOne',
@@ -287,8 +294,16 @@ module.exports.routes = {
   'PUT /api/campaign/:id': 'CampaignController.updateOne',
   'PUT /api/campaign/pause': 'CampaignController.pauseFunction',
   'DELETE /api/campaign/:id': 'CampaignController.deleteOne',
+  'POST /api/campaign/:id/copy': 'CampaignController.copy',
+
+  'GET /api/campaign-logs': 'CampaignLogController.find',
+  'GET /api/campaign-logs/:id': 'CampaignLogController.findOne',
+
+  'GET /api/lead-logs': 'LeadLogController.find',
+  'GET /api/lead-logs/:id': 'LeadLogController.findOne',
 
   'POST /api/leads': 'LeadsController.create',
+  'POST /api/leads/bulk': 'LeadsController.bulk',
   'GET /api/leads': 'LeadsController.find',
   'GET /api/leads/:id': 'LeadsController.findOne',
   'PUT /api/leads/:id': 'LeadsController.updateOne',

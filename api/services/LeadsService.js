@@ -90,17 +90,20 @@ const validateCustomProperties = async (company, values, existing = {}) => {
     if (!values || typeof values !== "object" || Array.isArray(values)) throw { statusCode: 400, error: { message: "customProperties must be an object" } };
     const definitions = await ContactProperty.find({ where: activeWhere(company) });
     const byKey = definitions.reduce((map, item) => { map[item.key] = item; return map; }, {});
+    const carried = { ...(existing || {}) };
     const normalized = {};
     for (const key of Object.keys(values)) {
+        if (values[key] === null) { delete carried[key]; continue; }
         if (!byKey[key]) throw { statusCode: 400, error: { message: `Unknown or inactive custom property: ${key}` } };
         normalized[key] = normalizeCustomValue(byKey[key], values[key]);
     }
     for (const definition of definitions) {
-        if (definition.required && (normalized[definition.key] === undefined) && (existing[definition.key] === undefined || existing[definition.key] === "" || existing[definition.key] === null)) {
+        if (definition.required && (normalized[definition.key] === undefined) && (carried[definition.key] === undefined || carried[definition.key] === "" || carried[definition.key] === null)) {
             throw { statusCode: 400, error: { message: `${definition.label || definition.key} is required` } };
         }
     }
-    return { ...(existing || {}), ...normalized };
+    const activeCarried = Object.fromEntries(Object.entries(carried).filter(([key]) => byKey[key]));
+    return { ...activeCarried, ...normalized };
 };
 
 const preparePayload = async (ctx, data, existing) => {
@@ -155,6 +158,78 @@ module.exports = {
         if (!company) throw { statusCode: 400, error: { message: "company id is required!" } };
         const where = { ...filter, company };
         if (!where.hasOwnProperty("isDeleted")) where.isDeleted = { "!=": true };
+
+        // Search-friendly filters (partial / multi-value matching)
+        const toIn = (value) => String(value).split(",").map((item) => item.trim()).filter(Boolean);
+        if (where.titleLike) { where.title = { contains: String(where.titleLike).trim() }; delete where.titleLike; }
+        if (where.mobileLike) { where.mobile = { contains: String(where.mobileLike).trim() }; delete where.mobileLike; }
+        if (where.emailLike) { where.email = { contains: String(where.emailLike).trim() }; delete where.emailLike; }
+        if (where.campaignIn) { const ids = toIn(where.campaignIn); delete where.campaignIn; if (ids.length) where.campaign = ids; }
+        if (where.sourceIn) { const values = toIn(where.sourceIn); delete where.sourceIn; if (values.length) where.source = values; }
+        const report = where.report === true || where.report === "true";
+        delete where.report;
+        for (const [key, field] of [["userIn", "salesExecutive"], ["statusIn", "leadStatus"]]) {
+            if (where[key]) where[field] = toIn(where[key]);
+            delete where[key];
+        }
+        if (where.stageIn) {
+            const values = toIn(where.stageIn);
+            const stages = values.filter(value => value !== "__none__");
+            const alternatives = stages.length ? [{ currentStageName: stages }] : [];
+            if (values.includes("__none__")) alternatives.push({ currentStageName: "" }, { currentStageName: null });
+            where.and = [...(where.and || []), { or: alternatives }];
+        }
+        delete where.stageIn;
+        if (where.tagIn) {
+            const tags = toIn(where.tagIn);
+            const candidates = await Leads.find({ where: activeWhere(company), select: ["id", "otherOptions"] });
+            const ids = candidates.filter(item => {
+                try { const other = typeof item.otherOptions === "string" ? JSON.parse(item.otherOptions || "{}") : item.otherOptions || {}; return tags.includes(String(other.tag || "")); }
+                catch { return false; }
+            }).map(item => item.id);
+            where.and = [...(where.and || []), { id: ids }];
+        }
+        delete where.tagIn;
+        const range = {};
+        for (const [key, operator] of [["createdFrom", ">="], ["createdTo", "<="]]) {
+            if (where[key]) {
+                const date = sails.dayjs(where[key]);
+                if (!date.isValid()) throw { statusCode: 400, error: { message: "Invalid creation date" } };
+                range[operator] = (operator === ">=" ? date.startOf("day") : date.endOf("day")).toDate();
+            }
+            delete where[key];
+        }
+        if (Object.keys(range).length) where.createdAt = range;
+        if (where.latestDisposition) {
+            const calls = await DialCallLog.find({ where: { company, isDeleted: { "!=": true } }, sort: "startedAt DESC" });
+            const seen = new Set();
+            const ids = [];
+            for (const call of calls) {
+                const lead = normalizeId(call.lead);
+                if (seen.has(lead)) continue;
+                seen.add(lead);
+                if (String(call.disposition || call.outcome || "").toLowerCase().includes(String(where.latestDisposition).toLowerCase())) ids.push(lead);
+            }
+            where.and = [...(where.and || []), { id: ids }];
+        }
+        delete where.latestDisposition;
+        if (where.customProps) {
+            try {
+                const props = JSON.parse(where.customProps);
+                delete where.customProps;
+                const definitions = await ContactProperty.find({ where: activeWhere(company) });
+                for (const [key, value] of Object.entries(props || {})) {
+                    const definition = definitions.find(item => item.key === key && item.status !== false);
+                    if (!definition || value === "" || value === undefined || value === null) continue;
+                    const field = `customProperties.${key}`;
+                    if (definition.fieldType === "multiSelect") { if (Array.isArray(value) && value.length) where[field] = { in: value }; }
+                    else if (definition.fieldType === "boolean") where[field] = value === true || value === "true";
+                    else if (definition.fieldType === "number") where[field] = Number(value);
+                    else if (definition.fieldType === "select") where[field] = String(value);
+                    else where[field] = { contains: String(value) };
+                }
+            } catch (error) { /* ignore malformed customProps */ }
+        }
         for (const dateKey of ["createdAt", "updatedAt"]) {
             if (where[dateKey]) where[dateKey] = { ">=": sails.dayjs(where[dateKey]).startOf("day").toDate(), "<=": sails.dayjs(where[dateKey]).endOf("day").toDate() };
         }
@@ -176,6 +251,35 @@ module.exports = {
                     const map = related.reduce((acc, item) => { acc[normalizeId(item.id)] = item; return acc; }, {});
                     records = records.map((item) => ({ ...item, [relation]: map[normalizeId(item[relation])] || item[relation] }));
                 }
+            }
+            if (report && records.length) {
+                const leadIds = records.map(item => normalizeId(item.id));
+                const [calls, followUps] = await Promise.all([
+                    DialCallLog.find({ where: { company, lead: leadIds, isDeleted: { "!=": true } }, sort: "startedAt DESC" }),
+                    LeadFollowUp.find({ where: { company, lead: leadIds, status: "pending", isDeleted: { "!=": true } }, sort: "dueAt ASC" }),
+                ]);
+                const callsByLead = calls.reduce((map, call) => {
+                    const lead = normalizeId(call.lead);
+                    if (!map[lead]) map[lead] = [];
+                    map[lead].push(call);
+                    return map;
+                }, {});
+                const followUpByLead = followUps.reduce((map, followUp) => {
+                    const lead = normalizeId(followUp.lead);
+                    if (!map[lead]) map[lead] = followUp;
+                    return map;
+                }, {});
+                records = records.map(item => {
+                    const leadId = normalizeId(item.id);
+                    const leadCalls = callsByLead[leadId] || [];
+                    return {
+                        ...item,
+                        followUpTime: followUpByLead[leadId]?.dueAt || null,
+                        lastCallDate: leadCalls[0]?.startedAt || null,
+                        totalDispositionCount: leadCalls.filter(call => call.disposition || call.outcome).length,
+                        callAttemptCount: leadCalls.length,
+                    };
+                });
             }
             if (params.totalCount) return { data: records, totalCount: await Leads.count(where) };
             return records;
@@ -206,6 +310,14 @@ module.exports = {
         try {
             const payload = await preparePayload(ctx, data, null);
             const record = avoidRecordFetch ? await Leads.create(payload) : await Leads.create(payload).fetch();
+            if (record?.id) {
+                await LeadLogService.log(ctx, {
+                    lead: record.id,
+                    campaign: payload.campaign,
+                    action: 'created',
+                    description: `Lead "${record.title || 'Untitled'}" was created`,
+                });
+            }
             return { data: record || { created: true } };
         } catch (error) {
             throw error?.statusCode ? error : { statusCode: 500, error };
@@ -221,6 +333,17 @@ module.exports = {
             if (!existing) throw { statusCode: 404, error: { message: "Lead not found" } };
             const payload = await preparePayload(ctx, data, existing);
             const record = await Leads.updateOne({ id, ...activeWhere(company) }).set(payload);
+            const changes = LeadLogService.diff(existing, record || {});
+            if (changes.length) {
+                const stageChanged = changes.some(change => change.field === 'currentStageName');
+                await LeadLogService.log(ctx, {
+                    lead: id,
+                    campaign: record?.campaign || existing.campaign,
+                    action: stageChanged ? 'stage-changed' : 'updated',
+                    description: `Lead "${record?.title || existing.title || 'Untitled'}" was ${stageChanged ? 'moved to stage ' + (record?.currentStageName || existing.currentStageName) : 'updated'}`,
+                    changes,
+                });
+            }
             return { data: record };
         } catch (error) {
             throw error?.statusCode ? error : { statusCode: 500, error };
@@ -244,6 +367,13 @@ module.exports = {
         applyStage(payload, target);
         if (target.kind === "lost" && !payload.lostReason) throw { statusCode: 400, error: { message: "lostReason is required for a lost lead" } };
         const updated = await Leads.updateOne({ id, ...activeWhere(company) }).set(payload);
+        await LeadLogService.log(ctx, {
+            lead: id,
+            campaign: lead.campaign,
+            action: 'stage-changed',
+            description: `Lead "${lead.title || 'Untitled'}" stage moved from "${lead.currentStageName || 'N/A'}" to "${target.name}"`,
+            changes: [{ field: 'currentStageName', oldValue: String(lead.currentStageName || ''), newValue: String(target.name) }],
+        });
         return { data: updated };
     },
 
@@ -252,6 +382,12 @@ module.exports = {
         if (!id || !company) throw { statusCode: 400, error: { message: "Lead id and company are required" } };
         const record = await Leads.updateOne({ id, ...activeWhere(company) }).set({ isDeleted: true, deletedAt: new Date(), deletedBy: normalizeId(ctx?.session?.user?.id) });
         if (!record) throw { statusCode: 404, error: { message: "Lead not found" } };
+        await LeadLogService.log(ctx, {
+            lead: id,
+            campaign: record.campaign,
+            action: 'deleted',
+            description: `Lead "${record.title || 'Untitled'}" was deleted`,
+        });
         return { data: { deleted: true } };
     },
 };

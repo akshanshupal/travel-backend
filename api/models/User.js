@@ -40,6 +40,7 @@ module.exports = {
         blocked: { type: 'boolean' },
         donNotHashPassword: {type: 'ref'},
         status : {type: 'boolean'},
+        pinnedCampaigns: { type: 'json', defaultsTo: [] },
 
     },
     beforeUpdate: function (user, next) {

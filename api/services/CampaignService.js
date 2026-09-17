@@ -233,6 +233,14 @@ module.exports = {
                 }
             }
 
+            if (record?.id) {
+                await CampaignLogService.log(ctx, {
+                    campaign: record.id,
+                    action: 'created',
+                    description: `Campaign "${record.title || 'Untitled'}" was created`,
+                });
+            }
+
             return resolve({ data: record || { created: true } });
         })
 
@@ -254,10 +262,30 @@ module.exports = {
                 updtBody.company= filter.company;
             }
 
+            let previous = null;
+            try {
+                previous = await Campaign.findOne({ id: id, company: filter.company });
+            } catch (error) {
+                return reject({ statusCode: 500, error: error });
+            }
+            if (!previous) {
+                return reject({ statusCode: 404, error: { code: "Not Found", message: "Campaign not found!" } });
+            }
+
             try {
                 var record = await Campaign.updateOne(filter).set(updtBody);
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
+            }
+
+            const changes = CampaignLogService.diff(previous, updtBody || {});
+            if (changes.length) {
+                await CampaignLogService.log(ctx, {
+                    campaign: id,
+                    action: 'updated',
+                    description: `Campaign "${record?.title || previous.title || 'Untitled'}" was updated`,
+                    changes,
+                });
             }
 
             return resolve({ data: record || { modified: true } });
@@ -276,12 +304,26 @@ module.exports = {
             if (!filter.company) {
                 return reject({ statusCode: 400, error: { message: 'company id is required!' } });
             }
+            let previous = null;
+            try {
+                previous = await Campaign.findOne({ id: id, company: filter.company });
+            } catch (error) {
+                return reject({ statusCode: 500, error: error });
+            }
+            if (!previous) {
+                return reject({ statusCode: 404, error: { code: "Not Found", message: "Campaign not found!" } });
+            }
             try {
                 await Campaign.destroyOne(filter);
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
 
+            await CampaignLogService.log(ctx, {
+                campaign: id,
+                action: 'deleted',
+                description: `Campaign "${previous.title || 'Untitled'}" was deleted`,
+            });
 
             return resolve({ data: { deleted: true } });
         })
@@ -301,16 +343,91 @@ module.exports = {
             if (!updtBody.company) {
                 updtBody.company= filter.company;
             }
+            const campaignIds = Array.isArray(updtBody.campaignIds) ? updtBody.campaignIds : [];
+            let previousCampaigns = [];
+            if (campaignIds.length) {
+                try {
+                    previousCampaigns = await Campaign.find({ id: campaignIds, company: filter.company });
+                } catch (error) {
+                    return reject({ statusCode: 500, error: error });
+                }
+                try {
+                    await Campaign.update({ id: campaignIds }).set({ pause: updtBody.status });
+                } catch (error) {
+                    return reject({ statusCode: 500, error: error });
+                }
+                for (const previous of previousCampaigns) {
+                    await CampaignLogService.log(ctx, {
+                        campaign: previous.id,
+                        action: updtBody.status ? 'paused' : 'unpaused',
+                        description: `Campaign "${previous.title || 'Untitled'}" was ${updtBody.status ? 'paused' : 'un-paused'}`,
+                        changes: [{ field: 'pause', oldValue: String(previous.pause), newValue: String(updtBody.status) }],
+                    });
+                }
+                return resolve({ data: { modified: true } });
+            }
             const updatePayload = {
                 pause: updtBody.status,
             }
-            await Campaign.update({id: updtBody.campaignIds}).set(updatePayload)
+            await Campaign.update(filter).set(updatePayload)
             try {
                 var record = await Campaign.update(filter).set(updtBody);
             } catch (error) {
                 return reject({ statusCode: 500, error: error });
             }
             return resolve({ data: record || { modified: true } });
+        })
+    },
+    copyOne: function (ctx, id, options) {
+        return new Promise(async (resolve, reject) => {
+            const filter = {
+                id: id,
+                company: ctx?.session?.activeCompany?.id,
+            };
+            if (!filter.id) {
+                return reject({ statusCode: 400, error: { message: 'id is required!' } });
+            }
+            if (!filter.company) {
+                return reject({ statusCode: 400, error: { message: 'company id is required!' } });
+            }
+            let previous = null;
+            try {
+                previous = await Campaign.findOne(filter);
+            } catch (error) {
+                return reject({ statusCode: 500, error: error });
+            }
+            if (!previous) {
+                return reject({ statusCode: 404, error: { code: "Not Found", message: "Campaign not found!" } });
+            }
+
+            const title = options?.title || `${previous.title || 'Campaign'} (Copy)`;
+            const clone = {
+                title,
+                pipeline: previous.pipeline,
+                managingCampaign: previous.managingCampaign,
+                salesExecutive: previous.salesExecutive,
+                distributionType: previous.distributionType,
+                additionalSetting: previous.additionalSetting,
+                status: previous.status,
+                pause: previous.pause,
+                company: filter.company,
+            };
+
+            let record = null;
+            try {
+                record = await Campaign.create(clone).fetch();
+            } catch (error) {
+                return reject({ statusCode: 500, error: error });
+            }
+
+            await CampaignLogService.log(ctx, {
+                campaign: record.id,
+                action: 'copied',
+                description: `Campaign "${previous.title || 'Untitled'}" was copied to "${title}"`,
+                changes: [{ field: 'sourceCampaign', oldValue: previous.id, newValue: record.id }],
+            });
+
+            return resolve({ data: record });
         })
     },
 }

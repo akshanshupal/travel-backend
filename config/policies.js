@@ -90,6 +90,16 @@ module.exports.policies = {
   },
   DialController: {
     '*': ['isAuthenticated']
+  },
+
+  CampaignLogController: {
+    '*': ['isAuthenticated']
+  },
+  LeadLogController: {
+    '*': ['isAuthenticated']
+  },
+  DataController: {
+    '*': ['isAuthenticated']
   }
-  
+
 };
