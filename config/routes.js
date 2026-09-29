@@ -20,6 +20,13 @@ module.exports.routes = {
   ***************************************************************************/
 
   '/': { view: 'pages/homepage' },
+  '/dial/home': { view: 'pages/homepage' },
+  '/dial/mycampaigns': { view: 'pages/homepage' },
+  '/dial/leads': { view: 'pages/homepage' },
+  '/dial/neo-whatsapp': { view: 'pages/homepage' },
+  '/dial/walk-in-leads': { view: 'pages/homepage' },
+  '/dial/call-logs': { view: 'pages/homepage' },
+  '/dial/report': { view: 'pages/homepage' },
 
   'POST /api/auth/signin': 'AuthController.signin',
   'POST /api/auth/request-otp': 'OtpAuthController.requestOtp',
@@ -115,6 +122,7 @@ module.exports.routes = {
 
 
   'GET /api/dashboard/getSummary': 'DashboardController.getSummary',
+  'GET /api/dashboard/performance': 'DashboardController.performance',
 
 
   'POST /api/package': 'PackageController.create',
@@ -334,6 +342,10 @@ module.exports.routes = {
 
   'GET /api/dial/queue': 'DialController.queue',
   'GET /api/dial/queue/summary': 'DialController.summary',
+  'POST /api/dial/queue/reserve': 'DialController.reserveNext',
+  'POST /api/dial/queue/release': 'DialController.releaseReservation',
+  'POST /api/dial/call-logs/state': 'DialController.updateCallState',
+  'POST /api/dial/call-logs/finalize': 'DialController.finalizeCall',
   'POST /api/dial/call-logs': 'DialController.createCallLog',
   'GET /api/dial/call-logs': 'DialController.callLogs',
   'GET /api/dial/call-logs/:id': 'DialController.callLog',

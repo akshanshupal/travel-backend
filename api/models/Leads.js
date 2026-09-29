@@ -64,7 +64,12 @@ module.exports = {
         },
         isDeleted: { type: 'boolean'},
         deletedAt: { type: 'ref', columnType: 'datetime' },
-        deletedBy: { model: 'user' }
+        deletedBy: { model: 'user' },
+        activeCallToken: { type: 'string' },
+        activeCallAgent: { model: 'user' },
+        activeCallState: { type: 'string' },
+        activeCallExpiresAt: { type: 'ref', columnType: 'datetime' },
+        callRetryCount: { type: 'number', defaultsTo: 0 }
 
     }
 };
