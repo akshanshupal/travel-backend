@@ -46,6 +46,21 @@ module.exports.http = {
 
     parseCompany: async function (req, res, next) {
       console.log('new req', req.url);
+      const allowedOrigins = [
+        'https://admin.urbanyatras.in',
+        'https://tripzipper.hospitalitygroup.in'
+      ];
+      const origin = req.headers && req.headers.origin;
+      const setCorsHeaders = () => {
+        if (allowedOrigins.includes(origin)) {
+          res.set('Access-Control-Allow-Origin', origin);
+          res.set('Vary', 'Origin');
+        }
+        res.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, HEAD');
+        res.set('Access-Control-Allow-Headers', req.headers['access-control-request-headers'] || 'Content-Type, Authorization, token, session, center, apihost, origin, api-key, X-Requested-With, Accept');
+        res.set('Access-Control-Allow-Credentials', 'true');
+      };
+      setCorsHeaders();
 
       if (req && req.method === 'OPTIONS') {
         const allowedOrigins = [
