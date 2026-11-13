@@ -134,6 +134,22 @@ module.exports = {
 
             const file = uploadedFiles[0];
             const folder = req.body?.folder || '';
+
+            // Universal image convention: when the request flags the upload as
+            // an image (`isImage=true` / `image=true`), validate the MIME type
+            // / extension before pushing it to storage. Generic (non-image)
+            // uploads are unaffected — see IMAGE_SUPPORT.md.
+            const isImageUpload = req.body?.isImage === true ||
+                String(req.body?.isImage || '').trim().toLowerCase() === 'true' ||
+                req.body?.image === true ||
+                String(req.body?.image || '').trim().toLowerCase() === 'true';
+            if (isImageUpload) {
+                const imageError = ImageService.validateImageFile(file);
+                if (imageError) {
+                    return res.status(400).send({ code: 'Error', message: imageError });
+                }
+            }
+
             let STORAGE_ZONE_NAME = sails.config.bunnyCDN.STORAGE_ZONE_NAME;
             if (folder) {
                 STORAGE_ZONE_NAME = `travelimg/${folder}`;
