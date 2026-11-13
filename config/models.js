@@ -72,28 +72,6 @@ module.exports.models = {
     createdAt: { type: 'ref', columnType: 'datetime', autoCreatedAt: true },
     updatedAt: { type: 'ref', columnType: 'datetime', autoUpdatedAt: true },
     id: { type: 'string', columnName: '_id' },
-
-    /***************************************************************************
-     *                                                                          *
-     * CANONICAL IMAGE ATTRIBUTES (universal image convention)                  *
-     *                                                                          *
-     * Every model inherits these automatically. They are the preferred place   *
-     * to store a record's primary image and its metadata. Legacy model-specific*
-     * fields (e.g. Area.featureImg, Site.hotelImg) keep working unchanged;     *
-     * new models should use ONLY these canonical fields. See IMAGE_SUPPORT.md. *
-     *                                                                          *
-     ***************************************************************************/
-
-    /** Primary image URL (CDN/absolute). Nullable — not every record has one. */
-    image: { type: 'string', allowNull: true },
-    /** Alias of `image`; kept separate so consumers can normalize freely. */
-    imageUrl: { type: 'string', allowNull: true },
-    /** Accessibility text for the image. */
-    imageAlt: { type: 'string', allowNull: true },
-    /** Arbitrary upload metadata: {filename, contentType, size, uploadedAt, folder, ...}. */
-    imageMeta: { type: 'json', allowNull: true },
-    /** Set true once the binary has been confirmed uploaded to storage. */
-    imageUploaded: { type: 'boolean', defaultsTo: false },
     //--------------------------------------------------------------------------
     //  /\   Using MongoDB?
     //  ||   Replace `id` above with this instead:

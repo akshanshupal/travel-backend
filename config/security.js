@@ -30,10 +30,9 @@ module.exports.security = {
 
   cors: {
     allRoutes: true,
-    allowOrigins: 'https://admin.urbanyatras.in, https://tripzipper.hospitalitygroup.in',
-    allowRequestHeaders: 'content-type, authorization, token, session, center, apihost, origin, api-key, x-requested-with, accept',
-    allowMethods: 'GET, POST, PUT, DELETE, OPTIONS, HEAD',
-    allowCredentials: true
+    allowOrigins: '*',
+    allowRequestHeaders: 'content-type,token,session,center,apihost,origin',
+    allowCredentials: false
   },
 
 
